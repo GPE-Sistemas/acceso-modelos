@@ -3,10 +3,10 @@ export interface IConfigCliente {
 }
 
 /**
- * Admin Global: Tiene acceso a toda la información y configuración del sistema.
- * Cliente: Gestiona sus propios "Complejos".
+ * Proveedor: el tenant del proveedor del software, con visibilidad global sobre todos los clientes.
+ * Cliente: tenant de un cliente final, gestiona sus propios Complejos.
  */
-export type ITipoCliente = 'Admin Global' | 'Cliente';
+export type ITipoCliente = 'Proveedor' | 'Cliente';
 
 export interface ICliente {
   _id?: string;

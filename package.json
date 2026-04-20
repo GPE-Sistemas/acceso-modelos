@@ -1,8 +1,8 @@
 {
-  "name": "gestion-modelos",
+  "name": "acceso-modelos",
   "version": "1.0.0",
-  "description": "Modelos para el sitema de gestión",
+  "description": "Modelos para el sistema de control de accesos",
   "author": "GPE Sistemas",
   "license": "Private",
-  "repository": "https://github.com/GPE-Sistemas/gestion-modelos"
+  "repository": "https://github.com/GPE-Sistemas/acceso-modelos"
 }

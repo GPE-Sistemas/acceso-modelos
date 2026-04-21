@@ -1,5 +1,6 @@
 import { IAcceso } from './acceso';
 import { ICliente } from './cliente';
+import { IEventoVisita } from './evento-visita';
 import { IComplejo } from './complejo';
 import { IPermiso } from './permiso';
 import { IUnidadFuncional } from './unidad-funcional';
@@ -24,6 +25,7 @@ export interface IIngresoEgreso {
   idsVisitantes?: string[];              // visitantes identificados sin cuenta en el sistema
   visitantesAnonimos?: number;           // cantidad de acompañantes no identificados
   idAcceso?: string;
+  idEventoVisita?: string;
   idVehiculo?: string;
   // Populate
   cliente?: ICliente;
@@ -33,6 +35,7 @@ export interface IIngresoEgreso {
   permisosAcompanantes?: IPermiso[];
   visitantes?: IVisitante[];
   acceso?: IAcceso;
+  eventoVisita?: IEventoVisita;
   vehiculo?: IVehiculo;
   aprobadoPorPermiso?: IPermiso;
 }
@@ -45,6 +48,7 @@ type OmitirPopulate =
   | 'permisosAcompanantes'
   | 'visitantes'
   | 'acceso'
+  | 'eventoVisita'
   | 'vehiculo'
   | 'aprobadoPorPermiso';
 

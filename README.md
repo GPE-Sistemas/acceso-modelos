@@ -90,9 +90,40 @@ Para visitas puntuales donde el vehículo no tiene vínculo registrado, la relac
 
 ---
 
-### 6. Eventos
+### 6. Eventos de visita
 
-`IEvento` representa ocurrencias del sistema que no son ingresos o egresos: botón de pánico, alertas de dispositivos, notificaciones, acciones de guardias, etc. Su estructura de datos específica (tipo de evento, descripción, estado) está pendiente de definición.
+`IEventoVisita` representa la autorización previa que un propietario (o guardia) crea para habilitar el ingreso de una o más personas en un rango horario determinado. Es la base del flujo de visitas:
+
+1. El propietario declara la visita con anticipación, o el guardia la crea en el momento contactando al propietario por fuera del sistema.
+2. Cuando la visita llega, el guardia verifica si existe un evento vigente y aprueba o rechaza el ingreso.
+3. Cada `IIngresoEgreso` de los visitantes queda vinculado al evento a través de `idEventoVisita`.
+4. El evento se cierra cuando todos los visitantes que ingresaron han registrado su egreso.
+
+Campos clave:
+- **`tipo`**: `'Particular'` o `'Proveedor'` (extensible a futuro).
+- **`creadoPor`**: distingue si lo creó el propietario o el guardia, usando el mismo `idPermiso` para ambos casos.
+- **`idUnidadFuncional`**: unidad del autorizante (para filtrado y contexto).
+- **`idUnidadFuncionalDestino`**: destino real de la visita, que puede diferir de la unidad del autorizante (ej: proveedor que va a un espacio común, autorizado por el administrador del complejo).
+- **`estado`**: ciclo de vida `Pendiente → Activa → Cerrada / Vencida`.
+
+---
+
+### 7. Unidades funcionales — tipos
+
+`IUnidadFuncional` representa tanto espacios privados (departamentos, lotes, oficinas) como espacios comunes del complejo (canchas, SUM, gimnasio, etc.), diferenciados por el campo `tipo`:
+
+| `tipo` | Descripción |
+| --- | --- |
+| `Privada` | Espacio de uso exclusivo con propietario/residente asignado |
+| `Común` | Espacio compartido del complejo (cancha de tenis, SUM, piscina, etc.) |
+
+Cada unidad puede tener su polígono geográfico (`ubicacion: IGeoJSONPolygon`) para representarla en un mapa del complejo. Esta base será reutilizada en el futuro sistema de reservas de turnos para espacios comunes.
+
+---
+
+### 8. Eventos
+
+`IEvento` representa ocurrencias del sistema que no son ingresos/egresos ni visitas: botón de pánico, alertas de dispositivos, notificaciones, acciones de guardias, etc. Su estructura de datos específica (tipo de evento, descripción, estado) está pendiente de definición.
 
 ---
 
@@ -121,7 +152,9 @@ erDiagram
   IUnidadFuncional {
     string _id PK
     string nombre
+    string tipo "'Privada' | 'Común'"
     boolean habilitado
+    object ubicacion "IGeoJSONPolygon"
     string idCliente FK
     string idComplejo FK
     string fechaCreacion
@@ -211,6 +244,23 @@ erDiagram
     string fechaCreacion
   }
 
+  IEventoVisita {
+    string _id PK
+    string tipo "'Particular' | 'Proveedor'"
+    string estado "'Pendiente' | 'Activa' | 'Cerrada' | 'Vencida'"
+    string creadoPor "'Propietario' | 'Guardia'"
+    string idCliente FK
+    string idComplejo FK
+    string idUnidadFuncional FK "unidad del autorizante"
+    string idUnidadFuncionalDestino FK "destino real de la visita"
+    string idPermiso FK
+    string[] idsVisitantes FK
+    string[] idsVehiculos FK
+    string fechaDesde
+    string fechaHasta
+    string fechaCreacion
+  }
+
   IIngresoEgreso {
     string _id PK
     string tipo "'Ingreso' | 'Egreso'"
@@ -224,6 +274,7 @@ erDiagram
     string[] idsVisitantes FK
     number visitantesAnonimos
     string idAcceso FK
+    string idEventoVisita FK
     string idVehiculo FK
     string fechaEvento
     string fechaCreacion
@@ -274,9 +325,17 @@ erDiagram
   ICliente          ||--o{  IEvento                  : "tiene"
   IComplejo         ||--o{  IEvento                  : "tiene"
   IPermiso          }o--o{  IEvento                  : "genera"
+  ICliente          ||--o{  IEventoVisita             : "tiene"
+  IComplejo         ||--o{  IEventoVisita             : "tiene"
+  IPermiso          }o--o{  IEventoVisita             : "autoriza"
+  IUnidadFuncional  }o--o{  IEventoVisita             : "autorizante"
+  IUnidadFuncional  }o--o{  IEventoVisita             : "destino"
+  IVisitante        }o--o{  IEventoVisita             : "idsVisitantes"
+  IVehiculo         }o--o{  IEventoVisita             : "idsVehiculos"
   ICliente          ||--o{  IIngresoEgreso            : "registra"
   IComplejo         ||--o{  IIngresoEgreso            : "registra"
   IAcceso           }o--o{  IIngresoEgreso            : "idAcceso"
+  IEventoVisita     }o--o{  IIngresoEgreso            : "idEventoVisita"
   IPermiso          }o--o{  IIngresoEgreso            : "responsable"
   IPermiso          }o--o{  IIngresoEgreso            : "acompanante"
   IVisitante        ||--|{  IDatosPersonales          : "contiene"

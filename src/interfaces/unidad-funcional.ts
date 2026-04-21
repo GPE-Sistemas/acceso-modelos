@@ -1,5 +1,8 @@
+import { IGeoJSONPolygon } from '../auxiliares/geojson';
 import { ICliente } from './cliente';
 import { IComplejo } from './complejo';
+
+export type ITipoUnidadFuncional = 'Privada' | 'Común';
 
 export interface IConfigUnidadFuncional {
   [key: string]: any;
@@ -12,6 +15,8 @@ export interface IUnidadFuncional {
   fechaCreacion?: string;
   habilitado?: boolean;
   nombre?: string;
+  tipo?: ITipoUnidadFuncional;
+  ubicacion?: IGeoJSONPolygon;
   config?: IConfigUnidadFuncional;
   // Populate
   cliente?: ICliente;

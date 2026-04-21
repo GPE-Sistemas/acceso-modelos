@@ -44,7 +44,7 @@ export interface IPermisoUnidadFuncional extends IPermisoBase {
   idUnidadFuncional: string;
   // Virtuals
   cliente?: ICliente;
-  Complejo?: IComplejo;
+  complejo?: IComplejo;
   unidadFuncional?: IUnidadFuncional;
 }
 

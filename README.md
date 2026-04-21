@@ -8,6 +8,8 @@ El sistema gestiona el acceso de usuarios a espacios físicos organizados jerár
 
 Los **Usuarios** obtienen acceso mediante **Permisos**, que vinculan un usuario con un nivel específico de la jerarquía y le asignan uno o más **Roles**. Cada Rol define el conjunto de acciones habilitadas dentro del sistema.
 
+Los accesos físicos se registran mediante **Ingresos/Egresos**, que capturan quién entra o sale, en qué vehículo y con qué acompañantes. Los **Visitantes** y **Vehículos** son entidades globales (no pertenecen a un tenant), y su vinculación con usuarios o complejos se gestiona a través de **VínculoVehículo**. Los **Dispositivos** (lectores, torniquetes, etc.) se asocian a cada complejo para registrar los accesos. Los **Eventos** representan ocurrencias del sistema que no son ingresos o egresos, como alertas o acciones de guardias.
+
 ### Tipos de cliente
 
 El modelo sigue un patrón **multi-tenant**: tanto el proveedor del software como sus clientes finales son representados como `ICliente`, diferenciados por el campo `tipoCliente`.
@@ -109,20 +111,102 @@ erDiagram
     string fechaCreacion
   }
 
-  ICliente         ||--o{ IComplejo          : "tiene"
-  IComplejo        ||--o{ IUnidadFuncional   : "tiene"
-  IUsuario         ||--|{ IDatosPersonales   : "contiene"
-  IUsuario         ||--o{ IPermiso           : "posee"
-  IPermiso         }o--||  ICliente          : "nivel Cliente"
-  IPermiso         }o--o|  IComplejo         : "nivel Complejo"
-  IPermiso         }o--o|  IUnidadFuncional  : "nivel UF"
-  IPermiso         }o--o{  IRol              : "idsRoles"
-  IRol             }o--o|  ICliente          : "alcance Cliente"
-  IRol             }o--o|  IComplejo         : "alcance Complejo"
+  ICliente ||--o{ IComplejo         : "tiene"
+  IComplejo ||--o{ IUnidadFuncional  : "tiene"
+  IUsuario  ||--|{ IDatosPersonales  : "contiene"
+  IUsuario  ||--o{ IPermiso          : "posee"
+  IPermiso  }o--||  ICliente         : "nivel Cliente"
+  IPermiso  }o--o|  IComplejo        : "nivel Complejo"
+  IPermiso  }o--o|  IUnidadFuncional : "nivel UF"
+  IPermiso  }o--o{  IRol             : "idsRoles"
+  IRol      }o--o|  ICliente         : "alcance Cliente"
+  IRol      }o--o|  IComplejo        : "alcance Complejo"
+
+  IDispositivo {
+    string _id PK
+    string serialNumber
+    string marca
+    string modelo
+    string idCliente FK
+    string idComplejo FK
+    string fechaCreacion
+  }
+
+  IEvento {
+    string _id PK
+    string idCliente FK
+    string idComplejo FK
+    string idUnidadFuncional FK
+    string idPermiso FK
+    string expireAt
+    string fechaCreacion
+  }
+
+  IIngresoEgreso {
+    string _id PK
+    string tipo "'Ingreso' | 'Egreso'"
+    boolean aprobado
+    string aprobadoPor "'Sistema' | 'Guardia'"
+    string idCliente FK
+    string idComplejo FK
+    string idUnidadFuncional FK
+    string idPermiso FK
+    string[] idsPermisosAcompanantes FK
+    string[] idsVisitantes FK
+    number visitantesAnonimos
+    string idVehiculo FK
+    string fechaEvento
+    string fechaCreacion
+  }
+
+  IVehiculo {
+    string _id PK
+    string marca
+    string modelo
+    string color
+    string patente
+    string fechaCreacion
+  }
+
+  IVisitante {
+    string _id PK
+    string fechaCreacion
+  }
+
+  IVinculoVehiculo {
+    string _id PK
+    string idCliente FK
+    string idComplejo FK
+    string idVehiculo FK
+    string idUsuario FK
+    string idVisitante FK
+    string tipo "'Titular' | 'Autorizado'"
+    string fechaCreacion
+  }
+
+  ICliente      ||--o{  IDispositivo      : "tiene"
+  IComplejo     ||--o{  IDispositivo      : "tiene"
+  ICliente      ||--o{  IEvento           : "tiene"
+  IComplejo     ||--o{  IEvento           : "tiene"
+  IPermiso      }o--o{  IEvento           : "genera"
+  ICliente      ||--o{  IIngresoEgreso    : "registra"
+  IComplejo     ||--o{  IIngresoEgreso    : "registra"
+  IPermiso      }o--o{  IIngresoEgreso    : "responsable"
+  IPermiso      }o--o{  IIngresoEgreso    : "acompanante"
+  IVisitante    ||--|{  IDatosPersonales  : "contiene"
+  IVisitante    }o--o{  IIngresoEgreso    : "idsVisitantes"
+  IVehiculo     }o--o|  IIngresoEgreso    : "idVehiculo"
+  IVehiculo     ||--o{  IVinculoVehiculo  : "vinculado"
+  IUsuario      }o--o{  IVinculoVehiculo  : "idUsuario"
+  IVisitante    }o--o{  IVinculoVehiculo  : "idVisitante"
 ```
 
 > **Nota sobre los union types:** `IPermiso` e `IRol` son *discriminated unions* en TypeScript.
 > El campo `nivel` / `alcance` actúa como discriminante y determina qué referencias de FK son requeridas u opcionales en cada variante.
+
+> **Nota sobre entidades globales:** `IVehiculo` e `IVisitante` no pertenecen a ningún tenant. Su vinculación con un complejo o usuario se establece a través de `IVinculoVehiculo` (para relaciones persistentes) o queda implícita en el registro de `IIngresoEgreso` (para visitas puntuales).
+
+> **Nota sobre ingresos con acompañantes:** `IIngresoEgreso` distingue tres tipos de acompañantes: usuarios del sistema (`idsPermisosAcompanantes`), visitantes identificados (`idsVisitantes`) y acompañantes no identificados (`visitantesAnonimos`). Pueden combinarse en el mismo registro.
 
 ---
 

@@ -276,6 +276,7 @@ erDiagram
     string idAcceso FK
     string idEventoVisita FK
     string idVehiculo FK
+    string[] imagenes "URLs a object storage"
     string fechaEvento
     string fechaCreacion
   }

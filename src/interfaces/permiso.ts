@@ -13,6 +13,8 @@ export type INivelPermiso = 'Cliente' | 'Complejo' | 'Unidad Funcional';
 interface IPermisoBase {
   _id?: string;
   fechaCreacion?: string;
+  habilitado?: boolean;
+  fechaExpiracion?: string;
   idUsuario?: string;
   idsRoles?: string[];
   config?: IConfigPermiso;

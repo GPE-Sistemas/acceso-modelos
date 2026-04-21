@@ -21,7 +21,7 @@ export type AccionesRol =
   | 'Administración - Ver permisos'
   | 'Administración - Crear permisos'
   | 'Administración - Editar permisos'
-  | 'Administración - Eliminar permisos'
+  // | 'Administración - Eliminar permisos' // Los permisos no se eliminan, solo se deshabilitan ya que se usan como referencia en otras entidades
   // Roles
   | 'Administración - Ver roles'
   | 'Administración - Crear roles'

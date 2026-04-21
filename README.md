@@ -192,6 +192,8 @@ erDiagram
   IPermiso {
     string _id PK
     string nivel "'Cliente' | 'Complejo' | 'Unidad Funcional'"
+    boolean habilitado
+    string fechaExpiracion
     string idUsuario FK
     string idCliente FK
     string idComplejo FK

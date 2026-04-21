@@ -1,6 +1,6 @@
 import { ICliente } from './cliente';
 import { IComplejo } from './complejo';
-import { IUsuario } from './usuario';
+import { IPermiso } from './permiso';
 import { IVehiculo } from './vehiculo';
 import { IVisitante } from './visitante';
 
@@ -12,25 +12,27 @@ export interface IVinculoVehiculo {
   idCliente?: string;
   idComplejo?: string;
   idVehiculo?: string;
-  idUsuario?: string;    // mutuamente excluyente con idVisitante
-  idVisitante?: string;  // mutuamente excluyente con idUsuario
+  idPermiso?: string;    // mutuamente excluyente con idVisitante
+  idVisitante?: string;  // mutuamente excluyente con idPermiso
   tipo?: ITipoVinculoVehiculo;
   // Populate
   cliente?: ICliente;
   complejo?: IComplejo;
   vehiculo?: IVehiculo;
-  usuario?: IUsuario;
+  permiso?: IPermiso;
   visitante?: IVisitante;
 }
 
-type OmitirCreate = '_id' | 'fechaCreacion' | 'cliente' | 'complejo' | 'vehiculo' | 'usuario' | 'visitante';
+type OmitirPopulate = 'cliente' | 'complejo' | 'vehiculo' | 'permiso' | 'visitante';
+
+type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
 
 export interface ICreateVinculoVehiculo extends Omit<
   Partial<IVinculoVehiculo>,
   OmitirCreate
 > {}
 
-type OmitirUpdate = '_id' | 'fechaCreacion' | 'cliente' | 'complejo' | 'vehiculo' | 'usuario' | 'visitante';
+type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
 
 export interface IUpdateVinculoVehiculo extends Omit<
   Partial<IVinculoVehiculo>,

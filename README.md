@@ -178,7 +178,7 @@ erDiagram
     string idCliente FK
     string idComplejo FK
     string idVehiculo FK
-    string idUsuario FK
+    string idPermiso FK
     string idVisitante FK
     string tipo "'Titular' | 'Autorizado'"
     string fechaCreacion
@@ -197,7 +197,7 @@ erDiagram
   IVisitante    }o--o{  IIngresoEgreso    : "idsVisitantes"
   IVehiculo     }o--o|  IIngresoEgreso    : "idVehiculo"
   IVehiculo     ||--o{  IVinculoVehiculo  : "vinculado"
-  IUsuario      }o--o{  IVinculoVehiculo  : "idUsuario"
+  IPermiso      }o--o{  IVinculoVehiculo  : "idPermiso"
   IVisitante    }o--o{  IVinculoVehiculo  : "idVisitante"
 ```
 

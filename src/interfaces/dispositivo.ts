@@ -2,9 +2,10 @@ import { ICliente } from './cliente';
 import { IComplejo } from './complejo';
 
 export type ITipoDispositivo =
-  | 'Control de Acceso'
-  | 'Camaras'
-  | 'Intercomunicador'
+  | 'Terminal de reconocimiento facial'
+  | 'Lector de huella digital'
+  | 'Lector de tarjeta'
+  | 'Teclado numérico'
   | 'Otro';
 
 export interface IDispositivo {

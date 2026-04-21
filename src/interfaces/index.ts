@@ -1,4 +1,6 @@
 export * from './complejo';
+export * from './credencial-dispositivo';
+export * from './dispositivo';
 export * from './evento';
 export * from './cliente';
 export * from './ingreso-egreso';

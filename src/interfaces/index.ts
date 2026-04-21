@@ -1,3 +1,4 @@
+export * from './acceso';
 export * from './complejo';
 export * from './credencial-dispositivo';
 export * from './dispositivo';

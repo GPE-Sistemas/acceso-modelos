@@ -8,7 +8,7 @@ El sistema gestiona el acceso de usuarios a espacios físicos organizados jerár
 
 Los **Usuarios** obtienen acceso mediante **Permisos**, que vinculan un usuario con un nivel específico de la jerarquía y le asignan uno o más **Roles**. Cada Rol define el conjunto de acciones habilitadas dentro del sistema.
 
-Los accesos físicos se registran mediante **Ingresos/Egresos**, que capturan quién entra o sale, con qué acompañantes, en qué vehículo y opcionalmente a través de qué dispositivo. Los **Visitantes** y **Vehículos** son entidades globales (no pertenecen a un tenant), y su vinculación con permisos o complejos se gestiona a través de **VínculoVehículo**. Los **Dispositivos** (lectores faciales, de huella, de tarjeta, etc.) se asocian a cada complejo; sus identificadores propios se vinculan a permisos mediante **CredencialDispositivo**, permitiendo que cada tipo de dispositivo identifique personas con su propio formato. Los **Eventos** representan ocurrencias del sistema que no son ingresos o egresos, como alertas o acciones de guardias.
+Los **Accesos** representan los puntos de entrada/salida físicos de un complejo (puertas, barreras, molinetes), cada uno con su tipo de tránsito, tipo de persona habilitada, dispositivos asociados y ubicación geográfica. Los accesos físicos se registran mediante **Ingresos/Egresos**, que capturan quién entra o sale, por qué acceso, con qué acompañantes, en qué vehículo y opcionalmente a través de qué dispositivo. Los **Visitantes** y **Vehículos** son entidades globales (no pertenecen a un tenant), y su vinculación con permisos o complejos se gestiona a través de **VínculoVehículo**. Los **Dispositivos** (lectores faciales, de huella, de tarjeta, etc.) se asocian a cada complejo; sus identificadores propios se vinculan a permisos mediante **CredencialDispositivo**, permitiendo que cada tipo de dispositivo identifique personas con su propio formato. Los **Eventos** representan ocurrencias del sistema que no son ingresos o egresos, como alertas o acciones de guardias.
 
 ### Tipos de cliente
 
@@ -122,6 +122,19 @@ erDiagram
   IRol      }o--o|  ICliente         : "alcance Cliente"
   IRol      }o--o|  IComplejo        : "alcance Complejo"
 
+  IAcceso {
+    string _id PK
+    string nombre
+    boolean habilitado
+    string tipo "'Ingreso' | 'Egreso' | 'Ambos'"
+    string tipoPersona "'Propietarios' | 'Visitas' | 'Ambos'"
+    string[] idsDispositivos FK
+    object ubicacion "IGeoJSONPoint"
+    string idCliente FK
+    string idComplejo FK
+    string fechaCreacion
+  }
+
   IDispositivo {
     string _id PK
     string serialNumber
@@ -154,7 +167,7 @@ erDiagram
     string[] idsPermisosAcompanantes FK
     string[] idsVisitantes FK
     number visitantesAnonimos
-    string idDispositivo FK
+    string idAcceso FK
     string idVehiculo FK
     string fechaEvento
     string fechaCreacion
@@ -195,6 +208,10 @@ erDiagram
     string fechaCreacion
   }
 
+  ICliente              ||--o{  IAcceso                 : "tiene"
+  IComplejo             ||--o{  IAcceso                 : "tiene"
+  IAcceso               }o--o{  IDispositivo            : "idsDispositivos"
+  IAcceso               }o--o{  IIngresoEgreso          : "idAcceso"
   ICliente              ||--o{  IDispositivo            : "tiene"
   IComplejo             ||--o{  IDispositivo            : "tiene"
   ICliente              ||--o{  IEvento                 : "tiene"
@@ -204,7 +221,6 @@ erDiagram
   IComplejo             ||--o{  IIngresoEgreso           : "registra"
   IPermiso              }o--o{  IIngresoEgreso           : "responsable"
   IPermiso              }o--o{  IIngresoEgreso           : "acompanante"
-  IDispositivo          }o--o{  IIngresoEgreso           : "idDispositivo"
   IVisitante            ||--|{  IDatosPersonales         : "contiene"
   IVisitante            }o--o{  IIngresoEgreso           : "idsVisitantes"
   IVehiculo             }o--o|  IIngresoEgreso           : "idVehiculo"

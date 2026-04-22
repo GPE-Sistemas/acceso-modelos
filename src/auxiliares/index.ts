@@ -1,3 +1,4 @@
+export * from './documento';
 export * from './exactly';
 export * from './geojson';
 export * from './listado';

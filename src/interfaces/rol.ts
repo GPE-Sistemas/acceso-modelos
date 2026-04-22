@@ -38,7 +38,60 @@ export type AccionesRol =
   | 'Administración - Crear usuarios'
   | 'Administración - Editar usuarios'
   | 'Administración - Eliminar usuarios'
-  | 'Administración - Deshabilitar / habilitar usuarios';
+  | 'Administración - Deshabilitar / habilitar usuarios'
+  // *******************************************
+  // MODULO HARDWARE
+  // *******************************************
+  // Accesos
+  | 'Hardware - Ver accesos'
+  | 'Hardware - Crear accesos'
+  | 'Hardware - Editar accesos'
+  | 'Hardware - Eliminar accesos'
+  // Dispositivos
+  | 'Hardware - Ver dispositivos'
+  | 'Hardware - Crear dispositivos'
+  | 'Hardware - Editar dispositivos'
+  | 'Hardware - Eliminar dispositivos'
+  // Credenciales de dispositivos
+  | 'Hardware - Ver credenciales'
+  | 'Hardware - Crear credenciales'
+  | 'Hardware - Editar credenciales'
+  | 'Hardware - Eliminar credenciales'
+  // *******************************************
+  // MODULO VISITAS
+  // *******************************************
+  // Eventos de visita
+  | 'Visitas - Ver eventos'
+  | 'Visitas - Crear eventos'
+  | 'Visitas - Editar eventos'
+  | 'Visitas - Eliminar eventos'
+  // Visitantes
+  | 'Visitas - Ver visitantes'
+  | 'Visitas - Crear visitantes'
+  | 'Visitas - Editar visitantes'
+  | 'Visitas - Eliminar visitantes'
+  // *******************************************
+  // MODULO VEHÍCULOS
+  // *******************************************
+  | 'Vehículos - Ver vehículos'
+  | 'Vehículos - Crear vehículos'
+  | 'Vehículos - Editar vehículos'
+  | 'Vehículos - Eliminar vehículos'
+  // Vínculos vehículo-persona
+  | 'Vehículos - Ver vínculos'
+  | 'Vehículos - Crear vínculos'
+  | 'Vehículos - Editar vínculos'
+  | 'Vehículos - Eliminar vínculos'
+  // *******************************************
+  // MODULO MOVIMIENTOS
+  // *******************************************
+  | 'Movimientos - Ver ingresos egresos'
+  | 'Movimientos - Registrar ingreso egreso'
+  // *******************************************
+  // MODULO EVENTOS
+  // *******************************************
+  | 'Eventos - Ver eventos'
+  | 'Eventos - Crear eventos';
 
 export type IAlcanceRol = 'Global' | 'Cliente' | 'Complejo';
 

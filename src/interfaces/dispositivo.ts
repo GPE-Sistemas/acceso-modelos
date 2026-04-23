@@ -8,6 +8,21 @@ export type ITipoDispositivo =
   | 'Teclado numérico'
   | 'Otro';
 
+export interface IConfigDispositivo {
+  username?: string;
+  password?: string;
+  apikey?: string;
+  //
+  /**
+   * Representa si el dispositivo fisico abre automáticamente al detectar una credencial válida
+   * En caso de ser false, el dispositivo requerirá una acción manual (como presionar un botón) para abrir.
+   * Esto sirve para que al momento de registrar un ingreso/egreso en el sistema:
+   * En caso de ser false este sea atendible (campo aprobadoPor === 'Guardia')
+   * En case de ser true, el sistema lo aprueba automáticamente (campo aprobadoPor === 'Sistema') y se registra el evento sin intervención humana, lo que es ideal para dispositivos de acceso rápido o sin supervisión.
+   */
+  aperturaAutomatica?: boolean;
+}
+
 export interface IDispositivo {
   _id?: string;
   fechaCreacion?: string;
@@ -18,8 +33,7 @@ export interface IDispositivo {
   serialNumber?: string;
   marca?: string;
   modelo?: string;
-  username?: string;
-  password?: string;
+  config?: IConfigDispositivo;
 
   // Populate
   cliente?: ICliente;

@@ -87,6 +87,8 @@ export type AccionesRol =
   // *******************************************
   | 'Movimientos - Ver ingresos egresos'
   | 'Movimientos - Registrar ingreso egreso'
+  | 'Movimientos - Ver propietarios'
+  | 'Movimientos - Ver visitas activas'
   // *******************************************
   // MODULO EVENTOS
   // *******************************************

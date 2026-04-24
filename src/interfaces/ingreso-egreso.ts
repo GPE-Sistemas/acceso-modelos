@@ -24,6 +24,7 @@ export interface IIngresoEgreso {
   idsPermisosAcompanantes?: string[];    // otros usuarios del sistema que acompañan
   idsVisitantes?: string[];              // visitantes identificados sin cuenta en el sistema
   visitantesAnonimos?: number;           // cantidad de acompañantes no identificados
+  categoria?: 'Propietario' | 'Visita';
   idAcceso?: string;
   idEventoVisita?: string;
   idVehiculo?: string;

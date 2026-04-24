@@ -15,7 +15,7 @@ interface IPermisoBase {
   fechaCreacion?: string;
   habilitado?: boolean;
   fechaExpiracion?: string;
-  idUsuario?: string;
+  username?: string;
   idsRoles?: string[];
   config?: IConfigPermiso;
   // Virtuals

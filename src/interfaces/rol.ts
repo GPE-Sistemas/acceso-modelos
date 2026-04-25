@@ -90,6 +90,7 @@ export type AccionesRol =
   | 'Movimientos - Ver propietarios'
   | 'Movimientos - Ver visitas activas'
   | 'Movimientos - Buscar visitantes'
+  | 'Movimientos - Buscar vehiculos'
   // *******************************************
   // MODULO EVENTOS
   // *******************************************

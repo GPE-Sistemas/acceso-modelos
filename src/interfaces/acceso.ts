@@ -1,7 +1,6 @@
 import { IGeoJSONPoint } from '../auxiliares/geojson';
 import { ICliente } from './cliente';
 import { IComplejo } from './complejo';
-import { IDispositivo } from './dispositivo';
 
 export type ITipoAcceso = 'Ingreso' | 'Egreso' | 'Ambos';
 export type ITipoPersonaAcceso = 'Propietarios' | 'Visitas' | 'Ambos';
@@ -15,15 +14,13 @@ export interface IAcceso {
   habilitado?: boolean;
   tipo?: ITipoAcceso;
   tipoPersona?: ITipoPersonaAcceso;
-  idsDispositivos?: string[];
   ubicacion?: IGeoJSONPoint;
   // Populate
   cliente?: ICliente;
   complejo?: IComplejo;
-  dispositivos?: IDispositivo[];
 }
 
-type OmitirPopulate = 'cliente' | 'complejo' | 'dispositivos';
+type OmitirPopulate = 'cliente' | 'complejo';
 
 type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
 

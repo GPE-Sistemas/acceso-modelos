@@ -57,6 +57,11 @@ export type AccionesRol =
   | 'Hardware - Crear credenciales'
   | 'Hardware - Editar credenciales'
   | 'Hardware - Eliminar credenciales'
+  // Relación dispositivo-acceso
+  | 'Hardware - Ver dispositivos acceso'
+  | 'Hardware - Crear dispositivos acceso'
+  | 'Hardware - Editar dispositivos acceso'
+  | 'Hardware - Eliminar dispositivos acceso'
   // *******************************************
   // MODULO VISITAS
   // *******************************************

@@ -80,7 +80,7 @@ type Exactly<T, U extends T> = T & { [K in Exclude<keyof U, keyof T>]: never };
 
 ## `AccionesRol` — agregar acciones nuevas
 
-El tipo `AccionesRol` en `src/interfaces/rol.ts` es la fuente de verdad para las acciones habilitables en roles. Módulos actuales: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`.
+El tipo `AccionesRol` en `src/interfaces/rol.ts` es la fuente de verdad para las acciones habilitables en roles. Módulos actuales: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`, `Publicaciones`.
 
 **Hardware** incluye acciones para: `accesos`, `dispositivos`, `credenciales`, y `dispositivos acceso` (relación `IDispositivoAcceso`).
 

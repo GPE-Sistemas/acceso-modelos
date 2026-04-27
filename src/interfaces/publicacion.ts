@@ -1,5 +1,5 @@
 import { IComplejo } from './complejo';
-import { IUsuario } from './usuario';
+import { IPermiso } from './permiso';
 
 export type ETipoBloque =
   | 'texto'
@@ -44,13 +44,13 @@ export interface IPublicacion {
   fechaInicio?: string;
   fechaFin?: string | null;  // null = permanente
   bloques?: IBloque[];
-  idUsuarioCarga?: string;
+  idPermisoCarga?: string;
   // Populate
   complejo?: IComplejo;
-  usuarioCarga?: IUsuario;
+  permisoCarga?: IPermiso;
 }
 
-type OmitirPopulate = 'complejo' | 'usuarioCarga';
+type OmitirPopulate = 'complejo' | 'permisoCarga';
 
 type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
 

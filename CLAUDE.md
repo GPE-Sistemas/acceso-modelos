@@ -57,7 +57,7 @@ import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
 | `vehiculo.ts` | `IVehiculo`, `ICreateVehiculo` |
 | `vinculo-vehiculo.ts` | `IVinculoVehiculo`, `ITipoVinculo` |
 | `visitante.ts` | `IVisitante`, `ICreateVisitante` |
-| `publicacion.ts` | `IPublicacion`, `IBloque`, `ICreatePublicacion`, `IUpdatePublicacion`, `ETipoBloque`, `ECategoriaPublicacion`, `EEstadoPublicacion` |
+| `publicacion.ts` | `IPublicacion`, `IBloque`, `ICreatePublicacion`, `IUpdatePublicacion`, `ETipoBloque`, `ECategoriaPublicacion`, `EEstadoPublicacion` — `idPermisoCarga` registra quién creó; populate `permisoCarga` da acceso al `IPermiso` y de ahí al usuario |
 
 ---
 

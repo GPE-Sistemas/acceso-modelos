@@ -100,7 +100,14 @@ export type AccionesRol =
   // MODULO EVENTOS
   // *******************************************
   | 'Eventos - Ver eventos'
-  | 'Eventos - Crear eventos';
+  | 'Eventos - Crear eventos'
+  // *******************************************
+  // MODULO PUBLICACIONES
+  // *******************************************
+  | 'Publicaciones - Ver publicaciones'
+  | 'Publicaciones - Crear publicaciones'
+  | 'Publicaciones - Editar publicaciones'
+  | 'Publicaciones - Eliminar publicaciones';
 
 export type IAlcanceRol = 'Global' | 'Cliente' | 'Complejo';
 

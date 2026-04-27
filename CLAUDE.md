@@ -45,7 +45,8 @@ import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
 | `cliente.ts` | `ICliente`, `ITipoCliente`, `ICreateCliente`, `IUpdateCliente` |
 | `complejo.ts` | `IComplejo`, `ITipoComplejo`, `ICreateComplejo`, `IUpdateComplejo` |
 | `credencial-dispositivo.ts` | `ICredencialDispositivo`, `ICreateCredencialDispositivo` |
-| `dispositivo.ts` | `IDispositivo`, `ICreateDispositivo`, `IUpdateDispositivo` |
+| `dispositivo.ts` | `IDispositivo`, `ICreateDispositivo`, `IUpdateDispositivo`, `IConfigDispositivo` |
+| `dispositivo-acceso.ts` | `IDispositivoAcceso`, `ICreateDispositivoAcceso`, `IUpdateDispositivoAcceso`, `IComportamientoCredencialValida`, `IComportamientoCredencialInvalida` |
 | `evento.ts` | `IEvento` — estructura pendiente de definición |
 | `evento-visita.ts` | `IEventoVisita`, `IEstadoEventoVisita`, `ICreateEventoVisita` |
 | `ingreso-egreso.ts` | `IIngresoEgreso`, `ICreateIngresoEgreso` — entidad de alto volumen |
@@ -79,6 +80,8 @@ type Exactly<T, U extends T> = T & { [K in Exclude<keyof U, keyof T>]: never };
 ## `AccionesRol` — agregar acciones nuevas
 
 El tipo `AccionesRol` en `src/interfaces/rol.ts` es la fuente de verdad para las acciones habilitables en roles. Módulos actuales: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`.
+
+**Hardware** incluye acciones para: `accesos`, `dispositivos`, `credenciales`, y `dispositivos acceso` (relación `IDispositivoAcceso`).
 
 Para agregar acciones de un módulo nuevo:
 1. Agregar al union type en `src/interfaces/rol.ts`

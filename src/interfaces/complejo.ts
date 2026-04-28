@@ -1,6 +1,10 @@
 import { ICliente } from './cliente';
 
 export interface IConfigComplejo {
+  imagenes?: {
+    logo?: string;
+    banner?: string;
+  };
   [key: string]: any;
 }
 

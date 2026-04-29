@@ -17,6 +17,7 @@ export type AccionesRol =
   | 'Administración - Editar complejos'
   | 'Administración - Eliminar complejos'
   | 'Administración - Deshabilitar / habilitar complejos'
+  | 'Administración - Editar configuración complejos'
   // Permisos
   | 'Administración - Ver permisos'
   | 'Administración - Crear permisos'

@@ -96,6 +96,9 @@ export type AccionesRol =
   | 'Movimientos - Ver visitas activas'
   | 'Movimientos - Buscar visitantes'
   | 'Movimientos - Buscar vehiculos'
+  | 'Movimientos - Ver vinculos evento ingreso'
+  | 'Movimientos - Crear vinculos evento ingreso'
+  | 'Movimientos - Eliminar vinculos evento ingreso'
   // *******************************************
   // MODULO EVENTOS
   // *******************************************

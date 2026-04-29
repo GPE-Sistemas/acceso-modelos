@@ -14,4 +14,5 @@ export * from './usuario';
 export * from './visitante';
 export * from './vehiculo';
 export * from './vinculo-vehiculo';
+export * from './vinculo-evento-ingreso';
 export * from './publicacion';

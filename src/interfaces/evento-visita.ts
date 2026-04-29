@@ -6,7 +6,7 @@ import { IVehiculo } from './vehiculo';
 import { IVisitante } from './visitante';
 
 export type ITipoEventoVisita = 'Particular' | 'Proveedor';
-export type IEstadoEventoVisita = 'Pendiente' | 'Activa' | 'Cerrada' | 'Vencida';
+export type IEstadoEventoVisita = 'Pendiente' | 'Activa' | 'Parcial' | 'Cerrada' | 'Vencida';
 export type ICreadoPorEventoVisita = 'Propietario' | 'Guardia';
 
 export interface IEventoVisita {
@@ -24,6 +24,8 @@ export interface IEventoVisita {
   fechaDesde?: string;
   fechaHasta?: string;
   estado?: IEstadoEventoVisita;
+  permiteAccesoMultiple?: boolean;     // si true: egreso no cierra el evento; cierre solo por vencimiento de ventana
+  idsVisitantesIngresados?: string[];  // cache: unión de idsVisitantesAplicados de los vínculos tipo 'Ingreso'
   // Populate
   cliente?: ICliente;
   complejo?: IComplejo;

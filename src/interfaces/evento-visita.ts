@@ -26,6 +26,7 @@ export interface IEventoVisita {
   estado?: IEstadoEventoVisita;
   permiteAccesoMultiple?: boolean;     // si true: egreso no cierra el evento; cierre solo por vencimiento de ventana
   idsVisitantesIngresados?: string[];  // cache: unión de idsVisitantesAplicados de los vínculos tipo 'Ingreso'
+  idsVisitantesAdentro?: string[];     // cache: idsVisitantesIngresados − idsVisitantesEgresados (quienes están actualmente adentro)
   observaciones?: string;
   // Populate
   cliente?: ICliente;

@@ -10,7 +10,7 @@ export interface IUbicacionEmergencia {
   lat: number;
   lng: number;
   accuracy?: number;     // metros
-  fuente?: 'gps' | 'network';
+  fuente?: 'gps' | 'network' | 'cache';
 }
 
 export interface IEmergencia {

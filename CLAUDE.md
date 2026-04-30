@@ -106,6 +106,21 @@ Para agregar acciones de un módulo nuevo:
 
 ---
 
+## ⚠️ Solo importar TYPES desde servicios Node (datos / api / dispositivos)
+
+`acceso-modelos` no compila — Node no puede resolver `require('acceso-modelos/src')` en runtime porque no existe `src/index.js`. tsc elimina los imports type-only al compilar a JS, pero **deja los imports de valores** (constantes, enums runtime, funciones).
+
+**No importar valores desde `acceso-modelos/src` en backend Node.** Si necesitás una constante (ej. `NOTIF_PREFERENCIAS_DEFAULT`, `CATEGORIAS_NOTIFICACION`):
+
+1. **Acceso-web (Angular)**: importar normal, Angular compila el TS y resuelve.
+2. **Backend Node**: declarar la constante en un archivo local del servicio (ej. `entidades/<entidad>/defaults.ts`) tipándola con la interface importada como type.
+
+Síntoma del bug en runtime: `Error: Cannot find module 'acceso-modelos/src'` al levantar el servicio.
+
+Las constantes exportadas en este repo (`CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT`) están pensadas para acceso-web; replicarlas localmente en cada servicio Node.
+
+---
+
 ## ADVERTENCIA: `src/externos/` — código de otro proyecto
 
 `src/externos/` contiene interfaces de un proyecto anterior (Chirpstack/LoRa, OSRM, Tripero, OAuth) que **se exportan inadvertidamente** desde el paquete. No pertenecen al sistema Acceso. No usar ninguna de estas interfaces en los servicios de Acceso.

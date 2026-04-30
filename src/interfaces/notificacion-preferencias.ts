@@ -5,7 +5,8 @@ export type ICategoriaNotificacion =
   | 'pub_evento'
   | 'pub_mantenimiento'
   | 'pub_urgente'
-  | 'pub_informacion';
+  | 'pub_informacion'
+  | 'emergencia_recibida';   // declarada para uso futuro: mobile guardia + contactos de emergencia
 
 export const CATEGORIAS_NOTIFICACION: ICategoriaNotificacion[] = [
   'visitor_entry',
@@ -15,6 +16,7 @@ export const CATEGORIAS_NOTIFICACION: ICategoriaNotificacion[] = [
   'pub_mantenimiento',
   'pub_urgente',
   'pub_informacion',
+  'emergencia_recibida',
 ];
 
 export type ICategoriasNotificacionMap = Record<ICategoriaNotificacion, boolean>;
@@ -46,4 +48,5 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   pub_mantenimiento: true,
   pub_urgente: true,
   pub_informacion: true,
+  emergencia_recibida: true,
 };

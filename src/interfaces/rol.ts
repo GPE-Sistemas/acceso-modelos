@@ -111,7 +111,23 @@ export type AccionesRol =
   | 'Publicaciones - Ver publicaciones'
   | 'Publicaciones - Crear publicaciones'
   | 'Publicaciones - Editar publicaciones'
-  | 'Publicaciones - Eliminar publicaciones';
+  | 'Publicaciones - Eliminar publicaciones'
+  // *******************************************
+  // MODULO EMERGENCIAS
+  // *******************************************
+  // Botones de emergencia (catálogo)
+  | 'Emergencias - Ver botones'
+  | 'Emergencias - Crear botones'
+  | 'Emergencias - Editar botones'
+  | 'Emergencias - Eliminar botones'
+  // Configuración por complejo (qué botones y orden ve la app mobile)
+  | 'Emergencias - Ver configuración'
+  | 'Emergencias - Editar configuración'
+  // Operación
+  | 'Emergencias - Enviar emergencia'        // mobile (UF)
+  | 'Emergencias - Ver emergencias'          // panel guardia
+  | 'Emergencias - Atender emergencias'      // tomar caso, cambiar estado, registrar interacciones, chatear
+  | 'Emergencias - Eliminar emergencias';
 
 export type IAlcanceRol = 'Global' | 'Cliente' | 'Complejo';
 

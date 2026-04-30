@@ -58,6 +58,8 @@ import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
 | `vinculo-vehiculo.ts` | `IVinculoVehiculo`, `ITipoVinculo` |
 | `visitante.ts` | `IVisitante`, `ICreateVisitante` |
 | `publicacion.ts` | `IPublicacion`, `IBloque`, `ICreatePublicacion`, `IUpdatePublicacion`, `ETipoBloque`, `ECategoriaPublicacion`, `EEstadoPublicacion` — `idPermisoCarga` registra quién creó; populate `permisoCarga` da acceso al `IPermiso` y de ahí al usuario |
+| `device-token.ts` | `IDeviceToken`, `IDevicePlatform`, `ICreateDeviceToken`, `IUpdateDeviceToken` — token FCM por device, vinculado a `idUsuario` (un usuario puede tener N devices) |
+| `notificacion-preferencias.ts` | `INotificacionPreferencias`, `ICategoriaNotificacion`, `ICategoriasNotificacionMap`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT` — preferencias de push por **permiso** (no por usuario): un usuario con N permisos UF puede tener prefs distintas en cada uno |
 
 ---
 

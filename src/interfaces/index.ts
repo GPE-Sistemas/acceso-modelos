@@ -16,3 +16,5 @@ export * from './vehiculo';
 export * from './vinculo-vehiculo';
 export * from './vinculo-evento-ingreso';
 export * from './publicacion';
+export * from './device-token';
+export * from './notificacion-preferencias';

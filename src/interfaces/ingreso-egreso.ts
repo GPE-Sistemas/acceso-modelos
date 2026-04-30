@@ -27,6 +27,7 @@ export interface IIngresoEgreso {
   idAcceso?: string;
   idVehiculo?: string;
   imagenes?: string[];
+  observaciones?: string;
   // Populate
   cliente?: ICliente;
   complejo?: IComplejo;

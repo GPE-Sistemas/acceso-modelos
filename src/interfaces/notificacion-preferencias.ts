@@ -6,7 +6,9 @@ export type ICategoriaNotificacion =
   | 'pub_mantenimiento'
   | 'pub_urgente'
   | 'pub_informacion'
-  | 'emergencia_recibida';   // declarada para uso futuro: mobile guardia + contactos de emergencia
+  | 'emergencia_recibida'   // declarada para uso futuro: mobile guardia + contactos de emergencia
+  | 'emergencia_mensaje'    // mobile UF: nuevo mensaje en chat de emergencia propia
+  | 'emergencia_estado';    // mobile UF: cambio de estado en emergencia propia
 
 export const CATEGORIAS_NOTIFICACION: ICategoriaNotificacion[] = [
   'visitor_entry',
@@ -17,6 +19,8 @@ export const CATEGORIAS_NOTIFICACION: ICategoriaNotificacion[] = [
   'pub_urgente',
   'pub_informacion',
   'emergencia_recibida',
+  'emergencia_mensaje',
+  'emergencia_estado',
 ];
 
 export type ICategoriasNotificacionMap = Record<ICategoriaNotificacion, boolean>;
@@ -49,4 +53,6 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   pub_urgente: true,
   pub_informacion: true,
   emergencia_recibida: true,
+  emergencia_mensaje: true,
+  emergencia_estado: true,
 };

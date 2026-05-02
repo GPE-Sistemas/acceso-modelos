@@ -92,6 +92,7 @@ export type AccionesRol =
   // *******************************************
   // MODULO MOVIMIENTOS
   // *******************************************
+  | 'Movimientos - Ver panel de guardia'
   | 'Movimientos - Ver ingresos egresos'
   | 'Movimientos - Registrar ingreso egreso'
   | 'Movimientos - Ver propietarios'

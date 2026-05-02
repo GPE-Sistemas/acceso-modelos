@@ -48,7 +48,7 @@ import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
 | `dispositivo.ts` | `IDispositivo`, `ICreateDispositivo`, `IUpdateDispositivo`, `IConfigDispositivo` |
 | `dispositivo-acceso.ts` | `IDispositivoAcceso`, `ICreateDispositivoAcceso`, `IUpdateDispositivoAcceso`, `IComportamientoCredencialValida`, `IComportamientoCredencialInvalida` |
 | `evento.ts` | `IEvento` — estructura pendiente de definición |
-| `evento-visita.ts` | `IEventoVisita`, `IEstadoEventoVisita`, `ICreateEventoVisita` |
+| `evento-visita.ts` | `IEventoVisita`, `IEstadoEventoVisita`, `IEstadoAprobacionEventoVisita`, `ICreateEventoVisita` — incluye flujo de aprobación (`estadoAprobacion`, `aprobadoPorIdPermiso`, `fechaAprobacion`, `motivoRechazo`) ortogonal a `estado` |
 | `ingreso-egreso.ts` | `IIngresoEgreso`, `ICreateIngresoEgreso` — entidad de alto volumen |
 | `permiso.ts` | `IPermiso`, `IPermisoCliente`, `IPermisoComplejo`, `IPermisoUnidadFuncional`, `INivelPermiso` |
 | `rol.ts` | `IRol`, `IRolGlobal`, `IRolCliente`, `IRolComplejo`, `AccionesRol` |
@@ -59,7 +59,7 @@ import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
 | `visitante.ts` | `IVisitante`, `ICreateVisitante` |
 | `publicacion.ts` | `IPublicacion`, `IBloque`, `ICreatePublicacion`, `IUpdatePublicacion`, `ETipoBloque`, `ECategoriaPublicacion`, `EEstadoPublicacion` — `idPermisoCarga` registra quién creó; populate `permisoCarga` da acceso al `IPermiso` y de ahí al usuario |
 | `device-token.ts` | `IDeviceToken`, `IDevicePlatform`, `ICreateDeviceToken`, `IUpdateDeviceToken` — token FCM por device, vinculado a `idUsuario` (un usuario puede tener N devices) |
-| `notificacion-preferencias.ts` | `INotificacionPreferencias`, `ICategoriaNotificacion`, `ICategoriasNotificacionMap`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT` — preferencias de push por **permiso** (no por usuario). Categorías de emergencias: `emergencia_mensaje` (mobile UF: nuevo mensaje en chat de emergencia propia), `emergencia_estado` (mobile UF: cambio de estado en emergencia propia), `emergencia_recibida` (declarada para uso futuro: mobile guardia + contactos de emergencia) |
+| `notificacion-preferencias.ts` | `INotificacionPreferencias`, `ICategoriaNotificacion`, `ICategoriasNotificacionMap`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT` — preferencias de push por **permiso** (no por usuario). Categorías: visitor_entry/exit, pub_*, emergencia_* (mensaje/estado/recibida), `visita_pendiente_aprobacion` (mobile UF: alguien creó un evento que requiere mi aprobación), `visita_resuelta` (mobile UF: mi evento fue aprobado/rechazado) |
 | `boton-emergencia.ts` | `IBotonEmergencia`, `IConfigBotonEmergencia`, `ICreateBotonEmergencia`, `IUpdateBotonEmergencia` — catálogo de botones; `global=true` solo Proveedor |
 | `config-botones-complejo.ts` | `IConfigBotonesComplejo` — entidad por complejo; `idsBotones[]` define orden visible en mobile (índice único en `idComplejo`) |
 | `emergencia.ts` | `IEmergencia`, `IEstadoEmergencia` (`Pendiente \| EnAtencion \| Resuelta \| Descartada`), `IUbicacionEmergencia` — emisor por `idPermiso`; ubicación obligatoria al crear |
@@ -90,6 +90,8 @@ type Exactly<T, U extends T> = T & { [K in Exclude<keyof U, keyof T>]: never };
 El tipo `AccionesRol` en `src/interfaces/rol.ts` es la fuente de verdad para las acciones habilitables en roles. Módulos actuales: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`, `Publicaciones`.
 
 **Hardware** incluye acciones para: `accesos`, `dispositivos`, `credenciales`, y `dispositivos acceso` (relación `IDispositivoAcceso`).
+
+**Visitas** incluye: `Ver/Crear/Editar/Eliminar eventos`, `Aprobar eventos` (otorga permiso de auto-aprobación al crear y autoriza el endpoint `PUT /eventos-visita/:id/aprobacion`), `Ver/Crear/Editar/Eliminar visitantes`. La acción `Aprobar eventos` aplica solo a nivel UF — a nivel Complejo no auto-aprueba contra UF Privada.
 
 **Emergencias** incluye: `Ver/Crear/Editar/Eliminar botones` (catálogo), `Ver/Editar configuración` (qué botones ve cada complejo en mobile), `Enviar emergencia` (mobile UF), `Ver emergencias` + `Atender emergencias` (panel guardia: cambiar estado, registrar interacciones, chatear), `Eliminar emergencias`.
 

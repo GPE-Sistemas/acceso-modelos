@@ -71,6 +71,7 @@ export type AccionesRol =
   | 'Visitas - Crear eventos'
   | 'Visitas - Editar eventos'
   | 'Visitas - Eliminar eventos'
+  | 'Visitas - Aprobar eventos'
   // Visitantes
   | 'Visitas - Ver visitantes'
   | 'Visitas - Crear visitantes'

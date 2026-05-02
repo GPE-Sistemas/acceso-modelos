@@ -8,7 +8,9 @@ export type ICategoriaNotificacion =
   | 'pub_informacion'
   | 'emergencia_recibida'   // declarada para uso futuro: mobile guardia + contactos de emergencia
   | 'emergencia_mensaje'    // mobile UF: nuevo mensaje en chat de emergencia propia
-  | 'emergencia_estado';    // mobile UF: cambio de estado en emergencia propia
+  | 'emergencia_estado'     // mobile UF: cambio de estado en emergencia propia
+  | 'visita_pendiente_aprobacion'  // mobile UF: alguien creó un evento de visita que requiere mi aprobación
+  | 'visita_resuelta';      // mobile UF: mi evento de visita fue aprobado o rechazado
 
 export const CATEGORIAS_NOTIFICACION: ICategoriaNotificacion[] = [
   'visitor_entry',
@@ -21,6 +23,8 @@ export const CATEGORIAS_NOTIFICACION: ICategoriaNotificacion[] = [
   'emergencia_recibida',
   'emergencia_mensaje',
   'emergencia_estado',
+  'visita_pendiente_aprobacion',
+  'visita_resuelta',
 ];
 
 export type ICategoriasNotificacionMap = Record<ICategoriaNotificacion, boolean>;
@@ -55,4 +59,6 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   emergencia_recibida: true,
   emergencia_mensaje: true,
   emergencia_estado: true,
+  visita_pendiente_aprobacion: true,
+  visita_resuelta: true,
 };

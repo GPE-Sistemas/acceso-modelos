@@ -8,6 +8,7 @@ import { IVisitante } from './visitante';
 export type ITipoEventoVisita = 'Particular' | 'Proveedor';
 export type IEstadoEventoVisita = 'Pendiente' | 'Activa' | 'Parcial' | 'Cerrada' | 'Vencida';
 export type ICreadoPorEventoVisita = 'Propietario' | 'Guardia';
+export type IEstadoAprobacionEventoVisita = 'Pendiente' | 'Aprobado' | 'Rechazado';
 
 export interface IEventoVisita {
   _id?: string;
@@ -28,6 +29,11 @@ export interface IEventoVisita {
   idsVisitantesIngresados?: string[];  // cache: unión de idsVisitantesAplicados de los vínculos tipo 'Ingreso'
   idsVisitantesAdentro?: string[];     // cache: idsVisitantesIngresados − idsVisitantesEgresados (quienes están actualmente adentro)
   observaciones?: string;
+  // Aprobación
+  estadoAprobacion?: IEstadoAprobacionEventoVisita; // ortogonal a estado: ciclo de autorización del evento
+  aprobadoPorIdPermiso?: string;
+  fechaAprobacion?: string;
+  motivoRechazo?: string;
   // Populate
   cliente?: ICliente;
   complejo?: IComplejo;
@@ -36,6 +42,7 @@ export interface IEventoVisita {
   permiso?: IPermiso;
   visitantes?: IVisitante[];
   vehiculos?: IVehiculo[];
+  aprobadoPorPermiso?: IPermiso;
 }
 
 type OmitirPopulate =
@@ -45,7 +52,8 @@ type OmitirPopulate =
   | 'unidadFuncionalDestino'
   | 'permiso'
   | 'visitantes'
-  | 'vehiculos';
+  | 'vehiculos'
+  | 'aprobadoPorPermiso';
 
 type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
 

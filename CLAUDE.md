@@ -65,6 +65,8 @@ import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
 | `emergencia.ts` | `IEmergencia`, `IEstadoEmergencia` (`Pendiente \| EnAtencion \| Resuelta \| Descartada`), `IUbicacionEmergencia` — emisor por `idPermiso`; ubicación obligatoria al crear |
 | `interaccion-emergencia.ts` | `IInteraccionEmergencia`, `ITipoInteraccionEmergencia`, `IAccionExternaEmergencia` — bitácora del guardia (CambioEstado, Comentario, AccionExterna) |
 | `mensaje-emergencia.ts` | `IMensajeEmergencia` — chat acotado a una emergencia; vive y muere con ella |
+| `contacto-usuario.ts` | `IContactoUsuario`, `IEstadoContactoUsuario` (`Pendiente \| Aceptado \| Rechazado \| Bloqueado`), `ICreateContactoUsuario`, `IUpdateContactoUsuario` — vínculo unidireccional usuario→usuario para alertas peer-to-peer. Receptor controla aceptar/rechazar/bloquear/silenciar |
+| `preferencias-contactos.ts` | `IPreferenciasContactos`, `PREFERENCIAS_CONTACTOS_DEFAULT` — prefs **por usuario** (cross-permiso). Campos: `recibirAlertas`, `recibirInvitaciones`. La constante runtime es para acceso-web; backends Node deben replicar local |
 
 ---
 

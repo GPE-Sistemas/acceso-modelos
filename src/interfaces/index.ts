@@ -23,4 +23,7 @@ export * from './config-botones-complejo';
 export * from './emergencia';
 export * from './interaccion-emergencia';
 export * from './mensaje-emergencia';
+export * from './contacto-usuario';
+export * from './preferencias-contactos';
 export * from './dashboard';
+

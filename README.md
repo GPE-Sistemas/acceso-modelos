@@ -248,7 +248,7 @@ erDiagram
 
   IEventoVisita {
     string _id PK
-    string tipo "'Particular' | 'Proveedor'"
+    string tipo "'Particular' | 'Servicio' | 'Retiro' | 'Entrega'"
     string estado "'Pendiente' | 'Activa' | 'Cerrada' | 'Vencida'"
     string creadoPor "'Propietario' | 'Guardia'"
     string idCliente FK

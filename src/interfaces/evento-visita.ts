@@ -5,7 +5,7 @@ import { IUnidadFuncional } from './unidad-funcional';
 import { IVehiculo } from './vehiculo';
 import { IVisitante } from './visitante';
 
-export type ITipoEventoVisita = 'Particular' | 'Proveedor';
+export type ITipoEventoVisita = 'Particular' | 'Servicio' | 'Retiro' | 'Entrega';
 export type IEstadoEventoVisita = 'Pendiente' | 'Activa' | 'Parcial' | 'Cerrada' | 'Vencida';
 export type ICreadoPorEventoVisita = 'Propietario' | 'Guardia';
 export type IEstadoAprobacionEventoVisita = 'Pendiente' | 'Aprobado' | 'Rechazado';

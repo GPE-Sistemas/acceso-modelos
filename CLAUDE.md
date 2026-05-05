@@ -48,7 +48,7 @@ import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
 | `dispositivo.ts` | `IDispositivo`, `ICreateDispositivo`, `IUpdateDispositivo`, `IConfigDispositivo` |
 | `dispositivo-acceso.ts` | `IDispositivoAcceso`, `ICreateDispositivoAcceso`, `IUpdateDispositivoAcceso`, `IComportamientoCredencialValida`, `IComportamientoCredencialInvalida` |
 | `evento.ts` | `IEvento` — estructura pendiente de definición |
-| `evento-visita.ts` | `IEventoVisita`, `IEstadoEventoVisita`, `IEstadoAprobacionEventoVisita`, `ICreateEventoVisita` — incluye flujo de aprobación (`estadoAprobacion`, `aprobadoPorIdPermiso`, `fechaAprobacion`, `motivoRechazo`) ortogonal a `estado` |
+| `evento-visita.ts` | `IEventoVisita`, `IEstadoEventoVisita`, `IEstadoAprobacionEventoVisita`, `IFrecuenciaRecurrencia`, `IRecurrenciaEventoVisita`, `ICreateEventoVisita` — flujo de aprobación (`estadoAprobacion`, `aprobadoPorIdPermiso`, `fechaAprobacion`, `motivoRechazo`) ortogonal a `estado`. Variante recurrente: subdoc opcional `recurrencia` + segunda aprobación `estadoAprobacionRecurrente` / `aprobadoRecurrentePorIdPermiso` / `fechaAprobacionRecurrente` / `motivoRechazoRecurrente` (admin Complejo) |
 | `ingreso-egreso.ts` | `IIngresoEgreso`, `ICreateIngresoEgreso` — entidad de alto volumen |
 | `permiso.ts` | `IPermiso`, `IPermisoCliente`, `IPermisoComplejo`, `IPermisoUnidadFuncional`, `INivelPermiso` |
 | `rol.ts` | `IRol`, `IRolGlobal`, `IRolCliente`, `IRolComplejo`, `AccionesRol` |
@@ -93,7 +93,7 @@ El tipo `AccionesRol` en `src/interfaces/rol.ts` es la fuente de verdad para las
 
 **Hardware** incluye acciones para: `accesos`, `dispositivos`, `credenciales`, y `dispositivos acceso` (relación `IDispositivoAcceso`).
 
-**Visitas** incluye: `Ver/Crear/Editar/Eliminar eventos`, `Aprobar eventos` (otorga permiso de auto-aprobación al crear y autoriza el endpoint `PUT /eventos-visita/:id/aprobacion`), `Ver/Crear/Editar/Eliminar visitantes`. La acción `Aprobar eventos` aplica solo a nivel UF — a nivel Complejo no auto-aprueba contra UF Privada.
+**Visitas** incluye: `Ver/Crear/Editar/Eliminar eventos`, `Aprobar eventos` (auto-aprobación al crear y autoriza `PUT /eventos-visita/:id/aprobacion`), `Aprobar eventos recurrentes` (auto-aprobación de la variante recurrente al crear y autoriza `PUT /eventos-visita/:id/aprobacion-recurrente`; típicamente asignada a permisos nivel Complejo), `Ver/Crear/Editar/Eliminar visitantes`.
 
 **Emergencias** incluye: `Ver/Crear/Editar/Eliminar botones` (catálogo), `Ver/Editar configuración` (qué botones ve cada complejo en mobile), `Enviar emergencia` (mobile UF), `Ver emergencias` + `Atender emergencias` (panel guardia: cambiar estado, registrar interacciones, chatear), `Eliminar emergencias`.
 

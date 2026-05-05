@@ -10,6 +10,16 @@ export type IEstadoEventoVisita = 'Pendiente' | 'Activa' | 'Parcial' | 'Cerrada'
 export type ICreadoPorEventoVisita = 'Propietario' | 'Guardia';
 export type IEstadoAprobacionEventoVisita = 'Pendiente' | 'Aprobado' | 'Rechazado';
 
+export type IFrecuenciaRecurrencia = 'Diaria' | 'Semanal' | 'Mensual' | 'Indeterminada';
+
+export interface IRecurrenciaEventoVisita {
+  frecuencia: IFrecuenciaRecurrencia;
+  diasSemana?: number[];   // 0..6 (0=domingo). Sólo para frecuencia 'Semanal'.
+  diaMes?: number;         // 1..31. Sólo para frecuencia 'Mensual'.
+  horaDesde?: string;      // 'HH:mm' — ventana intra-día opcional
+  horaHasta?: string;      // 'HH:mm' — opcional. Si horaHasta < horaDesde se interpreta cruzando medianoche.
+}
+
 export interface IEventoVisita {
   _id?: string;
   fechaCreacion?: string;
@@ -29,11 +39,18 @@ export interface IEventoVisita {
   idsVisitantesIngresados?: string[];  // cache: unión de idsVisitantesAplicados de los vínculos tipo 'Ingreso'
   idsVisitantesAdentro?: string[];     // cache: idsVisitantesIngresados − idsVisitantesEgresados (quienes están actualmente adentro)
   observaciones?: string;
-  // Aprobación
-  estadoAprobacion?: IEstadoAprobacionEventoVisita; // ortogonal a estado: ciclo de autorización del evento
+  // Recurrencia (presencia => evento recurrente). Reusa fechaDesde/fechaHasta del evento.
+  recurrencia?: IRecurrenciaEventoVisita;
+  // Aprobación UF (regla actual)
+  estadoAprobacion?: IEstadoAprobacionEventoVisita;
   aprobadoPorIdPermiso?: string;
   fechaAprobacion?: string;
   motivoRechazo?: string;
+  // Aprobación recurrente (admin Complejo). Sólo aplica si recurrencia presente.
+  estadoAprobacionRecurrente?: IEstadoAprobacionEventoVisita;
+  aprobadoRecurrentePorIdPermiso?: string;
+  fechaAprobacionRecurrente?: string;
+  motivoRechazoRecurrente?: string;
   // Populate
   cliente?: ICliente;
   complejo?: IComplejo;
@@ -43,6 +60,7 @@ export interface IEventoVisita {
   visitantes?: IVisitante[];
   vehiculos?: IVehiculo[];
   aprobadoPorPermiso?: IPermiso;
+  aprobadoRecurrentePorPermiso?: IPermiso;
 }
 
 type OmitirPopulate =
@@ -53,7 +71,8 @@ type OmitirPopulate =
   | 'permiso'
   | 'visitantes'
   | 'vehiculos'
-  | 'aprobadoPorPermiso';
+  | 'aprobadoPorPermiso'
+  | 'aprobadoRecurrentePorPermiso';
 
 type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
 

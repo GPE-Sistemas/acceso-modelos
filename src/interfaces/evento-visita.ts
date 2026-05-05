@@ -10,14 +10,10 @@ export type IEstadoEventoVisita = 'Pendiente' | 'Activa' | 'Parcial' | 'Cerrada'
 export type ICreadoPorEventoVisita = 'Propietario' | 'Guardia';
 export type IEstadoAprobacionEventoVisita = 'Pendiente' | 'Aprobado' | 'Rechazado';
 
-export type IFrecuenciaRecurrencia = 'Diaria' | 'Semanal' | 'Mensual' | 'Indeterminada';
-
 export interface IRecurrenciaEventoVisita {
-  frecuencia: IFrecuenciaRecurrencia;
-  diasSemana?: number[];   // 0..6 (0=domingo). Sólo para frecuencia 'Semanal'.
-  diaMes?: number;         // 1..31. Sólo para frecuencia 'Mensual'.
-  horaDesde?: string;      // 'HH:mm' — ventana intra-día opcional
-  horaHasta?: string;      // 'HH:mm' — opcional. Si horaHasta < horaDesde se interpreta cruzando medianoche.
+  diasSemana: number[];   // 0..6 (0=domingo). Lista de días que aplica. Si incluye los 7, equivale a "todos los días".
+  horaDesde?: string;     // 'HH:mm' — ventana intra-día opcional
+  horaHasta?: string;     // 'HH:mm' — opcional. Si horaHasta < horaDesde se interpreta cruzando medianoche.
 }
 
 export interface IEventoVisita {

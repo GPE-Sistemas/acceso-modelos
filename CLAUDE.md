@@ -48,7 +48,7 @@ import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
 | `dispositivo.ts` | `IDispositivo`, `ICreateDispositivo`, `IUpdateDispositivo`, `IConfigDispositivo` |
 | `dispositivo-acceso.ts` | `IDispositivoAcceso`, `ICreateDispositivoAcceso`, `IUpdateDispositivoAcceso`, `IComportamientoCredencialValida`, `IComportamientoCredencialInvalida` |
 | `evento.ts` | `IEvento` — estructura pendiente de definición |
-| `evento-visita.ts` | `IEventoVisita`, `IEstadoEventoVisita`, `IEstadoAprobacionEventoVisita`, `IFrecuenciaRecurrencia`, `IRecurrenciaEventoVisita`, `ICreateEventoVisita` — flujo de aprobación (`estadoAprobacion`, `aprobadoPorIdPermiso`, `fechaAprobacion`, `motivoRechazo`) ortogonal a `estado`. Variante recurrente: subdoc opcional `recurrencia` + segunda aprobación `estadoAprobacionRecurrente` / `aprobadoRecurrentePorIdPermiso` / `fechaAprobacionRecurrente` / `motivoRechazoRecurrente` (admin Complejo) |
+| `evento-visita.ts` | `IEventoVisita`, `IEstadoEventoVisita`, `IEstadoAprobacionEventoVisita`, `IRecurrenciaEventoVisita`, `ICreateEventoVisita` — flujo de aprobación (`estadoAprobacion`, `aprobadoPorIdPermiso`, `fechaAprobacion`, `motivoRechazo`) ortogonal a `estado`. Variante recurrente: subdoc opcional `recurrencia: { diasSemana, horaDesde?, horaHasta? }` + segunda aprobación `estadoAprobacionRecurrente` / `aprobadoRecurrentePorIdPermiso` / `fechaAprobacionRecurrente` / `motivoRechazoRecurrente` (admin Complejo) |
 | `ingreso-egreso.ts` | `IIngresoEgreso`, `ICreateIngresoEgreso` — entidad de alto volumen |
 | `permiso.ts` | `IPermiso`, `IPermisoCliente`, `IPermisoComplejo`, `IPermisoUnidadFuncional`, `INivelPermiso` |
 | `rol.ts` | `IRol`, `IRolGlobal`, `IRolCliente`, `IRolComplejo`, `AccionesRol` |

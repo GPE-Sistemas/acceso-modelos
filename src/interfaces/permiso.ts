@@ -5,7 +5,7 @@ import { RolSchema } from "./rol";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { UsuarioSchema } from "./usuario";
 
-export const ConfigPermisoSchema = z.object({});
+export const ConfigPermisoSchema = z.record(z.string(), z.any());
 
 export const NivelPermisoSchema = z.enum([
   "Cliente",
@@ -13,9 +13,7 @@ export const NivelPermisoSchema = z.enum([
   "Unidad Funcional",
 ]);
 
-export type IConfigPermiso = z.infer<typeof ConfigPermisoSchema> & {
-  [key: string]: any;
-};
+export type IConfigPermiso = z.infer<typeof ConfigPermisoSchema>;
 export type INivelPermiso = z.infer<typeof NivelPermisoSchema>;
 
 const PermisoBaseFields = {

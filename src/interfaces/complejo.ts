@@ -47,9 +47,7 @@ export const UpdateComplejoSchema = ComplejoSchema.omit({
 export type IConfigEmergenciasComplejo = z.infer<
   typeof ConfigEmergenciasComplejoSchema
 >;
-export type IConfigComplejo = z.infer<typeof ConfigComplejoSchema> & {
-  [key: string]: any;
-};
+export type IConfigComplejo = z.infer<typeof ConfigComplejoSchema>;
 export type ITipoComplejo = z.infer<typeof TipoComplejoSchema>;
 export type IComplejo = z.infer<typeof ComplejoSchema>;
 export type ICreateComplejo = z.infer<typeof CreateComplejoSchema>;

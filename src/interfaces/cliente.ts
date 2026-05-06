@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ConfigClienteSchema = z.object({});
+export const ConfigClienteSchema = z.record(z.string(), z.any());
 
 /**
  * Proveedor: el tenant del proveedor del software, con visibilidad global sobre todos los clientes.
@@ -27,9 +27,7 @@ export const UpdateClienteSchema = ClienteSchema.omit({
   fechaCreacion: true,
 }).partial();
 
-export type IConfigCliente = z.infer<typeof ConfigClienteSchema> & {
-  [key: string]: any;
-};
+export type IConfigCliente = z.infer<typeof ConfigClienteSchema>;
 export type ITipoCliente = z.infer<typeof TipoClienteSchema>;
 export type ICliente = z.infer<typeof ClienteSchema>;
 export type ICreateCliente = z.infer<typeof CreateClienteSchema>;

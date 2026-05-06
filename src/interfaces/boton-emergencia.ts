@@ -44,7 +44,7 @@ export const UpdateBotonEmergenciaSchema = BotonEmergenciaSchema.omit({
 
 export type IConfigBotonEmergencia = z.infer<
   typeof ConfigBotonEmergenciaSchema
-> & { [key: string]: any };
+>;
 export type IBotonEmergencia = z.infer<typeof BotonEmergenciaSchema>;
 export type ICreateBotonEmergencia = z.infer<
   typeof CreateBotonEmergenciaSchema

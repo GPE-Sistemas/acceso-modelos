@@ -5,7 +5,7 @@ import { ComplejoSchema } from "./complejo";
 
 export const TipoUnidadFuncionalSchema = z.enum(["Privada", "Común"]);
 
-export const ConfigUnidadFuncionalSchema = z.object({});
+export const ConfigUnidadFuncionalSchema = z.record(z.string(), z.any());
 
 export const UnidadFuncionalSchema = z.object({
     _id: z.string().optional(),
@@ -39,7 +39,7 @@ export const UpdateUnidadFuncionalSchema = UnidadFuncionalSchema.omit({
 export type ITipoUnidadFuncional = z.infer<typeof TipoUnidadFuncionalSchema>;
 export type IConfigUnidadFuncional = z.infer<
   typeof ConfigUnidadFuncionalSchema
-> & { [key: string]: any };
+>;
 export type IUnidadFuncional = z.infer<typeof UnidadFuncionalSchema>;
 export type ICreateUnidadFuncional = z.infer<typeof CreateUnidadFuncionalSchema>;
 export type IUpdateUnidadFuncional = z.infer<typeof UpdateUnidadFuncionalSchema>;

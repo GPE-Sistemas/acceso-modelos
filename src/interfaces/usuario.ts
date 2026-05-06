@@ -12,7 +12,7 @@ export const DatosPersonalesSchema = z.object({
     foto: z.string().optional(),
   });
 
-export const ConfigUsuarioSchema = z.object({});
+export const ConfigUsuarioSchema = z.record(z.string(), z.any());
 
 export const UsuarioSchema = z.object({
     _id: z.string().optional(),
@@ -36,9 +36,7 @@ export const UpdateUsuarioSchema = UsuarioSchema.omit({
 }).partial();
 
 export type IDatosPersonales = z.infer<typeof DatosPersonalesSchema>;
-export type IConfigUsuario = z.infer<typeof ConfigUsuarioSchema> & {
-  [key: string]: any;
-};
+export type IConfigUsuario = z.infer<typeof ConfigUsuarioSchema>;
 export type IUsuario = z.infer<typeof UsuarioSchema>;
 export type ICreateUsuario = z.infer<typeof CreateUsuarioSchema>;
 export type IUpdateUsuario = z.infer<typeof UpdateUsuarioSchema>;

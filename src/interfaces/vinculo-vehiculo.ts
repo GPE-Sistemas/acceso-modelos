@@ -1,10 +1,17 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IPermiso } from './permiso';
-import { IVehiculo } from './vehiculo';
-import { IVisitante } from './visitante';
+import { z } from "zod";
+import type { ICliente } from "./cliente";
+import { ClienteSchema } from "./cliente";
+import type { IComplejo } from "./complejo";
+import { ComplejoSchema } from "./complejo";
+import type { IPermiso } from "./permiso";
+import { PermisoSchema } from "./permiso";
+import type { IVehiculo } from "./vehiculo";
+import { VehiculoSchema } from "./vehiculo";
+import type { IVisitante } from "./visitante";
+import { VisitanteSchema } from "./visitante";
 
-export type ITipoVinculoVehiculo = 'Titular' | 'Autorizado';
+export const TipoVinculoVehiculoSchema = z.enum(["Titular", "Autorizado"]);
+export type ITipoVinculoVehiculo = z.infer<typeof TipoVinculoVehiculoSchema>;
 
 export interface IVinculoVehiculo {
   _id?: string;
@@ -12,8 +19,10 @@ export interface IVinculoVehiculo {
   idCliente?: string;
   idComplejo?: string;
   idVehiculo?: string;
-  idPermiso?: string;    // mutuamente excluyente con idVisitante
-  idVisitante?: string;  // mutuamente excluyente con idPermiso
+  /** Mutuamente excluyente con idVisitante */
+  idPermiso?: string;
+  /** Mutuamente excluyente con idPermiso */
+  idVisitante?: string;
   tipo?: ITipoVinculoVehiculo;
   // Populate
   cliente?: ICliente;
@@ -21,20 +30,55 @@ export interface IVinculoVehiculo {
   vehiculo?: IVehiculo;
   permiso?: IPermiso;
   visitante?: IVisitante;
+  [key: string]: any;
 }
 
-type OmitirPopulate = 'cliente' | 'complejo' | 'vehiculo' | 'permiso' | 'visitante';
+type VinculoVehiculoPopulateKey =
+  | "cliente"
+  | "complejo"
+  | "vehiculo"
+  | "permiso"
+  | "visitante";
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
-
-export interface ICreateVinculoVehiculo extends Omit<
+export type ICreateVinculoVehiculo = Omit<
   Partial<IVinculoVehiculo>,
-  OmitirCreate
-> {}
+  "_id" | "fechaCreacion" | VinculoVehiculoPopulateKey
+>;
+export type IUpdateVinculoVehiculo = ICreateVinculoVehiculo;
 
-type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
+const _VinculoVehiculoSchema = z
+  .object({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    idVehiculo: z.string().optional(),
+    idPermiso: z.string().optional(),
+    idVisitante: z.string().optional(),
+    tipo: TipoVinculoVehiculoSchema.optional(),
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+    vehiculo: VehiculoSchema.optional(),
+    permiso: PermisoSchema.optional(),
+    visitante: VisitanteSchema.optional(),
+  })
+  .passthrough();
 
-export interface IUpdateVinculoVehiculo extends Omit<
-  Partial<IVinculoVehiculo>,
-  OmitirUpdate
-> {}
+const _CreateVinculoVehiculoSchema = _VinculoVehiculoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+  vehiculo: true,
+  permiso: true,
+  visitante: true,
+});
+
+const _UpdateVinculoVehiculoSchema = _CreateVinculoVehiculoSchema.partial();
+
+export const VinculoVehiculoSchema: z.ZodType<IVinculoVehiculo> =
+  _VinculoVehiculoSchema as unknown as z.ZodType<IVinculoVehiculo>;
+export const CreateVinculoVehiculoSchema: z.ZodType<ICreateVinculoVehiculo> =
+  _CreateVinculoVehiculoSchema as unknown as z.ZodType<ICreateVinculoVehiculo>;
+export const UpdateVinculoVehiculoSchema: z.ZodType<IUpdateVinculoVehiculo> =
+  _UpdateVinculoVehiculoSchema as unknown as z.ZodType<IUpdateVinculoVehiculo>;

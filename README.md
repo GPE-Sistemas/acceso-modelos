@@ -1,6 +1,12 @@
 # acceso-modelos
 
-Paquete de interfaces TypeScript compartidas para el sistema de **control de acceso**. Define el modelo de dominio completo utilizado por todos los servicios de la plataforma.
+Paquete de **schemas Zod + tipos TypeScript** compartidos para el sistema de **control de acceso**. Define el modelo de dominio completo y la validación runtime utilizada por todos los servicios de la plataforma.
+
+> **v2.0** — el paquete pasó de interfaces TS-only a schemas Zod compilados. Cada entidad expone:
+> - `XSchema` (Zod) para validación runtime y generación de OpenAPI / Swagger.
+> - `IX` (TypeScript) inferido o declarado, idéntico al schema.
+>
+> **Pasthrough por defecto**: todos los schemas aceptan campos no declarados sin error. Apto para forward-compat entre versiones del paquete y del backend.
 
 ---
 
@@ -359,21 +365,102 @@ erDiagram
 "acceso-modelos": "git://github.com/GPE-Sistemas/acceso-modelos.git"
 ```
 
-### 2. Agregar el script de actualización
+`npm install` ejecuta `prepare` automáticamente (corre `tsc`), por lo que el paquete queda compilado en `dist/` al instalar como dependencia git.
+
+### 2. Script de actualización
 
 ```json
-"acceso-modelos": "yarn upgrade acceso-modelos"
+"scripts": {
+  "modelos": "npm update acceso-modelos"
+}
 ```
 
 ### 3. Instalar
 
 ```bash
-yarn install
+npm install
 ```
 
-### 4. Importar las interfaces
+### 4. Importar
 
 ```typescript
-import { IPermiso, IPermisoCliente, IPermisoComplejo } from 'acceso-modelos/src';
-import { IRol, IRolGlobal, ICliente, IComplejo } from 'acceso-modelos/src';
+// Tipos + schemas — desde la raíz del paquete (no más /src)
+import {
+  IAcceso,
+  AccesoSchema,
+  CreateAccesoSchema,
+  IPermiso,
+  PermisoSchema,
+  CreatePermisoSchema,
+  ICliente,
+  ClienteSchema,
+} from 'acceso-modelos';
 ```
+
+> **Breaking v1 → v2**: la ruta de importación cambia de `acceso-modelos/src` a `acceso-modelos`. Los servicios consumidores deben actualizar todos los imports.
+
+---
+
+## Uso
+
+### Tipos puros (consumo idéntico al v1)
+
+```typescript
+import { IAcceso, ICreateAcceso } from 'acceso-modelos';
+
+function crear(body: ICreateAcceso): Promise<IAcceso> { /* ... */ }
+```
+
+### Validación runtime
+
+```typescript
+import { CreateAccesoSchema } from 'acceso-modelos';
+
+const result = CreateAccesoSchema.safeParse(body);
+if (!result.success) throw new BadRequestException(result.error.issues);
+```
+
+### Generación de Swagger / OpenAPI (NestJS)
+
+```typescript
+import { createZodDto } from 'nestjs-zod';
+import { CreateAccesoSchema, UpdateAccesoSchema } from 'acceso-modelos';
+
+export class CreateAccesoDto extends createZodDto(CreateAccesoSchema) {}
+export class UpdateAccesoDto extends createZodDto(UpdateAccesoSchema) {}
+```
+
+### Constantes runtime
+
+`v2` permite importar constantes runtime desde Node (en `v1` solo eran usables desde Angular):
+
+```typescript
+import {
+  CATEGORIAS_NOTIFICACION,
+  NOTIF_PREFERENCIAS_DEFAULT,
+  PREFERENCIAS_CONTACTOS_DEFAULT,
+} from 'acceso-modelos';
+```
+
+---
+
+## Discriminated unions
+
+`IPermiso` (`nivel`) e `IRol` (`alcance`) son uniones discriminadas. Los schemas usan `z.discriminatedUnion`:
+
+```typescript
+import { PermisoSchema } from 'acceso-modelos';
+
+PermisoSchema.parse({ nivel: 'Cliente', idCliente: '...' });            // OK
+PermisoSchema.parse({ nivel: 'Complejo', idCliente: '...', idComplejo: '...' });    // OK
+PermisoSchema.parse({ nivel: 'Unidad Funcional', idCliente: '...', idComplejo: '...', idUnidadFuncional: '...' }); // OK
+```
+
+---
+
+## Notas técnicas
+
+- **Compilación**: `tsc` produce `dist/index.js` + `dist/index.d.ts`. El `prepare` hook corre el build al instalar.
+- **Casts `as z.ZodType<I>`**: algunos schemas con muchos populates triggerean `TS7056` (tipo inferido excede límite de serialización). En esos casos se declara la interface a mano y se castea el schema. La forma del schema y la interface se mantienen sincronizadas manualmente — desviarlas rompe consumidores.
+- **Passthrough**: campos no declarados pasan al output sin error. Implica que `body._id` enviado a un endpoint `Create*` se reenvía a `acceso-datos` sin filtrar — sigue siendo responsabilidad del backend descartar/sobrescribir IDs server-side.
+- **Sin `src/externos/`**: las interfaces legacy (Chirpstack, OSRM, Tripero, OAuth, eventos-lora) se removieron en v2.

@@ -1,5 +1,6 @@
-import { IPermiso } from './permiso';
-import { IEstadoEmergencia } from './emergencia';
+import { z } from "zod";
+import { EstadoEmergenciaSchema } from "./emergencia";
+import { PermisoSchema } from "./permiso";
 
 /**
  * Tipos de interacción del guardia sobre una emergencia.
@@ -7,42 +8,70 @@ import { IEstadoEmergencia } from './emergencia';
  * - Comentario: nota libre del guardia
  * - AccionExterna: acción predefinida (policía/ambulancia/bomberos enviados, etc.)
  */
-export type ITipoInteraccionEmergencia = 'CambioEstado' | 'Comentario' | 'AccionExterna';
+export const TipoInteraccionEmergenciaSchema = z.enum([
+  "CambioEstado",
+  "Comentario",
+  "AccionExterna",
+]);
 
-export type IAccionExternaEmergencia =
-  | 'PoliciaEnviada'
-  | 'AmbulanciaEnviada'
-  | 'BomberosEnviados'
-  | 'SeguridadPrivadaEnviada'
-  | 'ContactadoPropietario'
-  | 'Otro';
+export const AccionExternaEmergenciaSchema = z.enum([
+  "PoliciaEnviada",
+  "AmbulanciaEnviada",
+  "BomberosEnviados",
+  "SeguridadPrivadaEnviada",
+  "ContactadoPropietario",
+  "Otro",
+]);
 
-export interface IInteraccionEmergencia {
-  _id?: string;
-  fechaCreacion?: string;
-  idEmergencia?: string;
-  idPermiso?: string;                 // autor (guardia)
-  tipo?: ITipoInteraccionEmergencia;
-  estadoAnterior?: IEstadoEmergencia; // CambioEstado
-  estadoNuevo?: IEstadoEmergencia;    // CambioEstado
-  accion?: IAccionExternaEmergencia;  // AccionExterna
-  comentario?: string;                // texto libre (cualquier tipo)
-  // Populate
-  permiso?: IPermiso;
-}
+export const InteraccionEmergenciaSchema = z
+  .object({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idEmergencia: z.string().optional(),
+    /** Autor (guardia) */
+    idPermiso: z.string().optional(),
+    tipo: TipoInteraccionEmergenciaSchema.optional(),
+    /** CambioEstado */
+    estadoAnterior: EstadoEmergenciaSchema.optional(),
+    /** CambioEstado */
+    estadoNuevo: EstadoEmergenciaSchema.optional(),
+    /** AccionExterna */
+    accion: AccionExternaEmergenciaSchema.optional(),
+    /** Texto libre (cualquier tipo) */
+    comentario: z.string().optional(),
+    // Populate
+    permiso: PermisoSchema.optional(),
+  })
+  .passthrough();
 
-type OmitirPopulate = 'permiso';
+export const CreateInteraccionEmergenciaSchema = InteraccionEmergenciaSchema.omit(
+  {
+    _id: true,
+    fechaCreacion: true,
+    permiso: true,
+  },
+);
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
+export const UpdateInteraccionEmergenciaSchema = InteraccionEmergenciaSchema.omit(
+  {
+    _id: true,
+    fechaCreacion: true,
+    idEmergencia: true,
+    idPermiso: true,
+    permiso: true,
+  },
+).partial();
 
-export interface ICreateInteraccionEmergencia extends Omit<
-  Partial<IInteraccionEmergencia>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion' | 'idEmergencia' | 'idPermiso' | OmitirPopulate;
-
-export interface IUpdateInteraccionEmergencia extends Omit<
-  Partial<IInteraccionEmergencia>,
-  OmitirUpdate
-> {}
+export type ITipoInteraccionEmergencia = z.infer<
+  typeof TipoInteraccionEmergenciaSchema
+>;
+export type IAccionExternaEmergencia = z.infer<
+  typeof AccionExternaEmergenciaSchema
+>;
+export type IInteraccionEmergencia = z.infer<typeof InteraccionEmergenciaSchema>;
+export type ICreateInteraccionEmergencia = z.infer<
+  typeof CreateInteraccionEmergenciaSchema
+>;
+export type IUpdateInteraccionEmergencia = z.infer<
+  typeof UpdateInteraccionEmergenciaSchema
+>;

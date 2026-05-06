@@ -1,28 +1,45 @@
-export interface IPreferenciasContactos {
-  _id?: string;
-  fechaCreacion?: string;
-  fechaActualizacion?: string;
-  idUsuario?: string;
-  recibirAlertas?: boolean;       // master para push categoria 'alerta_contacto'
-  recibirInvitaciones?: boolean;  // push categoria 'contacto_invitacion'
-}
+import { z } from "zod";
 
-type OmitirCreate = '_id' | 'fechaCreacion' | 'fechaActualizacion';
+export const PreferenciasContactosSchema = z
+  .object({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    fechaActualizacion: z.string().optional(),
+    idUsuario: z.string().optional(),
+    /** Master para push categoria 'alerta_contacto' */
+    recibirAlertas: z.boolean().optional(),
+    /** Push categoria 'contacto_invitacion' */
+    recibirInvitaciones: z.boolean().optional(),
+  })
+  .passthrough();
 
-export interface ICreatePreferenciasContactos
-  extends Omit<Partial<IPreferenciasContactos>, OmitirCreate> {}
+export const CreatePreferenciasContactosSchema =
+  PreferenciasContactosSchema.omit({
+    _id: true,
+    fechaCreacion: true,
+    fechaActualizacion: true,
+  });
 
-type OmitirUpdate =
-  | '_id'
-  | 'fechaCreacion'
-  | 'fechaActualizacion'
-  | 'idUsuario';
+export const UpdatePreferenciasContactosSchema =
+  PreferenciasContactosSchema.omit({
+    _id: true,
+    fechaCreacion: true,
+    fechaActualizacion: true,
+    idUsuario: true,
+  }).partial();
 
-export interface IUpdatePreferenciasContactos
-  extends Omit<Partial<IPreferenciasContactos>, OmitirUpdate> {}
+export type IPreferenciasContactos = z.infer<
+  typeof PreferenciasContactosSchema
+>;
+export type ICreatePreferenciasContactos = z.infer<
+  typeof CreatePreferenciasContactosSchema
+>;
+export type IUpdatePreferenciasContactos = z.infer<
+  typeof UpdatePreferenciasContactosSchema
+>;
 
 export const PREFERENCIAS_CONTACTOS_DEFAULT: Required<
-  Pick<IPreferenciasContactos, 'recibirAlertas' | 'recibirInvitaciones'>
+  Pick<IPreferenciasContactos, "recibirAlertas" | "recibirInvitaciones">
 > = {
   recibirAlertas: true,
   recibirInvitaciones: true,

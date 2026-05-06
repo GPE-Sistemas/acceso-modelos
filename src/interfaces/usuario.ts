@@ -1,34 +1,48 @@
-export interface IDatosPersonales {
-  nombre?: string;
-  dni?: string;
-  sexo?: string;
-  email?: string;
-  direccion?: string;
-  pais?: string;
-  telefono?: string;
-  fechaNacimiento?: string;
-  foto?: string;
-}
+import { z } from "zod";
 
-export interface IConfigUsuario {
+export const DatosPersonalesSchema = z
+  .object({
+    nombre: z.string().optional(),
+    dni: z.string().optional(),
+    sexo: z.string().optional(),
+    email: z.string().optional(),
+    direccion: z.string().optional(),
+    pais: z.string().optional(),
+    telefono: z.string().optional(),
+    fechaNacimiento: z.string().optional(),
+    foto: z.string().optional(),
+  })
+  .passthrough();
+
+export const ConfigUsuarioSchema = z.object({}).passthrough();
+
+export const UsuarioSchema = z
+  .object({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    usuario: z.string().optional(),
+    hash: z.string().optional(),
+    datosPersonales: DatosPersonalesSchema.optional(),
+    config: ConfigUsuarioSchema.optional(),
+  })
+  .passthrough();
+
+export const CreateUsuarioSchema = UsuarioSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+}).extend({
+  password: z.string().optional(),
+});
+
+export const UpdateUsuarioSchema = UsuarioSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+}).partial();
+
+export type IDatosPersonales = z.infer<typeof DatosPersonalesSchema>;
+export type IConfigUsuario = z.infer<typeof ConfigUsuarioSchema> & {
   [key: string]: any;
-}
-
-export interface IUsuario {
-  _id?: string;
-  fechaCreacion?: string;
-  usuario?: string;
-  hash?: string;
-  datosPersonales?: IDatosPersonales;
-  config?: IConfigUsuario;
-}
-
-type OmitirCreate = '_id' | 'fechaCreacion';
-
-export interface ICreateUsuario extends Omit<Partial<IUsuario>, OmitirCreate> {
-  password?: string;
-}
-
-type OmitirUpdate = '_id' | 'fechaCreacion';
-
-export interface IUpdateUsuario extends Omit<Partial<IUsuario>, OmitirUpdate> {}
+};
+export type IUsuario = z.infer<typeof UsuarioSchema>;
+export type ICreateUsuario = z.infer<typeof CreateUsuarioSchema>;
+export type IUpdateUsuario = z.infer<typeof UpdateUsuarioSchema>;

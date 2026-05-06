@@ -1,29 +1,66 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IPermiso } from './permiso';
-import { IUnidadFuncional } from './unidad-funcional';
-import { IVehiculo } from './vehiculo';
-import { IVisitante } from './visitante';
+import { z } from "zod";
+import type { ICliente } from "./cliente";
+import { ClienteSchema } from "./cliente";
+import type { IComplejo } from "./complejo";
+import { ComplejoSchema } from "./complejo";
+import type { IPermiso } from "./permiso";
+import { PermisoSchema } from "./permiso";
+import type { IUnidadFuncional } from "./unidad-funcional";
+import { UnidadFuncionalSchema } from "./unidad-funcional";
+import type { IVehiculo } from "./vehiculo";
+import { VehiculoSchema } from "./vehiculo";
+import type { IVisitante } from "./visitante";
+import { VisitanteSchema } from "./visitante";
 
-export type ITipoEventoVisita = 'Particular' | 'Servicio' | 'Retiro' | 'Entrega';
-export type IEstadoEventoVisita = 'Pendiente' | 'Activa' | 'Parcial' | 'Cerrada' | 'Vencida';
-export type ICreadoPorEventoVisita = 'Propietario' | 'Guardia';
-export type IEstadoAprobacionEventoVisita = 'Pendiente' | 'Aprobado' | 'Rechazado';
+export const TipoEventoVisitaSchema = z.enum([
+  "Particular",
+  "Servicio",
+  "Retiro",
+  "Entrega",
+]);
+export const EstadoEventoVisitaSchema = z.enum([
+  "Pendiente",
+  "Activa",
+  "Parcial",
+  "Cerrada",
+  "Vencida",
+]);
+export const CreadoPorEventoVisitaSchema = z.enum(["Propietario", "Guardia"]);
+export const EstadoAprobacionEventoVisitaSchema = z.enum([
+  "Pendiente",
+  "Aprobado",
+  "Rechazado",
+]);
 
-export interface IRecurrenciaEventoVisita {
-  diasSemana: number[];   // 0..6 (0=domingo). Lista de días que aplica. Si incluye los 7, equivale a "todos los días".
-  horaDesde?: string;     // 'HH:mm' — ventana intra-día opcional
-  horaHasta?: string;     // 'HH:mm' — opcional. Si horaHasta < horaDesde se interpreta cruzando medianoche.
-}
+export const RecurrenciaEventoVisitaSchema = z
+  .object({
+    /** 0..6 (0=domingo). Si incluye los 7, equivale a "todos los días". */
+    diasSemana: z.array(z.number()),
+    /** 'HH:mm' — ventana intra-día opcional */
+    horaDesde: z.string().optional(),
+    /** 'HH:mm' — si horaHasta < horaDesde se interpreta cruzando medianoche. */
+    horaHasta: z.string().optional(),
+  })
+  .passthrough();
+
+export type ITipoEventoVisita = z.infer<typeof TipoEventoVisitaSchema>;
+export type IEstadoEventoVisita = z.infer<typeof EstadoEventoVisitaSchema>;
+export type ICreadoPorEventoVisita = z.infer<typeof CreadoPorEventoVisitaSchema>;
+export type IEstadoAprobacionEventoVisita = z.infer<
+  typeof EstadoAprobacionEventoVisitaSchema
+>;
+export type IRecurrenciaEventoVisita = z.infer<
+  typeof RecurrenciaEventoVisitaSchema
+>;
 
 export interface IEventoVisita {
   _id?: string;
   fechaCreacion?: string;
   idCliente?: string;
   idComplejo?: string;
-  idUnidadFuncional?: string;        // unidad del propietario que autoriza (contexto del creador)
-  idUnidadFuncionalDestino?: string; // destino real de la visita (puede diferir de la anterior)
-  idPermiso?: string;                // quien creó el evento (propietario o guardia)
+  idUnidadFuncional?: string;
+  idUnidadFuncionalDestino?: string;
+  idPermiso?: string;
   creadoPor?: ICreadoPorEventoVisita;
   tipo?: ITipoEventoVisita;
   idsVisitantes?: string[];
@@ -31,18 +68,15 @@ export interface IEventoVisita {
   fechaDesde?: string;
   fechaHasta?: string;
   estado?: IEstadoEventoVisita;
-  permiteAccesoMultiple?: boolean;     // si true: egreso no cierra el evento; cierre solo por vencimiento de ventana
-  idsVisitantesIngresados?: string[];  // cache: unión de idsVisitantesAplicados de los vínculos tipo 'Ingreso'
-  idsVisitantesAdentro?: string[];     // cache: idsVisitantesIngresados − idsVisitantesEgresados (quienes están actualmente adentro)
+  permiteAccesoMultiple?: boolean;
+  idsVisitantesIngresados?: string[];
+  idsVisitantesAdentro?: string[];
   observaciones?: string;
-  // Recurrencia (presencia => evento recurrente). Reusa fechaDesde/fechaHasta del evento.
   recurrencia?: IRecurrenciaEventoVisita;
-  // Aprobación UF (regla actual)
   estadoAprobacion?: IEstadoAprobacionEventoVisita;
   aprobadoPorIdPermiso?: string;
   fechaAprobacion?: string;
   motivoRechazo?: string;
-  // Aprobación recurrente (admin Complejo). Sólo aplica si recurrencia presente.
   estadoAprobacionRecurrente?: IEstadoAprobacionEventoVisita;
   aprobadoRecurrentePorIdPermiso?: string;
   fechaAprobacionRecurrente?: string;
@@ -57,29 +91,88 @@ export interface IEventoVisita {
   vehiculos?: IVehiculo[];
   aprobadoPorPermiso?: IPermiso;
   aprobadoRecurrentePorPermiso?: IPermiso;
+  [key: string]: any;
 }
 
-type OmitirPopulate =
-  | 'cliente'
-  | 'complejo'
-  | 'unidadFuncional'
-  | 'unidadFuncionalDestino'
-  | 'permiso'
-  | 'visitantes'
-  | 'vehiculos'
-  | 'aprobadoPorPermiso'
-  | 'aprobadoRecurrentePorPermiso';
+type EventoVisitaPopulateKey =
+  | "cliente"
+  | "complejo"
+  | "unidadFuncional"
+  | "unidadFuncionalDestino"
+  | "permiso"
+  | "visitantes"
+  | "vehiculos"
+  | "aprobadoPorPermiso"
+  | "aprobadoRecurrentePorPermiso";
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
-
-export interface ICreateEventoVisita extends Omit<
+export type ICreateEventoVisita = Omit<
   Partial<IEventoVisita>,
-  OmitirCreate
-> {}
+  "_id" | "fechaCreacion" | EventoVisitaPopulateKey
+>;
+export type IUpdateEventoVisita = ICreateEventoVisita;
 
-type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
+const _EventoVisitaSchema = z
+  .object({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    idUnidadFuncional: z.string().optional(),
+    idUnidadFuncionalDestino: z.string().optional(),
+    idPermiso: z.string().optional(),
+    creadoPor: CreadoPorEventoVisitaSchema.optional(),
+    tipo: TipoEventoVisitaSchema.optional(),
+    idsVisitantes: z.array(z.string()).optional(),
+    idsVehiculos: z.array(z.string()).optional(),
+    fechaDesde: z.string().optional(),
+    fechaHasta: z.string().optional(),
+    estado: EstadoEventoVisitaSchema.optional(),
+    permiteAccesoMultiple: z.boolean().optional(),
+    idsVisitantesIngresados: z.array(z.string()).optional(),
+    idsVisitantesAdentro: z.array(z.string()).optional(),
+    observaciones: z.string().optional(),
+    recurrencia: RecurrenciaEventoVisitaSchema.optional(),
+    estadoAprobacion: EstadoAprobacionEventoVisitaSchema.optional(),
+    aprobadoPorIdPermiso: z.string().optional(),
+    fechaAprobacion: z.string().optional(),
+    motivoRechazo: z.string().optional(),
+    estadoAprobacionRecurrente: EstadoAprobacionEventoVisitaSchema.optional(),
+    aprobadoRecurrentePorIdPermiso: z.string().optional(),
+    fechaAprobacionRecurrente: z.string().optional(),
+    motivoRechazoRecurrente: z.string().optional(),
+    // Populate
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+    unidadFuncional: UnidadFuncionalSchema.optional(),
+    unidadFuncionalDestino: UnidadFuncionalSchema.optional(),
+    permiso: PermisoSchema.optional(),
+    visitantes: z.array(VisitanteSchema).optional(),
+    vehiculos: z.array(VehiculoSchema).optional(),
+    aprobadoPorPermiso: PermisoSchema.optional(),
+    aprobadoRecurrentePorPermiso: PermisoSchema.optional(),
+  })
+  .passthrough();
 
-export interface IUpdateEventoVisita extends Omit<
-  Partial<IEventoVisita>,
-  OmitirUpdate
-> {}
+const _CreateEventoVisitaSchema = _EventoVisitaSchema
+  .omit({
+    _id: true,
+    fechaCreacion: true,
+    cliente: true,
+    complejo: true,
+    unidadFuncional: true,
+    unidadFuncionalDestino: true,
+    permiso: true,
+    visitantes: true,
+    vehiculos: true,
+    aprobadoPorPermiso: true,
+    aprobadoRecurrentePorPermiso: true,
+  });
+
+const _UpdateEventoVisitaSchema = _CreateEventoVisitaSchema.partial();
+
+export const EventoVisitaSchema: z.ZodType<IEventoVisita> =
+  _EventoVisitaSchema as unknown as z.ZodType<IEventoVisita>;
+export const CreateEventoVisitaSchema: z.ZodType<ICreateEventoVisita> =
+  _CreateEventoVisitaSchema as unknown as z.ZodType<ICreateEventoVisita>;
+export const UpdateEventoVisitaSchema: z.ZodType<IUpdateEventoVisita> =
+  _UpdateEventoVisitaSchema as unknown as z.ZodType<IUpdateEventoVisita>;

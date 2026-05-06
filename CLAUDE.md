@@ -1,8 +1,24 @@
 # acceso-modelos
 
-Interfaces TypeScript compartidas del sistema Acceso. Consumido como dependencia por `acceso-datos`, `acceso-api`, `acceso-dispositivos` y `acceso-web`. **No se compila** — los `.ts` se importan directamente en tiempo de desarrollo. No genera ningún runtime artifact.
+Schemas **Zod + tipos TypeScript** compartidos del sistema Acceso. Consumido como dependencia git por `acceso-datos`, `acceso-api` y `acceso-web`. **Se compila** vía `tsc` con `prepare` hook — `dist/index.js` y `dist/index.d.ts` se generan al instalar.
 
 Para contexto del sistema completo ver `CLAUDE.md` en `acceso-documentacion-general/` (directorio hermano).
+
+---
+
+## v1 → v2 — cambios estructurales
+
+| Aspecto | v1 | v2 |
+|---|---|---|
+| Source of truth | `interface I…` TS-only | Schema Zod + tipo inferido / declarado |
+| Build | Sin compilar (importaba `acceso-modelos/src`) | `tsc` produce `dist/`. `prepare` hook |
+| Importación | `from 'acceso-modelos/src'` | `from 'acceso-modelos'` |
+| Constantes runtime en Node | Imposible (no había `src/index.js`) | OK directamente |
+| Validación runtime | No existía | Cada `XSchema` valida con Zod |
+| OpenAPI / Swagger | Sin soporte | `createZodDto` (`nestjs-zod`) genera DTOs y schemas Swagger |
+| `src/externos/` (Chirpstack, OSRM, etc) | Re-exportado desde el paquete | Borrado |
+
+**Migración de consumidores**: cambiar todos los imports `'acceso-modelos/src'` → `'acceso-modelos'`. En `acceso-web` borrar el `paths` alias del `tsconfig.json`. En backends Node ya pueden importar constantes (`CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT`, etc) directo del paquete.
 
 ---
 
@@ -14,126 +30,188 @@ Para contexto del sistema completo ver `CLAUDE.md` en `acceso-documentacion-gene
   "acceso-modelos": "git://github.com/GPE-Sistemas/acceso-modelos.git"
 },
 "scripts": {
-  "modelos": "yarn upgrade acceso-modelos"
+  "modelos": "npm update acceso-modelos"
 }
 ```
 
 ```bash
-yarn install          # primera vez
+npm install           # primera vez (corre prepare → tsc)
 npm run modelos       # actualizar a la última versión
 ```
-
-En `acceso-web`, `tsconfig.json` tiene un `paths` alias que resuelve `acceso-modelos/src` al TypeScript en `node_modules`.
 
 ---
 
 ## Importación
 
 ```typescript
-import { IPermiso, IPermisoCliente, IPermisoComplejo } from 'acceso-modelos/src';
-import { IRol, IRolGlobal, ICliente, IComplejo } from 'acceso-modelos/src';
-import { IDocumento, IListado, IQueryParam, Exactly } from 'acceso-modelos/src';
+// Tipos
+import {
+  IPermiso, IPermisoCliente, IPermisoComplejo,
+  IRol, IRolGlobal, ICliente, IComplejo,
+  IDocumento, IListado, IQueryParam, Exactly,
+} from 'acceso-modelos';
+
+// Schemas Zod
+import {
+  PermisoSchema, RolSchema, ClienteSchema,
+  CreateAccesoSchema, UpdateAccesoSchema,
+} from 'acceso-modelos';
+
+// Constantes runtime
+import {
+  CATEGORIAS_NOTIFICACION,
+  NOTIF_PREFERENCIAS_DEFAULT,
+  PREFERENCIAS_CONTACTOS_DEFAULT,
+} from 'acceso-modelos';
 ```
+
+---
+
+## Schemas Zod — convenciones
+
+### Pattern básico (entidad simple)
+
+```typescript
+export const FooSchema = z.object({
+  _id: z.string().optional(),
+  // ...
+}).passthrough();
+
+export const CreateFooSchema = FooSchema.omit({ _id: true, fechaCreacion: true });
+export const UpdateFooSchema = CreateFooSchema.partial();
+
+export type IFoo = z.infer<typeof FooSchema>;
+export type ICreateFoo = z.infer<typeof CreateFooSchema>;
+export type IUpdateFoo = z.infer<typeof UpdateFooSchema>;
+```
+
+### Pattern con cast (entidades con muchos populates)
+
+Cuando una entidad popula varias entidades (transitivamente, IPermiso → IUsuario, IRol, ICliente, etc), TS hace explotar el tipo inferido (`TS7056: type exceeds maximum length`). Workaround: declarar la interface a mano y castear el schema en el export.
+
+```typescript
+export interface IFoo {
+  _id?: string;
+  // ...
+  cliente?: ICliente;       // populate
+  permiso?: IPermiso;       // populate
+  [key: string]: any;       // passthrough refleja en el tipo
+}
+
+const _FooSchema = z.object({ /* ... */ }).passthrough();
+const _CreateFooSchema = _FooSchema.omit({ /* ... */ });
+
+export const FooSchema: z.ZodType<IFoo> = _FooSchema as unknown as z.ZodType<IFoo>;
+export const CreateFooSchema: z.ZodType<ICreateFoo> = _CreateFooSchema as unknown as z.ZodType<ICreateFoo>;
+```
+
+Aplica a: `permiso`, `evento-visita`, `ingreso-egreso`, `vinculo-vehiculo`, `vinculo-evento-ingreso`, partes de `dashboard`. Mantener interface y schema sincronizados — TS no detecta divergencias gracias al `as unknown as`.
+
+### Discriminated unions
+
+```typescript
+export const PermisoSchema = z.discriminatedUnion("nivel", [
+  PermisoClienteSchema,            // nivel: z.literal("Cliente")
+  PermisoComplejoSchema,           // nivel: z.literal("Complejo")
+  PermisoUnidadFuncionalSchema,    // nivel: z.literal("Unidad Funcional")
+]);
+```
+
+---
+
+## Pasthrough por defecto
+
+**Todos los schemas usan `.passthrough()`** — campos no declarados pasan al output sin error. Implica:
+
+- Forward-compat: el backend puede recibir bodies con campos nuevos y reenviarlos a `acceso-datos` sin romper.
+- **Riesgo**: un `Create*Dto` no descarta campos como `_id` si el cliente los manda. La capa de `acceso-datos` (Mongo) genera su propio `_id` ignorando el del body, pero campos sensibles como `idCliente` / `idComplejo` / `idPermisoCarga` deben sobrescribirse en el service vía `injectScope` (ya implementado en `acceso-api`).
+
+Si en el futuro se prefiere rechazo estricto sobre algún DTO específico, usar `.strict()` localmente al definir el `createZodDto` del endpoint.
 
 ---
 
 ## Interfaces de dominio (`src/interfaces/`)
 
-| Archivo | Interfaces principales |
+| Archivo | Schemas y tipos principales |
 |---|---|
-| `acceso.ts` | `IAcceso`, `ICreateAcceso`, `IUpdateAcceso` |
-| `cliente.ts` | `ICliente`, `ITipoCliente`, `ICreateCliente`, `IUpdateCliente` |
-| `complejo.ts` | `IComplejo`, `ITipoComplejo`, `ICreateComplejo`, `IUpdateComplejo` |
-| `credencial-dispositivo.ts` | `ICredencialDispositivo`, `ICreateCredencialDispositivo` |
-| `dispositivo.ts` | `IDispositivo`, `ICreateDispositivo`, `IUpdateDispositivo`, `IConfigDispositivo` |
-| `dispositivo-acceso.ts` | `IDispositivoAcceso`, `ICreateDispositivoAcceso`, `IUpdateDispositivoAcceso`, `IComportamientoCredencialValida`, `IComportamientoCredencialInvalida` |
-| `evento.ts` | `IEvento` — estructura pendiente de definición |
-| `evento-visita.ts` | `IEventoVisita`, `IEstadoEventoVisita`, `IEstadoAprobacionEventoVisita`, `IRecurrenciaEventoVisita`, `ICreateEventoVisita` — flujo de aprobación (`estadoAprobacion`, `aprobadoPorIdPermiso`, `fechaAprobacion`, `motivoRechazo`) ortogonal a `estado`. Variante recurrente: subdoc opcional `recurrencia: { diasSemana, horaDesde?, horaHasta? }` + segunda aprobación `estadoAprobacionRecurrente` / `aprobadoRecurrentePorIdPermiso` / `fechaAprobacionRecurrente` / `motivoRechazoRecurrente` (admin Complejo) |
-| `ingreso-egreso.ts` | `IIngresoEgreso`, `ICreateIngresoEgreso` — entidad de alto volumen |
-| `permiso.ts` | `IPermiso`, `IPermisoCliente`, `IPermisoComplejo`, `IPermisoUnidadFuncional`, `INivelPermiso` |
-| `rol.ts` | `IRol`, `IRolGlobal`, `IRolCliente`, `IRolComplejo`, `AccionesRol` |
-| `unidad-funcional.ts` | `IUnidadFuncional`, `ITipoUnidadFuncional` |
-| `usuario.ts` | `IUsuario`, `ICreateUsuario`, `IUpdateUsuario` |
-| `vehiculo.ts` | `IVehiculo`, `ICreateVehiculo` |
-| `vinculo-vehiculo.ts` | `IVinculoVehiculo`, `ITipoVinculo` |
-| `visitante.ts` | `IVisitante`, `ICreateVisitante` |
-| `publicacion.ts` | `IPublicacion`, `IBloque`, `ICreatePublicacion`, `IUpdatePublicacion`, `ETipoBloque`, `ECategoriaPublicacion`, `EEstadoPublicacion` — `idPermisoCarga` registra quién creó; populate `permisoCarga` da acceso al `IPermiso` y de ahí al usuario |
-| `device-token.ts` | `IDeviceToken`, `IDevicePlatform`, `ICreateDeviceToken`, `IUpdateDeviceToken` — token FCM por device, vinculado a `idUsuario` (un usuario puede tener N devices) |
-| `notificacion-preferencias.ts` | `INotificacionPreferencias`, `ICategoriaNotificacion`, `ICategoriasNotificacionMap`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT` — preferencias de push por **permiso** (no por usuario). Categorías: visitor_entry/exit, pub_*, emergencia_* (mensaje/estado/recibida), `visita_pendiente_aprobacion` (mobile UF: alguien creó un evento que requiere mi aprobación), `visita_resuelta` (mobile UF: mi evento fue aprobado/rechazado) |
-| `boton-emergencia.ts` | `IBotonEmergencia`, `IConfigBotonEmergencia`, `ICreateBotonEmergencia`, `IUpdateBotonEmergencia` — catálogo de botones; `global=true` solo Proveedor |
-| `config-botones-complejo.ts` | `IConfigBotonesComplejo` — entidad por complejo; `idsBotones[]` define orden visible en mobile (índice único en `idComplejo`) |
-| `emergencia.ts` | `IEmergencia`, `IEstadoEmergencia` (`Pendiente \| EnAtencion \| Resuelta \| Descartada`), `IUbicacionEmergencia` — emisor por `idPermiso`; ubicación obligatoria al crear |
-| `interaccion-emergencia.ts` | `IInteraccionEmergencia`, `ITipoInteraccionEmergencia`, `IAccionExternaEmergencia` — bitácora del guardia (CambioEstado, Comentario, AccionExterna) |
-| `mensaje-emergencia.ts` | `IMensajeEmergencia` — chat acotado a una emergencia; vive y muere con ella |
-| `contacto-usuario.ts` | `IContactoUsuario`, `IEstadoContactoUsuario` (`Pendiente \| Aceptado \| Rechazado \| Bloqueado`), `ICreateContactoUsuario`, `IUpdateContactoUsuario` — vínculo unidireccional usuario→usuario para alertas peer-to-peer. Receptor controla aceptar/rechazar/bloquear/silenciar |
-| `preferencias-contactos.ts` | `IPreferenciasContactos`, `PREFERENCIAS_CONTACTOS_DEFAULT` — prefs **por usuario** (cross-permiso). Campos: `recibirAlertas`, `recibirInvitaciones`. La constante runtime es para acceso-web; backends Node deben replicar local |
+| `acceso.ts` | `AccesoSchema` / `IAcceso`, `CreateAccesoSchema`, `UpdateAccesoSchema`, `TipoAccesoSchema` |
+| `cliente.ts` | `ClienteSchema` / `ICliente`, `TipoClienteSchema`, `ConfigClienteSchema` |
+| `complejo.ts` | `ComplejoSchema` / `IComplejo`, `TipoComplejoSchema`, `ConfigComplejoSchema`, `ConfigEmergenciasComplejoSchema` |
+| `credencial-dispositivo.ts` | `CredencialDispositivoSchema` / `ICredencialDispositivo` |
+| `dispositivo.ts` | `DispositivoSchema` / `IDispositivo`, `TipoDispositivoSchema`, `ConfigDispositivoSchema` |
+| `dispositivo-acceso.ts` | `DispositivoAccesoSchema` / `IDispositivoAcceso`, `ComportamientoCredencialValidaSchema`, `ComportamientoCredencialInvalidaSchema` |
+| `evento.ts` | `EventoSchema` / `IEvento` — estructura pendiente de definición |
+| `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita` (con cast — populate complejo), `RecurrenciaEventoVisitaSchema`, estados, aprobación |
+| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso` (con cast). Entidad de alto volumen |
+| `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional. Casted (TS7056) |
+| `rol.ts` | `RolSchema` / `IRol` — discriminated union por `alcance`. `AccionesRolSchema` enumera todas las acciones del catálogo |
+| `unidad-funcional.ts` | `UnidadFuncionalSchema` / `IUnidadFuncional` |
+| `usuario.ts` | `UsuarioSchema` / `IUsuario`, `DatosPersonalesSchema` |
+| `vehiculo.ts` | `VehiculoSchema` / `IVehiculo`, `DatosVehiculoSchema` |
+| `vinculo-vehiculo.ts` | `VinculoVehiculoSchema` / `IVinculoVehiculo` (casted) |
+| `vinculo-evento-ingreso.ts` | `VinculoEventoIngresoSchema` / `IVinculoEventoIngreso` (casted) |
+| `visitante.ts` | `VisitanteSchema` / `IVisitante` |
+| `publicacion.ts` | `PublicacionSchema` / `IPublicacion`, `BloqueSchema`, enums (`TipoBloqueSchema`, `CategoriaPublicacionSchema`, `EstadoPublicacionSchema`) |
+| `device-token.ts` | `DeviceTokenSchema` / `IDeviceToken`, `DevicePlatformSchema` |
+| `notificacion-preferencias.ts` | `NotificacionPreferenciasSchema` / `INotificacionPreferencias`, `CategoriaNotificacionSchema`, `CategoriasNotificacionMapSchema`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT` |
+| `boton-emergencia.ts` | `BotonEmergenciaSchema` / `IBotonEmergencia`, `ConfigBotonEmergenciaSchema` |
+| `config-botones-complejo.ts` | `ConfigBotonesComplejoSchema` / `IConfigBotonesComplejo` — uno por complejo; `idsBotones[]` define orden mobile |
+| `emergencia.ts` | `EmergenciaSchema` / `IEmergencia`, `EstadoEmergenciaSchema`, `UbicacionEmergenciaSchema` |
+| `interaccion-emergencia.ts` | `InteraccionEmergenciaSchema` / `IInteraccionEmergencia`, `TipoInteraccionEmergenciaSchema`, `AccionExternaEmergenciaSchema` |
+| `mensaje-emergencia.ts` | `MensajeEmergenciaSchema` / `IMensajeEmergencia` |
+| `contacto-usuario.ts` | `ContactoUsuarioSchema` / `IContactoUsuario`, `EstadoContactoUsuarioSchema` |
+| `preferencias-contactos.ts` | `PreferenciasContactosSchema` / `IPreferenciasContactos`, `PREFERENCIAS_CONTACTOS_DEFAULT` |
+| `dashboard.ts` | `DashboardComplejoSchema` / `IDashboardComplejo`, `DashboardUFSchema` / `IDashboardUF`, `DashboardClienteSchema` / `IDashboardCliente`, `DashboardProveedorSchema` / `IDashboardProveedor` (varias casted) |
 
 ---
 
 ## Tipos utilitarios (`src/auxiliares/`)
 
 ```typescript
-// Respuestas normalizadas de acceso-datos
-interface IDocumento<T> { dato: T; duration?: number; }
-interface IListado<T> { datos: T[]; totalCount?: number; duration?: number; }
+// Respuestas normalizadas de acceso-datos (genéricos)
+DocumentoSchema(InnerSchema)            // builder de schemas runtime
+ListadoSchema(InnerSchema)              // builder
 
-// Parámetros de consulta (filter, sort, skip, limit, populate)
-interface IQueryParam { filter?: string; sort?: string; skip?: number; limit?: number; populate?: string; }
+interface IDocumento<T> { dato: T; duration?: number; }
+interface IListado<T>   { datos: T[]; totalCount?: number; duration?: number; }
+
+// Parámetros de consulta
+QueryParamSchema                        // Zod schema con passthrough
+interface IQueryParam { filter?: string; sort?: string; limit?: number; populate?: string; ... }
 
 // Type-safety entre interface y clase Mongoose (acceso-datos)
-// No usar con discriminated unions (IRol, IPermiso)
 type Exactly<T, U extends T> = T & { [K in Exclude<keyof U, keyof T>]: never };
+
+// GeoJSON
+GeoJSONPointSchema, GeoJSONPolygonSchema, GeoJSONMultiPolygonSchema, ...
 ```
 
 ---
 
 ## `AccionesRol` — agregar acciones nuevas
 
-El tipo `AccionesRol` en `src/interfaces/rol.ts` es la fuente de verdad para las acciones habilitables en roles. Módulos actuales: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`, `Publicaciones`.
+`AccionesRolSchema` (`src/interfaces/rol.ts`) es la fuente de verdad. Módulos: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`, `Publicaciones`, `Emergencias`.
 
-**Hardware** incluye acciones para: `accesos`, `dispositivos`, `credenciales`, y `dispositivos acceso` (relación `IDispositivoAcceso`).
+**Hardware** — `accesos`, `dispositivos`, `credenciales`, `dispositivos acceso`.
 
-**Visitas** incluye: `Ver/Crear/Editar/Eliminar eventos`, `Aprobar eventos` (auto-aprobación al crear y autoriza `PUT /eventos-visita/:id/aprobacion`), `Aprobar eventos recurrentes` (auto-aprobación de la variante recurrente al crear y autoriza `PUT /eventos-visita/:id/aprobacion-recurrente`; típicamente asignada a permisos nivel Complejo), `Ver/Crear/Editar/Eliminar visitantes`.
+**Visitas** — `Ver/Crear/Editar/Eliminar eventos`, `Aprobar eventos`, `Aprobar eventos recurrentes` (auto-aprobación al crear y autoriza `PUT /eventos-visita/:id/aprobacion-recurrente`; típicamente nivel Complejo), `Ver/Crear/Editar/Eliminar visitantes`.
 
-**Emergencias** incluye: `Ver/Crear/Editar/Eliminar botones` (catálogo), `Ver/Editar configuración` (qué botones ve cada complejo en mobile), `Enviar emergencia` (mobile UF), `Ver emergencias` + `Atender emergencias` (panel guardia: cambiar estado, registrar interacciones, chatear), `Eliminar emergencias`.
+**Emergencias** — `Ver/Crear/Editar/Eliminar botones`, `Ver/Editar configuración`, `Enviar emergencia` (mobile UF), `Ver emergencias` + `Atender emergencias` (panel guardia), `Eliminar emergencias`.
 
-Para agregar acciones de un módulo nuevo:
-1. Agregar al union type en `src/interfaces/rol.ts`
-2. Hacer push al repo
-3. Correr `npm run modelos` en cada servicio que use el nuevo módulo
+Para agregar acciones:
+1. Agregar al `z.enum([...])` en `AccionesRolSchema`
+2. `npm run build`, push al repo
+3. `npm run modelos` en cada servicio
 
-**Workaround hasta hacer push:** copiar el cambio directamente a `node_modules/acceso-modelos/src/interfaces/rol.ts` en el servicio local para que TypeScript lo reconozca.
-
----
-
-## Convenciones de interfaces
-
-- Campos `Populate` (virtuals): no se persisten en MongoDB, solo para respuestas enriquecidas
-- `ICreate*`: omite `_id`, `fechaCreacion` y campos populate
-- `IUpdate*`: todos los campos `Partial`, con discriminante requerido en unions
-- Fechas: `string` (ISO 8601)
-- MongoDB ObjectIds: `string`
-- `IPermiso` y `IRol` son discriminated unions — no usar `Exactly<>` en sus schemas Mongoose
+**Workaround hasta hacer push**: editar `node_modules/acceso-modelos/dist/interfaces/rol.js` y `.d.ts` para reflejar la acción nueva en el servicio local (o build local con `npm run build` desde `node_modules/acceso-modelos`).
 
 ---
 
-## ⚠️ Solo importar TYPES desde servicios Node (datos / api / dispositivos)
+## Convenciones
 
-`acceso-modelos` no compila — Node no puede resolver `require('acceso-modelos/src')` en runtime porque no existe `src/index.js`. tsc elimina los imports type-only al compilar a JS, pero **deja los imports de valores** (constantes, enums runtime, funciones).
-
-**No importar valores desde `acceso-modelos/src` en backend Node.** Si necesitás una constante (ej. `NOTIF_PREFERENCIAS_DEFAULT`, `CATEGORIAS_NOTIFICACION`):
-
-1. **Acceso-web (Angular)**: importar normal, Angular compila el TS y resuelve.
-2. **Backend Node**: declarar la constante en un archivo local del servicio (ej. `entidades/<entidad>/defaults.ts`) tipándola con la interface importada como type.
-
-Síntoma del bug en runtime: `Error: Cannot find module 'acceso-modelos/src'` al levantar el servicio.
-
-Las constantes exportadas en este repo (`CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT`) están pensadas para acceso-web; replicarlas localmente en cada servicio Node.
-
----
-
-## ADVERTENCIA: `src/externos/` — código de otro proyecto
-
-`src/externos/` contiene interfaces de un proyecto anterior (Chirpstack/LoRa, OSRM, Tripero, OAuth) que **se exportan inadvertidamente** desde el paquete. No pertenecen al sistema Acceso. No usar ninguna de estas interfaces en los servicios de Acceso.
-
-Afectados: `osrm.ts`, `tripero.ts`, `eventos-lora/`, `chirpstack/`, `oauth/`. También re-exportados desde `src/auxiliares/index.ts` (eventos-lora). Limpiar en algún momento con coordinación de todos los servicios que usen el paquete.
+- **Campos populate** (virtuals): no se persisten en Mongo, solo para respuestas enriquecidas. En schemas Zod son `Schema.optional()` referenciando otros schemas.
+- **`Create*`**: omite `_id`, `fechaCreacion` y campos populate.
+- **`Update*`**: derivado de `Create*` con `.partial()`. Discriminated unions extienden con `nivel` / `alcance` literal requerido.
+- **Fechas**: `string` ISO 8601.
+- **MongoDB ObjectIds**: `string`.
+- **`IPermiso` / `IRol`**: discriminated unions. No usar `Exactly<>` en sus schemas Mongoose en `acceso-datos`.

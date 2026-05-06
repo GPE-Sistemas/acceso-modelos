@@ -1,32 +1,44 @@
-import { IPermiso } from './permiso';
+import { z } from "zod";
+import { PermisoSchema } from "./permiso";
 
 /**
  * Mensaje de chat acotado a una emergencia. Vive y muere con la emergencia.
  * No reutiliza el chat general del sistema.
  */
-export interface IMensajeEmergencia {
-  _id?: string;
-  fechaCreacion?: string;
-  idEmergencia?: string;
-  idPermiso?: string;       // autor
-  texto?: string;
-  leidoPor?: string[];      // idsPermisos que ya leyeron
-  // Populate
-  permiso?: IPermiso;
-}
+export const MensajeEmergenciaSchema = z
+  .object({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idEmergencia: z.string().optional(),
+    /** Autor */
+    idPermiso: z.string().optional(),
+    texto: z.string().optional(),
+    /** idsPermisos que ya leyeron */
+    leidoPor: z.array(z.string()).optional(),
+    // Populate
+    permiso: PermisoSchema.optional(),
+  })
+  .passthrough();
 
-type OmitirPopulate = 'permiso';
+export const CreateMensajeEmergenciaSchema = MensajeEmergenciaSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  leidoPor: true,
+  permiso: true,
+});
 
-type OmitirCreate = '_id' | 'fechaCreacion' | 'leidoPor' | OmitirPopulate;
+export const UpdateMensajeEmergenciaSchema = MensajeEmergenciaSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  idEmergencia: true,
+  idPermiso: true,
+  permiso: true,
+}).partial();
 
-export interface ICreateMensajeEmergencia extends Omit<
-  Partial<IMensajeEmergencia>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion' | 'idEmergencia' | 'idPermiso' | OmitirPopulate;
-
-export interface IUpdateMensajeEmergencia extends Omit<
-  Partial<IMensajeEmergencia>,
-  OmitirUpdate
-> {}
+export type IMensajeEmergencia = z.infer<typeof MensajeEmergenciaSchema>;
+export type ICreateMensajeEmergencia = z.infer<
+  typeof CreateMensajeEmergenciaSchema
+>;
+export type IUpdateMensajeEmergencia = z.infer<
+  typeof UpdateMensajeEmergenciaSchema
+>;

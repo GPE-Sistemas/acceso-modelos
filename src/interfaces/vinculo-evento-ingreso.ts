@@ -1,10 +1,19 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IEventoVisita } from './evento-visita';
-import { IIngresoEgreso } from './ingreso-egreso';
-import { IVisitante } from './visitante';
+import { z } from "zod";
+import type { ICliente } from "./cliente";
+import { ClienteSchema } from "./cliente";
+import type { IComplejo } from "./complejo";
+import { ComplejoSchema } from "./complejo";
+import type { IEventoVisita } from "./evento-visita";
+import { EventoVisitaSchema } from "./evento-visita";
+import type { IIngresoEgreso } from "./ingreso-egreso";
+import { IngresoEgresoSchema } from "./ingreso-egreso";
+import type { IVisitante } from "./visitante";
+import { VisitanteSchema } from "./visitante";
 
-export type ITipoVinculoEventoIngreso = 'Ingreso' | 'Egreso';
+export const TipoVinculoEventoIngresoSchema = z.enum(["Ingreso", "Egreso"]);
+export type ITipoVinculoEventoIngreso = z.infer<
+  typeof TipoVinculoEventoIngresoSchema
+>;
 
 export interface IVinculoEventoIngreso {
   _id?: string;
@@ -14,32 +23,64 @@ export interface IVinculoEventoIngreso {
   idEventoVisita?: string;
   idIngresoEgreso?: string;
   tipo?: ITipoVinculoEventoIngreso;
-  idsVisitantesAplicados?: string[]; // subset de IEventoVisita.idsVisitantes que entró/salió en este vínculo
+  /** Subset de IEventoVisita.idsVisitantes que entró/salió en este vínculo */
+  idsVisitantesAplicados?: string[];
   // Populate
   cliente?: ICliente;
   complejo?: IComplejo;
   eventoVisita?: IEventoVisita;
   ingresoEgreso?: IIngresoEgreso;
   visitantesAplicados?: IVisitante[];
+  [key: string]: any;
 }
 
-type OmitirPopulate =
-  | 'cliente'
-  | 'complejo'
-  | 'eventoVisita'
-  | 'ingresoEgreso'
-  | 'visitantesAplicados';
+type VinculoEventoIngresoPopulateKey =
+  | "cliente"
+  | "complejo"
+  | "eventoVisita"
+  | "ingresoEgreso"
+  | "visitantesAplicados";
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
-
-export interface ICreateVinculoEventoIngreso extends Omit<
+export type ICreateVinculoEventoIngreso = Omit<
   Partial<IVinculoEventoIngreso>,
-  OmitirCreate
-> {}
+  "_id" | "fechaCreacion" | VinculoEventoIngresoPopulateKey
+>;
+export type IUpdateVinculoEventoIngreso = ICreateVinculoEventoIngreso;
 
-type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
+const _VinculoEventoIngresoSchema = z
+  .object({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    idEventoVisita: z.string().optional(),
+    idIngresoEgreso: z.string().optional(),
+    tipo: TipoVinculoEventoIngresoSchema.optional(),
+    idsVisitantesAplicados: z.array(z.string()).optional(),
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+    eventoVisita: EventoVisitaSchema.optional(),
+    ingresoEgreso: IngresoEgresoSchema.optional(),
+    visitantesAplicados: z.array(VisitanteSchema).optional(),
+  })
+  .passthrough();
 
-export interface IUpdateVinculoEventoIngreso extends Omit<
-  Partial<IVinculoEventoIngreso>,
-  OmitirUpdate
-> {}
+const _CreateVinculoEventoIngresoSchema = _VinculoEventoIngresoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+  eventoVisita: true,
+  ingresoEgreso: true,
+  visitantesAplicados: true,
+});
+
+const _UpdateVinculoEventoIngresoSchema =
+  _CreateVinculoEventoIngresoSchema.partial();
+
+export const VinculoEventoIngresoSchema: z.ZodType<IVinculoEventoIngreso> =
+  _VinculoEventoIngresoSchema as unknown as z.ZodType<IVinculoEventoIngreso>;
+export const CreateVinculoEventoIngresoSchema: z.ZodType<ICreateVinculoEventoIngreso> =
+  _CreateVinculoEventoIngresoSchema as unknown as z.ZodType<ICreateVinculoEventoIngreso>;
+export const UpdateVinculoEventoIngresoSchema: z.ZodType<IUpdateVinculoEventoIngreso> =
+  _UpdateVinculoEventoIngresoSchema as unknown as z.ZodType<IUpdateVinculoEventoIngreso>;

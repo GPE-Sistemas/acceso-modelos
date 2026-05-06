@@ -1,46 +1,49 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
 
-export type ITipoDispositivo =
-  | 'Terminal de reconocimiento facial'
-  | 'Lector de huella digital'
-  | 'Lector de tarjeta'
-  | 'Teclado numérico'
-  | 'Otro';
+export const TipoDispositivoSchema = z.enum([
+  "Terminal de reconocimiento facial",
+  "Lector de huella digital",
+  "Lector de tarjeta",
+  "Teclado numérico",
+  "Otro",
+]);
 
-export interface IConfigDispositivo {
-  username?: string;
-  password?: string;
-  apikey?: string;
-}
+export const ConfigDispositivoSchema = z.looseObject({
+    username: z.string().optional(),
+    password: z.string().optional(),
+    apikey: z.string().optional(),
+  });
 
-export interface IDispositivo {
-  _id?: string;
-  fechaCreacion?: string;
-  idCliente?: string;
-  idComplejo?: string;
-  // Datos específicos del dispositivo
-  tipo?: ITipoDispositivo;
-  serialNumber?: string;
-  marca?: string;
-  modelo?: string;
-  config?: IConfigDispositivo;
+export const DispositivoSchema = z.looseObject({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    // Datos específicos del dispositivo
+    tipo: TipoDispositivoSchema.optional(),
+    serialNumber: z.string().optional(),
+    marca: z.string().optional(),
+    modelo: z.string().optional(),
+    config: ConfigDispositivoSchema.optional(),
+    // Populate
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+  });
 
-  // Populate
-  cliente?: ICliente;
-  complejo?: IComplejo;
-}
+export const CreateDispositivoSchema = DispositivoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+});
 
-type OmitirCreate = '_id' | 'fechaCreacion';
+export const UpdateDispositivoSchema = DispositivoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+}).partial();
 
-export interface ICreateDispositivo extends Omit<
-  Partial<IDispositivo>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion';
-
-export interface IUpdateDispositivo extends Omit<
-  Partial<IDispositivo>,
-  OmitirUpdate
-> {}
+export type ITipoDispositivo = z.infer<typeof TipoDispositivoSchema>;
+export type IConfigDispositivo = z.infer<typeof ConfigDispositivoSchema>;
+export type IDispositivo = z.infer<typeof DispositivoSchema>;
+export type ICreateDispositivo = z.infer<typeof CreateDispositivoSchema>;
+export type IUpdateDispositivo = z.infer<typeof UpdateDispositivoSchema>;

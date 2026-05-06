@@ -1,40 +1,44 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IPermiso } from './permiso';
-import { IVehiculo } from './vehiculo';
-import { IVisitante } from './visitante';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
+import { PermisoSchema } from "./permiso";
+import { VehiculoSchema } from "./vehiculo";
+import { VisitanteSchema } from "./visitante";
 
-export type ITipoVinculoVehiculo = 'Titular' | 'Autorizado';
+export const TipoVinculoVehiculoSchema = z.enum(["Titular", "Autorizado"]);
+export type ITipoVinculoVehiculo = z.infer<typeof TipoVinculoVehiculoSchema>;
 
-export interface IVinculoVehiculo {
-  _id?: string;
-  fechaCreacion?: string;
-  idCliente?: string;
-  idComplejo?: string;
-  idVehiculo?: string;
-  idPermiso?: string;    // mutuamente excluyente con idVisitante
-  idVisitante?: string;  // mutuamente excluyente con idPermiso
-  tipo?: ITipoVinculoVehiculo;
+export const VinculoVehiculoSchema = z.looseObject({
+  _id: z.string().optional(),
+  fechaCreacion: z.string().optional(),
+  idCliente: z.string().optional(),
+  idComplejo: z.string().optional(),
+  idVehiculo: z.string().optional(),
+  /** Mutuamente excluyente con idVisitante */
+  idPermiso: z.string().optional(),
+  /** Mutuamente excluyente con idPermiso */
+  idVisitante: z.string().optional(),
+  tipo: TipoVinculoVehiculoSchema.optional(),
   // Populate
-  cliente?: ICliente;
-  complejo?: IComplejo;
-  vehiculo?: IVehiculo;
-  permiso?: IPermiso;
-  visitante?: IVisitante;
-}
+  cliente: ClienteSchema.optional(),
+  complejo: ComplejoSchema.optional(),
+  vehiculo: VehiculoSchema.optional(),
+  permiso: PermisoSchema.optional(),
+  visitante: VisitanteSchema.optional(),
+});
 
-type OmitirPopulate = 'cliente' | 'complejo' | 'vehiculo' | 'permiso' | 'visitante';
+export const CreateVinculoVehiculoSchema = VinculoVehiculoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+  vehiculo: true,
+  permiso: true,
+  visitante: true,
+});
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
+export const UpdateVinculoVehiculoSchema = CreateVinculoVehiculoSchema.partial();
 
-export interface ICreateVinculoVehiculo extends Omit<
-  Partial<IVinculoVehiculo>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
-
-export interface IUpdateVinculoVehiculo extends Omit<
-  Partial<IVinculoVehiculo>,
-  OmitirUpdate
-> {}
+export type IVinculoVehiculo = z.infer<typeof VinculoVehiculoSchema>;
+export type ICreateVinculoVehiculo = z.infer<typeof CreateVinculoVehiculoSchema>;
+export type IUpdateVinculoVehiculo = z.infer<typeof UpdateVinculoVehiculoSchema>;

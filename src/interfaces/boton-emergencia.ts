@@ -1,40 +1,54 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
 
-export interface IConfigBotonEmergencia {
-  permiteImagenes?: boolean;
-  // Extensible: futuras flags (permiteAudio, requiereConfirmacion, etc.)
-  [key: string]: any;
-}
+export const ConfigBotonEmergenciaSchema = z.looseObject({
+    permiteImagenes: z.boolean().optional(),
+    // Extensible: futuras flags (permiteAudio, requiereConfirmacion, etc.)
+  });
 
-export interface IBotonEmergencia {
-  _id?: string;
-  fechaCreacion?: string;
-  habilitado?: boolean;
-  global?: boolean;            // true => visible para todos los complejos. Solo Proveedor crea globales.
-  idCliente?: string;          // requerido si global=false
-  idComplejo?: string;         // requerido si global=false
-  texto?: string;
-  icono?: string;              // nombre de ícono Material (ej: 'local_police', 'medical_services')
-  color?: string;              // hex (#rrggbb)
-  config?: IConfigBotonEmergencia;
-  // Populate
-  cliente?: ICliente;
-  complejo?: IComplejo;
-}
+export const BotonEmergenciaSchema = z.looseObject({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    habilitado: z.boolean().optional(),
+    /** true => visible para todos los complejos. Solo Proveedor crea globales. */
+    global: z.boolean().optional(),
+    /** Requerido si global=false */
+    idCliente: z.string().optional(),
+    /** Requerido si global=false */
+    idComplejo: z.string().optional(),
+    texto: z.string().optional(),
+    /** Nombre de ícono Material (ej: 'local_police', 'medical_services') */
+    icono: z.string().optional(),
+    /** hex (#rrggbb) */
+    color: z.string().optional(),
+    config: ConfigBotonEmergenciaSchema.optional(),
+    // Populate
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+  });
 
-type OmitirPopulate = 'cliente' | 'complejo';
+export const CreateBotonEmergenciaSchema = BotonEmergenciaSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+});
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
+export const UpdateBotonEmergenciaSchema = BotonEmergenciaSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+}).partial();
 
-export interface ICreateBotonEmergencia extends Omit<
-  Partial<IBotonEmergencia>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
-
-export interface IUpdateBotonEmergencia extends Omit<
-  Partial<IBotonEmergencia>,
-  OmitirUpdate
-> {}
+export type IConfigBotonEmergencia = z.infer<
+  typeof ConfigBotonEmergenciaSchema
+> & { [key: string]: any };
+export type IBotonEmergencia = z.infer<typeof BotonEmergenciaSchema>;
+export type ICreateBotonEmergencia = z.infer<
+  typeof CreateBotonEmergenciaSchema
+>;
+export type IUpdateBotonEmergencia = z.infer<
+  typeof UpdateBotonEmergenciaSchema
+>;

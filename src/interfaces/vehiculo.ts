@@ -1,39 +1,45 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IUnidadFuncional } from './unidad-funcional';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
+import { UnidadFuncionalSchema } from "./unidad-funcional";
 
-export interface IDatosVehiculo {
-  marca?: string;
-  modelo?: string;
-  color?: string;
-  patente?: string;
-}
+export const DatosVehiculoSchema = z.looseObject({
+    marca: z.string().optional(),
+    modelo: z.string().optional(),
+    color: z.string().optional(),
+    patente: z.string().optional(),
+  });
 
-export interface IVehiculo {
-  _id?: string;
-  fechaCreacion?: string;
-  idCliente?: string;
-  idComplejo?: string;
-  idUnidadFuncional?: string;
-  datosVehiculo?: IDatosVehiculo;
-  // Populate
-  cliente?: ICliente;
-  complejo?: IComplejo;
-  unidadFuncional?: IUnidadFuncional;
-}
+export const VehiculoSchema = z.looseObject({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    idUnidadFuncional: z.string().optional(),
+    datosVehiculo: DatosVehiculoSchema.optional(),
+    // Populate
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+    unidadFuncional: UnidadFuncionalSchema.optional(),
+  });
 
-type OmitirPopulate = 'cliente' | 'complejo' | 'unidadFuncional';
+export const CreateVehiculoSchema = VehiculoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+  unidadFuncional: true,
+});
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
+export const UpdateVehiculoSchema = VehiculoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+  unidadFuncional: true,
+}).partial();
 
-export interface ICreateVehiculo extends Omit<
-  Partial<IVehiculo>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
-
-export interface IUpdateVehiculo extends Omit<
-  Partial<IVehiculo>,
-  OmitirUpdate
-> {}
+export type IDatosVehiculo = z.infer<typeof DatosVehiculoSchema>;
+export type IVehiculo = z.infer<typeof VehiculoSchema>;
+export type ICreateVehiculo = z.infer<typeof CreateVehiculoSchema>;
+export type IUpdateVehiculo = z.infer<typeof UpdateVehiculoSchema>;

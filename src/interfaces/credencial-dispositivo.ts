@@ -1,35 +1,51 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IDispositivo } from './dispositivo';
-import { IPermiso } from './permiso';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
+import { DispositivoSchema } from "./dispositivo";
+import { PermisoSchema } from "./permiso";
 
-export interface ICredencialDispositivo {
-  _id?: string;
-  fechaCreacion?: string;
-  idCliente?: string;
-  idComplejo?: string;
-  idDispositivo?: string;
-  identificador?: string; // valor propio del dispositivo (id de cara, número de tarjeta, QR, PIN, etc.)
-  idPermiso?: string;
-  // Populate
-  cliente?: ICliente;
-  complejo?: IComplejo;
-  dispositivo?: IDispositivo;
-  permiso?: IPermiso;
-}
+export const CredencialDispositivoSchema = z.looseObject({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    idDispositivo: z.string().optional(),
+    /** Valor propio del dispositivo (id de cara, número de tarjeta, QR, PIN, etc.) */
+    identificador: z.string().optional(),
+    idPermiso: z.string().optional(),
+    // Populate
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+    dispositivo: DispositivoSchema.optional(),
+    permiso: PermisoSchema.optional(),
+  });
 
-type OmitirPopulate = 'cliente' | 'complejo' | 'dispositivo' | 'permiso';
+export const CreateCredencialDispositivoSchema = CredencialDispositivoSchema.omit(
+  {
+    _id: true,
+    fechaCreacion: true,
+    cliente: true,
+    complejo: true,
+    dispositivo: true,
+    permiso: true,
+  },
+);
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
+export const UpdateCredencialDispositivoSchema = CredencialDispositivoSchema.omit(
+  {
+    _id: true,
+    fechaCreacion: true,
+    cliente: true,
+    complejo: true,
+    dispositivo: true,
+    permiso: true,
+  },
+).partial();
 
-export interface ICreateCredencialDispositivo extends Omit<
-  Partial<ICredencialDispositivo>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
-
-export interface IUpdateCredencialDispositivo extends Omit<
-  Partial<ICredencialDispositivo>,
-  OmitirUpdate
-> {}
+export type ICredencialDispositivo = z.infer<typeof CredencialDispositivoSchema>;
+export type ICreateCredencialDispositivo = z.infer<
+  typeof CreateCredencialDispositivoSchema
+>;
+export type IUpdateCredencialDispositivo = z.infer<
+  typeof UpdateCredencialDispositivoSchema
+>;

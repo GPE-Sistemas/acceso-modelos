@@ -1,46 +1,56 @@
-import { ICliente } from './cliente';
-import { IGeoJSONMultiPolygon } from '../auxiliares/geojson';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { GeoJSONMultiPolygonSchema } from "../auxiliares/geojson";
 
-export interface IConfigEmergenciasComplejo {
-  /** Si false, las emergencias enviadas desde mobile deben validarse contra el polígono del complejo. Default: true. */
-  permitirFueraDelComplejo?: boolean;
-}
+export const ConfigEmergenciasComplejoSchema = z.looseObject({
+    /** Si false, las emergencias enviadas desde mobile deben validarse contra el polígono del complejo. Default: true. */
+    permitirFueraDelComplejo: z.boolean().optional(),
+  });
 
-export interface IConfigComplejo {
-  imagenes?: {
-    logo?: string;
-    banner?: string;
-  };
-  emergencias?: IConfigEmergenciasComplejo;
-  /** Polígono(s) que delimita(n) el complejo. Usado para geo-fence de emergencias. */
-  geoJson?: IGeoJSONMultiPolygon;
+export const ConfigComplejoSchema = z.looseObject({
+    imagenes: z.looseObject({
+        logo: z.string().optional(),
+        banner: z.string().optional(),
+      })
+      .optional(),
+    emergencias: ConfigEmergenciasComplejoSchema.optional(),
+    /** Polígono(s) que delimita(n) el complejo. Usado para geo-fence de emergencias. */
+    geoJson: GeoJSONMultiPolygonSchema.optional(),
+  });
+
+export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
+
+export const ComplejoSchema = z.looseObject({
+    _id: z.string().optional(),
+    idCliente: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    habilitado: z.boolean().optional(),
+    nombre: z.string().optional(),
+    tipo: TipoComplejoSchema.optional(),
+    config: ConfigComplejoSchema.optional(),
+    // Populate
+    cliente: ClienteSchema.optional(),
+  });
+
+export const CreateComplejoSchema = ComplejoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+});
+
+export const UpdateComplejoSchema = ComplejoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+}).partial();
+
+export type IConfigEmergenciasComplejo = z.infer<
+  typeof ConfigEmergenciasComplejoSchema
+>;
+export type IConfigComplejo = z.infer<typeof ConfigComplejoSchema> & {
   [key: string]: any;
-}
-
-export type ITipoComplejo = 'Barrio' | 'Edificio' | 'Condominio';
-
-export interface IComplejo {
-  _id?: string;
-  idCliente?: string;
-  fechaCreacion?: string;
-  habilitado?: boolean;
-  nombre?: string;
-  tipo?: ITipoComplejo;
-  config?: IConfigComplejo;
-  // Populate
-  cliente?: ICliente;
-}
-
-type OmitirCreate = '_id' | 'fechaCreacion' | 'cliente';
-
-export interface ICreateComplejo extends Omit<
-  Partial<IComplejo>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion' | 'cliente';
-
-export interface IUpdateComplejo extends Omit<
-  Partial<IComplejo>,
-  OmitirUpdate
-> {}
+};
+export type ITipoComplejo = z.infer<typeof TipoComplejoSchema>;
+export type IComplejo = z.infer<typeof ComplejoSchema>;
+export type ICreateComplejo = z.infer<typeof CreateComplejoSchema>;
+export type IUpdateComplejo = z.infer<typeof UpdateComplejoSchema>;

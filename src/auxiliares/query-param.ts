@@ -1,19 +1,23 @@
-export interface IQueryParam {
-  page?: string | number;
-  limit?: string | number;
-  sort?: string;
-  filter?: string;
-  populate?: string;
-  select?: string;
-  excludeTotalCount?: boolean;
-  onlyTotalCount?: boolean;
-  executionStats?: boolean;
-  /**
-   * Si está en true setea el limit en 0, lo que significa que no hay límite en la cantidad de resultados
-   */
-  unlimited?: boolean;
+import { z } from "zod";
+
+export const QueryParamSchema = z.looseObject({
+    page: z.union([z.string(), z.number()]).optional(),
+    limit: z.union([z.string(), z.number()]).optional(),
+    sort: z.string().optional(),
+    filter: z.string().optional(),
+    populate: z.string().optional(),
+    select: z.string().optional(),
+    excludeTotalCount: z.boolean().optional(),
+    onlyTotalCount: z.boolean().optional(),
+    executionStats: z.boolean().optional(),
+    /** Si está en true setea el limit en 0, lo que significa que no hay límite en la cantidad de resultados */
+    unlimited: z.boolean().optional(),
+  });
+
+export type IQueryParam = z.infer<typeof QueryParamSchema> & {
   [key: string]: any;
-}
+};
+
 export interface IPopulate {
   path?: string;
   select?: string;

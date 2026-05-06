@@ -1,33 +1,38 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IUnidadFuncional } from './unidad-funcional';
-import { IDatosPersonales } from './usuario';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
+import { UnidadFuncionalSchema } from "./unidad-funcional";
+import { DatosPersonalesSchema } from "./usuario";
 
-export interface IVisitante {
-  _id?: string;
-  fechaCreacion?: string;
-  idCliente?: string;
-  idComplejo?: string;
-  idUnidadFuncional?: string;
-  datosPersonales?: IDatosPersonales;
-  // Populate
-  cliente?: ICliente;
-  complejo?: IComplejo;
-  unidadFuncional?: IUnidadFuncional;
-}
+export const VisitanteSchema = z.looseObject({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    idUnidadFuncional: z.string().optional(),
+    datosPersonales: DatosPersonalesSchema.optional(),
+    // Populate
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+    unidadFuncional: UnidadFuncionalSchema.optional(),
+  });
 
-type OmitirPopulate = 'cliente' | 'complejo' | 'unidadFuncional';
+export const CreateVisitanteSchema = VisitanteSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+  unidadFuncional: true,
+});
 
-type OmitirCreate = '_id' | 'fechaCreacion' | OmitirPopulate;
+export const UpdateVisitanteSchema = VisitanteSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+  unidadFuncional: true,
+}).partial();
 
-export interface ICreateVisitante extends Omit<
-  Partial<IVisitante>,
-  OmitirCreate
-> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion' | OmitirPopulate;
-
-export interface IUpdateVisitante extends Omit<
-  Partial<IVisitante>,
-  OmitirUpdate
-> {}
+export type IVisitante = z.infer<typeof VisitanteSchema>;
+export type ICreateVisitante = z.infer<typeof CreateVisitanteSchema>;
+export type IUpdateVisitante = z.infer<typeof UpdateVisitanteSchema>;

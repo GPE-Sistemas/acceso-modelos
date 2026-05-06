@@ -1,77 +1,146 @@
-import { IComplejo } from './complejo';
-import { ICliente } from './cliente';
-import { IRol } from './rol';
-import { IUnidadFuncional } from './unidad-funcional';
-import { IUsuario } from './usuario';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
+import { RolSchema } from "./rol";
+import { UnidadFuncionalSchema } from "./unidad-funcional";
+import { UsuarioSchema } from "./usuario";
 
-export interface IConfigPermiso {
+export const ConfigPermisoSchema = z.looseObject({});
+
+export const NivelPermisoSchema = z.enum([
+  "Cliente",
+  "Complejo",
+  "Unidad Funcional",
+]);
+
+export type IConfigPermiso = z.infer<typeof ConfigPermisoSchema> & {
   [key: string]: any;
-}
+};
+export type INivelPermiso = z.infer<typeof NivelPermisoSchema>;
 
-export type INivelPermiso = 'Cliente' | 'Complejo' | 'Unidad Funcional';
-
-interface IPermisoBase {
-  _id?: string;
-  fechaCreacion?: string;
-  habilitado?: boolean;
-  fechaExpiracion?: string;
-  username?: string;
-  idsRoles?: string[];
-  config?: IConfigPermiso;
+const PermisoBaseFields = {
+  _id: z.string().optional(),
+  fechaCreacion: z.string().optional(),
+  habilitado: z.boolean().optional(),
+  fechaExpiracion: z.string().optional(),
+  username: z.string().optional(),
+  idsRoles: z.array(z.string()).optional(),
+  config: ConfigPermisoSchema.optional(),
   // Virtuals
-  usuario?: IUsuario;
-  roles?: IRol[];
-}
+  usuario: UsuarioSchema.optional(),
+  roles: z.array(RolSchema).optional(),
+};
 
-export interface IPermisoCliente extends IPermisoBase {
-  nivel: 'Cliente';
-  idCliente: string;
+export const PermisoClienteSchema = z.looseObject({
+  ...PermisoBaseFields,
+  nivel: z.literal("Cliente"),
+  idCliente: z.string(),
   // Virtual
-  cliente?: ICliente;
-}
+  cliente: ClienteSchema.optional(),
+});
 
-export interface IPermisoComplejo extends IPermisoBase {
-  nivel: 'Complejo';
-  idCliente: string;
-  idComplejo: string;
+export const PermisoComplejoSchema = z.looseObject({
+  ...PermisoBaseFields,
+  nivel: z.literal("Complejo"),
+  idCliente: z.string(),
+  idComplejo: z.string(),
   // Virtuals
-  cliente?: ICliente;
-  complejo?: IComplejo;
-}
+  cliente: ClienteSchema.optional(),
+  complejo: ComplejoSchema.optional(),
+});
 
-export interface IPermisoUnidadFuncional extends IPermisoBase {
-  nivel: 'Unidad Funcional';
-  idCliente: string;
-  idComplejo: string;
-  idUnidadFuncional: string;
+export const PermisoUnidadFuncionalSchema = z.looseObject({
+  ...PermisoBaseFields,
+  nivel: z.literal("Unidad Funcional"),
+  idCliente: z.string(),
+  idComplejo: z.string(),
+  idUnidadFuncional: z.string(),
   // Virtuals
-  cliente?: ICliente;
-  complejo?: IComplejo;
-  unidadFuncional?: IUnidadFuncional;
-}
+  cliente: ClienteSchema.optional(),
+  complejo: ComplejoSchema.optional(),
+  unidadFuncional: UnidadFuncionalSchema.optional(),
+});
 
-export type IPermiso =
-  | IPermisoCliente
-  | IPermisoComplejo
-  | IPermisoUnidadFuncional;
+export const PermisoSchema = z.discriminatedUnion("nivel", [
+  PermisoClienteSchema,
+  PermisoComplejoSchema,
+  PermisoUnidadFuncionalSchema,
+]);
 
-type OmitirVirtuales =
-  | '_id'
-  | 'fechaCreacion'
-  | 'usuario'
-  | 'roles'
-  | 'cliente'
-  | 'complejo'
-  | 'unidadFuncional';
+export const CreatePermisoSchema = z.discriminatedUnion("nivel", [
+  PermisoClienteSchema
+    .omit({
+      _id: true,
+      fechaCreacion: true,
+      usuario: true,
+      roles: true,
+      cliente: true,
+    })
+    .extend({ password: z.string().optional() }),
+  PermisoComplejoSchema
+    .omit({
+      _id: true,
+      fechaCreacion: true,
+      usuario: true,
+      roles: true,
+      cliente: true,
+      complejo: true,
+    })
+    .extend({ password: z.string().optional() }),
+  PermisoUnidadFuncionalSchema
+    .omit({
+      _id: true,
+      fechaCreacion: true,
+      usuario: true,
+      roles: true,
+      cliente: true,
+      complejo: true,
+      unidadFuncional: true,
+    })
+    .extend({ password: z.string().optional() }),
+]);
 
-export type ICreatePermiso =
-  | (Omit<IPermisoCliente, OmitirVirtuales> & { password?: string })
-  | (Omit<IPermisoComplejo, OmitirVirtuales> & { password?: string })
-  | (Omit<IPermisoUnidadFuncional, OmitirVirtuales> & { password?: string });
+export const UpdatePermisoSchema = z.discriminatedUnion("nivel", [
+  PermisoClienteSchema
+    .omit({
+      _id: true,
+      fechaCreacion: true,
+      usuario: true,
+      roles: true,
+      cliente: true,
+    })
+    .partial()
+    .extend({ nivel: z.literal("Cliente") }),
+  PermisoComplejoSchema
+    .omit({
+      _id: true,
+      fechaCreacion: true,
+      usuario: true,
+      roles: true,
+      cliente: true,
+      complejo: true,
+    })
+    .partial()
+    .extend({ nivel: z.literal("Complejo") }),
+  PermisoUnidadFuncionalSchema
+    .omit({
+      _id: true,
+      fechaCreacion: true,
+      usuario: true,
+      roles: true,
+      cliente: true,
+      complejo: true,
+      unidadFuncional: true,
+    })
+    .partial()
+    .extend({ nivel: z.literal("Unidad Funcional") }),
+]);
 
-export type IUpdatePermiso =
-  | (Partial<Omit<IPermisoCliente, OmitirVirtuales>> & { nivel: 'Cliente' })
-  | (Partial<Omit<IPermisoComplejo, OmitirVirtuales>> & { nivel: 'Complejo' })
-  | (Partial<Omit<IPermisoUnidadFuncional, OmitirVirtuales>> & {
-      nivel: 'Unidad Funcional';
-    });
+export type IPermisoCliente = z.infer<typeof PermisoClienteSchema>;
+export type IPermisoComplejo = z.infer<typeof PermisoComplejoSchema>;
+export type IPermisoUnidadFuncional = z.infer<
+  typeof PermisoUnidadFuncionalSchema
+>;
+export type IPermiso = z.infer<typeof PermisoSchema>;
+export type ICreatePermiso = z.infer<typeof CreatePermisoSchema>;
+export type IUpdatePermiso = z.infer<typeof UpdatePermisoSchema>;

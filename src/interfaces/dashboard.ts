@@ -1,156 +1,213 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IEmergencia } from './emergencia';
-import { IEventoVisita } from './evento-visita';
-import { IIngresoEgreso } from './ingreso-egreso';
-import { IPublicacion } from './publicacion';
-import { IVehiculo } from './vehiculo';
-import { IVinculoVehiculo } from './vinculo-vehiculo';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
+import { EmergenciaSchema } from "./emergencia";
+import { EventoVisitaSchema } from "./evento-visita";
+import { IngresoEgresoSchema } from "./ingreso-egreso";
+import { PublicacionSchema } from "./publicacion";
+import { VehiculoSchema } from "./vehiculo";
+import { VinculoVehiculoSchema } from "./vinculo-vehiculo";
 
-export interface IDashboardComplejoMovimientosPorHora {
-  hora: string; // ISO inicio de hora
-  ingresos: number;
-  egresos: number;
-}
+// ─── Dashboard nivel Complejo ────────────────────────────────────────────────
 
-export interface IDashboardComplejoMovimientos {
-  hoyIngresos: number;
-  hoyEgresos: number;
-  personasDentroEstimado: number;
-  esperandoResolucion: number;
-  porHora: IDashboardComplejoMovimientosPorHora[];
-  ultimos: IIngresoEgreso[];
-}
+export const DashboardComplejoMovimientosPorHoraSchema = z.looseObject({
+  /** ISO inicio de hora */
+  hora: z.string(),
+  ingresos: z.number(),
+  egresos: z.number(),
+});
 
-export interface IDashboardComplejoVisitas {
-  activas: number;
-  pendientesAprobacion: number;
-  proximas: IEventoVisita[];
-}
+export const DashboardComplejoMovimientosSchema = z.looseObject({
+  hoyIngresos: z.number(),
+  hoyEgresos: z.number(),
+  personasDentroEstimado: z.number(),
+  esperandoResolucion: z.number(),
+  porHora: z.array(DashboardComplejoMovimientosPorHoraSchema),
+  ultimos: z.array(IngresoEgresoSchema),
+});
 
-export interface IDashboardComplejoEmergencias {
-  activas: number;
-  porEstado: { Pendiente: number; EnAtencion: number };
-  lista: IEmergencia[];
-}
+export const DashboardComplejoVisitasSchema = z.looseObject({
+  activas: z.number(),
+  pendientesAprobacion: z.number(),
+  proximas: z.array(EventoVisitaSchema),
+});
 
-export interface IDashboardComplejoHardwareItem {
-  _id: string;
-  nombre?: string;
-  tipo?: string;
-  ultimoEvento?: string;
-}
+export const DashboardComplejoEmergenciasSchema = z.looseObject({
+  activas: z.number(),
+  porEstado: z.looseObject({
+    Pendiente: z.number(),
+    EnAtencion: z.number(),
+  }),
+  lista: z.array(EmergenciaSchema),
+});
 
-export interface IDashboardComplejoHardware {
-  dispositivosTotal: number;
-  dispositivosOnline: number;
-  dispositivosOffline: IDashboardComplejoHardwareItem[];
-}
+export const DashboardComplejoHardwareItemSchema = z.looseObject({
+  _id: z.string(),
+  nombre: z.string().optional(),
+  tipo: z.string().optional(),
+  ultimoEvento: z.string().optional(),
+});
 
-export interface IDashboardComplejoPublicaciones {
-  activas: number;
-  proximaAVencer?: IPublicacion;
-}
+export const DashboardComplejoHardwareSchema = z.looseObject({
+  dispositivosTotal: z.number(),
+  dispositivosOnline: z.number(),
+  dispositivosOffline: z.array(DashboardComplejoHardwareItemSchema),
+});
 
-export interface IDashboardComplejo {
-  idComplejo: string;
-  generadoEn: string; // ISO timestamp del cálculo
-  movimientos: IDashboardComplejoMovimientos;
-  visitas: IDashboardComplejoVisitas;
-  emergencias: IDashboardComplejoEmergencias;
-  hardware: IDashboardComplejoHardware;
-  publicaciones: IDashboardComplejoPublicaciones;
-}
+export const DashboardComplejoPublicacionesSchema = z.looseObject({
+  activas: z.number(),
+  proximaAVencer: PublicacionSchema.optional(),
+});
+
+export const DashboardComplejoSchema = z.looseObject({
+  idComplejo: z.string(),
+  /** ISO timestamp del cálculo */
+  generadoEn: z.string(),
+  movimientos: DashboardComplejoMovimientosSchema,
+  visitas: DashboardComplejoVisitasSchema,
+  emergencias: DashboardComplejoEmergenciasSchema,
+  hardware: DashboardComplejoHardwareSchema,
+  publicaciones: DashboardComplejoPublicacionesSchema,
+});
 
 // ─── Dashboard nivel Unidad Funcional ────────────────────────────────────────
 
-export interface IDashboardUFVisitas {
-  misActivas: number;            // eventos creados por mí, estado in [Pendiente, Activa]
-  misPendientesAprobacion: number; // eventos creados por mí con estadoAprobacion = Pendiente
-  paraAprobarPorMi: number;      // eventos pendientes destinados a mi UF (acción aprobar)
-  proximas: IEventoVisita[];     // mis próximas (top N)
-}
+export const DashboardUFVisitasSchema = z.looseObject({
+  /** Eventos creados por mí, estado in [Pendiente, Activa] */
+  misActivas: z.number(),
+  /** Eventos creados por mí con estadoAprobacion = Pendiente */
+  misPendientesAprobacion: z.number(),
+  /** Eventos pendientes destinados a mi UF (acción aprobar) */
+  paraAprobarPorMi: z.number(),
+  /** Mis próximas (top N) */
+  proximas: z.array(EventoVisitaSchema),
+});
 
-export interface IDashboardUFMovimientos {
-  misRecientes: IIngresoEgreso[]; // ingresos donde idPermiso = mi permiso
-}
+export const DashboardUFMovimientosSchema = z.looseObject({
+  /** Ingresos donde idPermiso = mi permiso */
+  misRecientes: z.array(IngresoEgresoSchema),
+});
 
-export interface IDashboardUFVehiculos {
-  total: number;
-  lista: IVehiculo[];
-  vinculos: IVinculoVehiculo[]; // populated con vehiculo
-}
+export const DashboardUFVehiculosSchema = z.looseObject({
+  total: z.number(),
+  lista: z.array(VehiculoSchema),
+  /** Populated con vehiculo */
+  vinculos: z.array(VinculoVehiculoSchema),
+});
 
-export interface IDashboardUFPublicaciones {
-  activas: number;
-  recientes: IPublicacion[]; // top N del complejo
-}
+export const DashboardUFPublicacionesSchema = z.looseObject({
+  activas: z.number(),
+  /** Top N del complejo */
+  recientes: z.array(PublicacionSchema),
+});
 
-export interface IDashboardUF {
-  idPermiso: string;
-  idUnidadFuncional: string;
-  idComplejo: string;
-  generadoEn: string;
-  visitas: IDashboardUFVisitas;
-  movimientos: IDashboardUFMovimientos;
-  vehiculos: IDashboardUFVehiculos;
-  publicaciones: IDashboardUFPublicaciones;
-}
+export const DashboardUFSchema = z.looseObject({
+  idPermiso: z.string(),
+  idUnidadFuncional: z.string(),
+  idComplejo: z.string(),
+  generadoEn: z.string(),
+  visitas: DashboardUFVisitasSchema,
+  movimientos: DashboardUFMovimientosSchema,
+  vehiculos: DashboardUFVehiculosSchema,
+  publicaciones: DashboardUFPublicacionesSchema,
+});
 
 // ─── Dashboard nivel Cliente (Cliente final) ─────────────────────────────────
 
-export interface IDashboardClienteComplejoRow {
-  _id: string;
-  nombre?: string;
-  ingresosHoy: number;
-  visitasActivas: number;
-  emergenciasAbiertas: number;
-  dispositivosTotal: number;
-}
+export const DashboardClienteComplejoRowSchema = z.looseObject({
+  _id: z.string(),
+  nombre: z.string().optional(),
+  ingresosHoy: z.number(),
+  visitasActivas: z.number(),
+  emergenciasAbiertas: z.number(),
+  dispositivosTotal: z.number(),
+});
 
-export interface IDashboardCliente {
-  idCliente: string;
-  generadoEn: string;
-  totales: {
-    complejos: number;
-    unidadesFuncionales: number;
-    unidadesPrivadas: number;
-    unidadesComunes: number;
-    dispositivos: number;
-    permisosActivos: number;
-  };
-  pendientes: {
-    emergenciasActivas: number;
-    visitasPendientesAprobacion: number;
-  };
-  porComplejo: IDashboardClienteComplejoRow[];
-}
+export const DashboardClienteSchema = z.looseObject({
+  idCliente: z.string(),
+  generadoEn: z.string(),
+  totales: z.looseObject({
+    complejos: z.number(),
+    unidadesFuncionales: z.number(),
+    unidadesPrivadas: z.number(),
+    unidadesComunes: z.number(),
+    dispositivos: z.number(),
+    permisosActivos: z.number(),
+  }),
+  pendientes: z.looseObject({
+    emergenciasActivas: z.number(),
+    visitasPendientesAprobacion: z.number(),
+  }),
+  porComplejo: z.array(DashboardClienteComplejoRowSchema),
+});
 
 // ─── Dashboard Proveedor (visión global GPE Sistemas) ────────────────────────
 
-export interface IDashboardProveedorClienteRow {
-  _id: string;
-  nombre?: string;
-  complejos: number;
-  ingresosHoy: number;
-  emergenciasAbiertas: number;
-}
+export const DashboardProveedorClienteRowSchema = z.looseObject({
+  _id: z.string(),
+  nombre: z.string().optional(),
+  complejos: z.number(),
+  ingresosHoy: z.number(),
+  emergenciasAbiertas: z.number(),
+});
 
-export interface IDashboardProveedor {
-  generadoEn: string;
-  totales: {
-    clientes: number;
-    complejos: number;
-    unidadesFuncionales: number;
-    dispositivos: number;
-    permisosActivos: number;
-  };
-  pendientes: {
-    emergenciasActivas: number;
-    visitasPendientesAprobacion: number;
-  };
-  topClientes: IDashboardProveedorClienteRow[];
-  emergenciasRecientes: IEmergencia[];
-  clientesRecientes: ICliente[];
-  complejosRecientes: IComplejo[];
-}
+export const DashboardProveedorSchema = z.looseObject({
+  generadoEn: z.string(),
+  totales: z.looseObject({
+    clientes: z.number(),
+    complejos: z.number(),
+    unidadesFuncionales: z.number(),
+    dispositivos: z.number(),
+    permisosActivos: z.number(),
+  }),
+  pendientes: z.looseObject({
+    emergenciasActivas: z.number(),
+    visitasPendientesAprobacion: z.number(),
+  }),
+  topClientes: z.array(DashboardProveedorClienteRowSchema),
+  emergenciasRecientes: z.array(EmergenciaSchema),
+  clientesRecientes: z.array(ClienteSchema),
+  complejosRecientes: z.array(ComplejoSchema),
+});
+
+// ─── Type exports ───────────────────────────────────────────────────────────
+
+export type IDashboardComplejoMovimientosPorHora = z.infer<
+  typeof DashboardComplejoMovimientosPorHoraSchema
+>;
+export type IDashboardComplejoMovimientos = z.infer<
+  typeof DashboardComplejoMovimientosSchema
+>;
+export type IDashboardComplejoVisitas = z.infer<
+  typeof DashboardComplejoVisitasSchema
+>;
+export type IDashboardComplejoEmergencias = z.infer<
+  typeof DashboardComplejoEmergenciasSchema
+>;
+export type IDashboardComplejoHardwareItem = z.infer<
+  typeof DashboardComplejoHardwareItemSchema
+>;
+export type IDashboardComplejoHardware = z.infer<
+  typeof DashboardComplejoHardwareSchema
+>;
+export type IDashboardComplejoPublicaciones = z.infer<
+  typeof DashboardComplejoPublicacionesSchema
+>;
+export type IDashboardComplejo = z.infer<typeof DashboardComplejoSchema>;
+export type IDashboardUFVisitas = z.infer<typeof DashboardUFVisitasSchema>;
+export type IDashboardUFMovimientos = z.infer<
+  typeof DashboardUFMovimientosSchema
+>;
+export type IDashboardUFVehiculos = z.infer<typeof DashboardUFVehiculosSchema>;
+export type IDashboardUFPublicaciones = z.infer<
+  typeof DashboardUFPublicacionesSchema
+>;
+export type IDashboardUF = z.infer<typeof DashboardUFSchema>;
+export type IDashboardClienteComplejoRow = z.infer<
+  typeof DashboardClienteComplejoRowSchema
+>;
+export type IDashboardCliente = z.infer<typeof DashboardClienteSchema>;
+export type IDashboardProveedorClienteRow = z.infer<
+  typeof DashboardProveedorClienteRowSchema
+>;
+export type IDashboardProveedor = z.infer<typeof DashboardProveedorSchema>;

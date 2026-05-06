@@ -1,11 +1,14 @@
-export interface ICounter {
-  _id?: string;
-  colection?: string;
-  seq?: number;
-}
+import { z } from "zod";
 
-type OmitirCreate = "_id";
-export interface ICreateCounter extends Omit<Partial<ICounter>, OmitirCreate> {}
+export const CounterSchema = z.looseObject({
+    _id: z.string().optional(),
+    colection: z.string().optional(),
+    seq: z.number().optional(),
+  });
 
-type OmitirUpdate = "_id";
-export interface IUpdateCounter extends Omit<Partial<ICounter>, OmitirUpdate> {}
+export const CreateCounterSchema = CounterSchema.omit({ _id: true });
+export const UpdateCounterSchema = CounterSchema.omit({ _id: true });
+
+export type ICounter = z.infer<typeof CounterSchema>;
+export type ICreateCounter = z.infer<typeof CreateCounterSchema>;
+export type IUpdateCounter = z.infer<typeof UpdateCounterSchema>;

@@ -1,31 +1,37 @@
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
-import { IPermiso } from './permiso';
-import { IUnidadFuncional } from './unidad-funcional';
+import { z } from "zod";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
+import { PermisoSchema } from "./permiso";
+import { UnidadFuncionalSchema } from "./unidad-funcional";
 
-export interface IEvento {
-  _id?: string;
-  fechaCreacion?: string;
-  expireAt?: string;
-  idCliente?: string;
-  idComplejo?: string;
-  idUnidadFuncional?: string;
-  // Datos del evento
-  fechaEvento?: string;
-  idPermiso?: string; // Cuando es un usuario del sistema (propietario, residente, empleado)
-  // TODO agregar datos específicos del evento, como tipo de evento, descripción, etc.
+export const EventoSchema = z.looseObject({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    expireAt: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    idUnidadFuncional: z.string().optional(),
+    fechaEvento: z.string().optional(),
+    /** Cuando es un usuario del sistema (propietario, residente, empleado) */
+    idPermiso: z.string().optional(),
+    // TODO agregar datos específicos del evento, como tipo de evento, descripción, etc.
+    // Populate
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+    unidadFuncional: UnidadFuncionalSchema.optional(),
+    permiso: PermisoSchema.optional(),
+  });
 
-  // Populate
-  cliente?: ICliente;
-  complejo?: IComplejo;
-  unidadFuncional?: IUnidadFuncional;
-  permiso?: IPermiso;
-}
+export const CreateEventoSchema = EventoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+});
 
-type OmitirCreate = '_id' | 'fechaCreacion';
+export const UpdateEventoSchema = EventoSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+}).partial();
 
-export interface ICreateEvento extends Omit<Partial<IEvento>, OmitirCreate> {}
-
-type OmitirUpdate = '_id' | 'fechaCreacion';
-
-export interface IUpdateEvento extends Omit<Partial<IEvento>, OmitirUpdate> {}
+export type IEvento = z.infer<typeof EventoSchema>;
+export type ICreateEvento = z.infer<typeof CreateEventoSchema>;
+export type IUpdateEvento = z.infer<typeof UpdateEventoSchema>;

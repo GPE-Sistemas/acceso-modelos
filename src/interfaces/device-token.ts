@@ -1,20 +1,31 @@
-export type IDevicePlatform = 'ios' | 'android';
+import { z } from "zod";
 
-export interface IDeviceToken {
-  _id?: string;
-  fechaCreacion?: string;
-  idUsuario?: string;
-  token?: string;
-  platform?: IDevicePlatform;
-  locale?: string;
-  appVersion?: string;
-  ultimaActividad?: string;
-}
+export const DevicePlatformSchema = z.enum(["ios", "android"]);
 
-type OmitirCreate = '_id' | 'fechaCreacion';
+export const DeviceTokenSchema = z.looseObject({
+    _id: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    idUsuario: z.string().optional(),
+    token: z.string().optional(),
+    platform: DevicePlatformSchema.optional(),
+    locale: z.string().optional(),
+    appVersion: z.string().optional(),
+    ultimaActividad: z.string().optional(),
+  });
 
-export interface ICreateDeviceToken extends Omit<Partial<IDeviceToken>, OmitirCreate> {}
+export const CreateDeviceTokenSchema = DeviceTokenSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+});
 
-type OmitirUpdate = '_id' | 'fechaCreacion' | 'idUsuario' | 'token';
+export const UpdateDeviceTokenSchema = DeviceTokenSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  idUsuario: true,
+  token: true,
+}).partial();
 
-export interface IUpdateDeviceToken extends Omit<Partial<IDeviceToken>, OmitirUpdate> {}
+export type IDevicePlatform = z.infer<typeof DevicePlatformSchema>;
+export type IDeviceToken = z.infer<typeof DeviceTokenSchema>;
+export type ICreateDeviceToken = z.infer<typeof CreateDeviceTokenSchema>;
+export type IUpdateDeviceToken = z.infer<typeof UpdateDeviceTokenSchema>;

@@ -1,38 +1,45 @@
-import { IGeoJSONPolygon } from '../auxiliares/geojson';
-import { ICliente } from './cliente';
-import { IComplejo } from './complejo';
+import { z } from "zod";
+import { GeoJSONPolygonSchema } from "../auxiliares/geojson";
+import { ClienteSchema } from "./cliente";
+import { ComplejoSchema } from "./complejo";
 
-export type ITipoUnidadFuncional = 'Privada' | 'Común';
+export const TipoUnidadFuncionalSchema = z.enum(["Privada", "Común"]);
 
-export interface IConfigUnidadFuncional {
-  [key: string]: any;
-}
+export const ConfigUnidadFuncionalSchema = z.looseObject({});
 
-export interface IUnidadFuncional {
-  _id?: string;
-  idCliente?: string;
-  idComplejo?: string;
-  fechaCreacion?: string;
-  habilitado?: boolean;
-  nombre?: string;
-  tipo?: ITipoUnidadFuncional;
-  ubicacion?: IGeoJSONPolygon;
-  config?: IConfigUnidadFuncional;
-  // Populate
-  cliente?: ICliente;
-  complejo?: IComplejo;
-}
+export const UnidadFuncionalSchema = z.looseObject({
+    _id: z.string().optional(),
+    idCliente: z.string().optional(),
+    idComplejo: z.string().optional(),
+    fechaCreacion: z.string().optional(),
+    habilitado: z.boolean().optional(),
+    nombre: z.string().optional(),
+    tipo: TipoUnidadFuncionalSchema.optional(),
+    ubicacion: GeoJSONPolygonSchema.optional(),
+    config: ConfigUnidadFuncionalSchema.optional(),
+    // Populate
+    cliente: ClienteSchema.optional(),
+    complejo: ComplejoSchema.optional(),
+  });
 
-type OmitirCreate = '_id' | 'fechaCreacion' | 'complejo' | 'cliente';
+export const CreateUnidadFuncionalSchema = UnidadFuncionalSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+});
 
-export interface ICreateUnidadFuncional extends Omit<
-  Partial<IUnidadFuncional>,
-  OmitirCreate
-> {}
+export const UpdateUnidadFuncionalSchema = UnidadFuncionalSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+  complejo: true,
+}).partial();
 
-type OmitirUpdate = '_id' | 'fechaCreacion' | 'complejo' | 'cliente';
-
-export interface IUpdateUnidadFuncional extends Omit<
-  Partial<IUnidadFuncional>,
-  OmitirUpdate
-> {}
+export type ITipoUnidadFuncional = z.infer<typeof TipoUnidadFuncionalSchema>;
+export type IConfigUnidadFuncional = z.infer<
+  typeof ConfigUnidadFuncionalSchema
+> & { [key: string]: any };
+export type IUnidadFuncional = z.infer<typeof UnidadFuncionalSchema>;
+export type ICreateUnidadFuncional = z.infer<typeof CreateUnidadFuncionalSchema>;
+export type IUpdateUnidadFuncional = z.infer<typeof UpdateUnidadFuncionalSchema>;

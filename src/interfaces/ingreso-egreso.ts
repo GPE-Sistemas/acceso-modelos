@@ -25,14 +25,20 @@ export interface IIngresoEgreso {
   idCliente?: string;
   idComplejo?: string;
   idUnidadFuncional?: string;
+  // Datos del evento
   fechaEvento?: string;
   tipo?: "Ingreso" | "Egreso";
   aprobado?: boolean;
   aprobadoPor?: "Sistema" | "Guardia";
+  /** ID del permiso del usuario que aprobó, si aprobadoPor === 'Guardia' */
   aprobadoPorIdPermiso?: string;
+  /** Responsable del ingreso (propietario, residente, empleado) */
   idPermiso?: string;
+  /** Otros usuarios del sistema que acompañan */
   idsPermisosAcompanantes?: string[];
+  /** Visitantes identificados sin cuenta en el sistema */
   idsVisitantes?: string[];
+  /** Cantidad de acompañantes no identificados */
   visitantesAnonimos?: number;
   categoria?: "Propietario" | "Visita";
   idAcceso?: string;

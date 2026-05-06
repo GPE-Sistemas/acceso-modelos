@@ -37,6 +37,7 @@ interface IPermisoBase {
 export interface IPermisoCliente extends IPermisoBase {
   nivel: "Cliente";
   idCliente: string;
+  // Virtual
   cliente?: ICliente;
 }
 
@@ -44,6 +45,7 @@ export interface IPermisoComplejo extends IPermisoBase {
   nivel: "Complejo";
   idCliente: string;
   idComplejo: string;
+  // Virtuals
   cliente?: ICliente;
   complejo?: IComplejo;
 }
@@ -53,6 +55,7 @@ export interface IPermisoUnidadFuncional extends IPermisoBase {
   idCliente: string;
   idComplejo: string;
   idUnidadFuncional: string;
+  // Virtuals
   cliente?: ICliente;
   complejo?: IComplejo;
   unidadFuncional?: IUnidadFuncional;

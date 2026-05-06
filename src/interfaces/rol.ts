@@ -17,7 +17,7 @@ export const AccionesRolSchema = z.enum([
   "Administración - Eliminar complejos",
   "Administración - Deshabilitar / habilitar complejos",
   "Administración - Editar configuración complejos",
-  // Permisos (no eliminan, solo deshabilitan — se referencian desde otras entidades)
+  // Permisos — no se elimina ('Administración - Eliminar permisos'): solo se deshabilitan, ya que se referencian desde otras entidades
   "Administración - Ver permisos",
   "Administración - Crear permisos",
   "Administración - Editar permisos",
@@ -106,11 +106,13 @@ export const AccionesRolSchema = z.enum([
   "Emergencias - Crear botones",
   "Emergencias - Editar botones",
   "Emergencias - Eliminar botones",
+  // Configuración por complejo (qué botones y orden ve la app mobile)
   "Emergencias - Ver configuración",
   "Emergencias - Editar configuración",
-  "Emergencias - Enviar emergencia",
-  "Emergencias - Ver emergencias",
-  "Emergencias - Atender emergencias",
+  // Operación
+  "Emergencias - Enviar emergencia", // mobile (UF)
+  "Emergencias - Ver emergencias", // panel guardia
+  "Emergencias - Atender emergencias", // tomar caso, cambiar estado, registrar interacciones, chatear
   "Emergencias - Eliminar emergencias",
 ]);
 

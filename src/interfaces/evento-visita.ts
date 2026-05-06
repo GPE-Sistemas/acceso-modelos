@@ -58,8 +58,11 @@ export interface IEventoVisita {
   fechaCreacion?: string;
   idCliente?: string;
   idComplejo?: string;
+  /** Unidad del propietario que autoriza (contexto del creador) */
   idUnidadFuncional?: string;
+  /** Destino real de la visita (puede diferir de idUnidadFuncional) */
   idUnidadFuncionalDestino?: string;
+  /** Quien creó el evento (propietario o guardia) */
   idPermiso?: string;
   creadoPor?: ICreadoPorEventoVisita;
   tipo?: ITipoEventoVisita;
@@ -68,15 +71,21 @@ export interface IEventoVisita {
   fechaDesde?: string;
   fechaHasta?: string;
   estado?: IEstadoEventoVisita;
+  /** Si true: egreso no cierra el evento; cierre solo por vencimiento de ventana */
   permiteAccesoMultiple?: boolean;
+  /** Cache: unión de idsVisitantesAplicados de los vínculos tipo 'Ingreso' */
   idsVisitantesIngresados?: string[];
+  /** Cache: idsVisitantesIngresados − idsVisitantesEgresados (quienes están actualmente adentro) */
   idsVisitantesAdentro?: string[];
   observaciones?: string;
+  /** Recurrencia (presencia => evento recurrente). Reusa fechaDesde/fechaHasta del evento. */
   recurrencia?: IRecurrenciaEventoVisita;
+  // Aprobación UF (regla actual)
   estadoAprobacion?: IEstadoAprobacionEventoVisita;
   aprobadoPorIdPermiso?: string;
   fechaAprobacion?: string;
   motivoRechazo?: string;
+  // Aprobación recurrente (admin Complejo). Sólo aplica si recurrencia presente.
   estadoAprobacionRecurrente?: IEstadoAprobacionEventoVisita;
   aprobadoRecurrentePorIdPermiso?: string;
   fechaAprobacionRecurrente?: string;

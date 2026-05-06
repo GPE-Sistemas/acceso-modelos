@@ -13,7 +13,9 @@ export const EventoSchema = z
     idComplejo: z.string().optional(),
     idUnidadFuncional: z.string().optional(),
     fechaEvento: z.string().optional(),
+    /** Cuando es un usuario del sistema (propietario, residente, empleado) */
     idPermiso: z.string().optional(),
+    // TODO agregar datos específicos del evento, como tipo de evento, descripción, etc.
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),

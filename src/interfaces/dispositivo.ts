@@ -24,6 +24,7 @@ export const DispositivoSchema = z
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
+    // Datos específicos del dispositivo
     tipo: TipoDispositivoSchema.optional(),
     serialNumber: z.string().optional(),
     marca: z.string().optional(),

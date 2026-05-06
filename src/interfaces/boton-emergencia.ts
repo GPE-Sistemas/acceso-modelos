@@ -2,12 +2,12 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 
-export const ConfigBotonEmergenciaSchema = z.looseObject({
+export const ConfigBotonEmergenciaSchema = z.object({
     permiteImagenes: z.boolean().optional(),
     // Extensible: futuras flags (permiteAudio, requiereConfirmacion, etc.)
   });
 
-export const BotonEmergenciaSchema = z.looseObject({
+export const BotonEmergenciaSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     habilitado: z.boolean().optional(),

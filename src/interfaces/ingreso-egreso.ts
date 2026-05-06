@@ -11,7 +11,7 @@ export const TipoIngresoEgresoSchema = z.enum(["Ingreso", "Egreso"]);
 export const AprobadoPorIngresoEgresoSchema = z.enum(["Sistema", "Guardia"]);
 export const CategoriaIngresoEgresoSchema = z.enum(["Propietario", "Visita"]);
 
-export const IngresoEgresoSchema = z.looseObject({
+export const IngresoEgresoSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
   expireAt: z.string().optional(),

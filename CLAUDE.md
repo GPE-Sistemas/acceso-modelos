@@ -69,14 +69,14 @@ import {
 
 ## Schemas Zod — convenciones
 
-Versión: **Zod v4.x** (`zod ^4.4.3`). Usa la API canónica de v4: `z.looseObject`, `z.strictObject`, `z.object`. Los métodos `.passthrough()` / `.strict()` / `.strip()` siguen funcionando como deprecated aliases pero **no se usan** en este repo.
+Versión: **Zod v4.x** (`zod ^4.4.3`). Usa la API canónica de v4: `z.object`, `z.strictObject`, `z.looseObject`. Los métodos `.passthrough()` / `.strict()` / `.strip()` siguen funcionando como deprecated aliases pero **no se usan** en este repo.
 
 ### Pattern único — toda entidad
 
-Patrón uniforme: declarar el schema con `z.looseObject()` (passthrough en v4), derivar Create/Update con `.omit()` / `.partial()`, exportar tipos vía `z.infer<>`.
+Patrón uniforme: declarar el schema con `z.object()` (modo strip = default), derivar Create/Update con `.omit()` / `.partial()`, exportar tipos vía `z.infer<>`.
 
 ```typescript
-export const FooSchema = z.looseObject({
+export const FooSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
   // ...
@@ -104,9 +104,9 @@ export type IUpdateFoo = z.infer<typeof UpdateFooSchema>;
 `IPermiso` (`nivel`) e `IRol` (`alcance`):
 
 ```typescript
-export const PermisoClienteSchema = z.looseObject({ ...PermisoBaseFields, nivel: z.literal("Cliente"), idCliente: z.string() });
-export const PermisoComplejoSchema = z.looseObject({ ...PermisoBaseFields, nivel: z.literal("Complejo"), idCliente: z.string(), idComplejo: z.string() });
-export const PermisoUnidadFuncionalSchema = z.looseObject({ ...PermisoBaseFields, nivel: z.literal("Unidad Funcional"), idCliente: z.string(), idComplejo: z.string(), idUnidadFuncional: z.string() });
+export const PermisoClienteSchema = z.object({ ...PermisoBaseFields, nivel: z.literal("Cliente"), idCliente: z.string() });
+export const PermisoComplejoSchema = z.object({ ...PermisoBaseFields, nivel: z.literal("Complejo"), idCliente: z.string(), idComplejo: z.string() });
+export const PermisoUnidadFuncionalSchema = z.object({ ...PermisoBaseFields, nivel: z.literal("Unidad Funcional"), idCliente: z.string(), idComplejo: z.string(), idUnidadFuncional: z.string() });
 
 export const PermisoSchema = z.discriminatedUnion("nivel", [
   PermisoClienteSchema,
@@ -115,20 +115,39 @@ export const PermisoSchema = z.discriminatedUnion("nivel", [
 ]);
 ```
 
-`z.discriminatedUnion` requiere que cada miembro sea ZodObject (incluido looseObject). Las discriminadas heredan `.omit()`, `.partial()`, `.extend()` chainables si se aplican sobre los miembros antes del `discriminatedUnion`.
+`z.discriminatedUnion` requiere que cada miembro sea ZodObject. Heredan `.omit()`, `.partial()`, `.extend()` chainables si se aplican sobre los miembros antes del `discriminatedUnion`.
 
 **Update de discriminated unions**: re-añadir el discriminante con `.extend({ nivel: z.literal(...) })` después de `.partial()` para que `nivel` siga siendo requerido y la unión siga siendo válida (sino los miembros parciales ya no son discriminables).
 
 ---
 
-## Pasthrough por defecto
+## Strip por defecto (cambio en v2.1.0)
 
-**Todos los schemas usan `z.looseObject()`** — campos no declarados pasan al output sin error. Implica:
+**Todos los schemas usan `z.object()`** — modo strip por default. Campos no declarados se descartan al hacer `.parse()` (no genera error, pero no aparecen en el output).
 
-- Forward-compat: el backend puede recibir bodies con campos nuevos y reenviarlos a `acceso-datos` sin romper.
-- **Riesgo**: un `Create*Dto` no descarta campos como `_id` si el cliente los manda. La capa de `acceso-datos` (Mongo) genera su propio `_id` ignorando el del body, pero campos sensibles como `idCliente` / `idComplejo` / `idPermisoCarga` deben sobrescribirse en el service vía `injectScope` (ya implementado en `acceso-api`).
+**Por qué strip y no loose** (decisión revisada en v2.1.0):
 
-Si en el futuro se prefiere rechazo estricto sobre algún DTO específico, usar `.strict()` localmente al definir el `createZodDto` del endpoint.
+- En v4, `z.looseObject()` agrega `[x: string]: unknown` al tipo inferido. Esto rompe la interop con clases Mongoose en `acceso-datos` (`implements Exactly<I, MongooseClass>` falla porque la clase no tiene index signature, y `IListado<MongooseDoc>` no asigna a `IListado<IFoo>`).
+- En v3, `.passthrough()` era runtime-only (no afectaba el tipo) → coexistía con Mongoose sin fricción. v4 acopla runtime y type, así que toca elegir uno.
+- Con strip + disciplina de versionado de `acceso-modelos` (campos nuevos primero acá, después en clientes), no se pierde nada práctico. El runtime descarta extras silenciosamente.
+
+**Forward-compat opcional por endpoint** (en `acceso-api`):
+
+```typescript
+import { CreateFooSchema } from 'acceso-modelos';
+import { createZodDto } from 'nestjs-zod';
+
+// Strip default — descarta extras al parse
+export class CreateFooDto extends createZodDto(CreateFooSchema) {}
+
+// Si un endpoint puntual necesita aceptar campos no declarados sin descartarlos:
+export class LooseCreateFooDto extends createZodDto(CreateFooSchema.loose()) {}
+
+// Si querés rechazo estricto (error si llega un campo extra):
+export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {}
+```
+
+**Importante para campos sensibles**: aunque `z.object` strip descarta `_id`, `idCliente`, etc del body al parsear, los services de `acceso-api` deben sobrescribir scopes vía `injectScope` antes de llamar a `acceso-datos` (ya implementado).
 
 ---
 

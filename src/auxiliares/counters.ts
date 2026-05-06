@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const CounterSchema = z.looseObject({
+export const CounterSchema = z.object({
     _id: z.string().optional(),
     colection: z.string().optional(),
     seq: z.number().optional(),

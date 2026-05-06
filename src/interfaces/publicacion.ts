@@ -21,7 +21,7 @@ export const CategoriaPublicacionSchema = z.enum([
 
 export const EstadoPublicacionSchema = z.enum(["activa", "inactiva"]);
 
-export const BloqueSchema = z.looseObject({
+export const BloqueSchema = z.object({
     tipo: TipoBloqueSchema.optional(),
     orden: z.number().optional(),
     /** texto */
@@ -44,7 +44,7 @@ export const BloqueSchema = z.looseObject({
     direccion: z.string().optional(),
   });
 
-export const PublicacionSchema = z.looseObject({
+export const PublicacionSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),

@@ -8,7 +8,7 @@ import { VisitanteSchema } from "./visitante";
 export const TipoVinculoVehiculoSchema = z.enum(["Titular", "Autorizado"]);
 export type ITipoVinculoVehiculo = z.infer<typeof TipoVinculoVehiculoSchema>;
 
-export const VinculoVehiculoSchema = z.looseObject({
+export const VinculoVehiculoSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
   idCliente: z.string().optional(),

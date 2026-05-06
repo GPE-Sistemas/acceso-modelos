@@ -12,7 +12,7 @@ export const EstadoEmergenciaSchema = z.enum([
   "Descartada",
 ]);
 
-export const UbicacionEmergenciaSchema = z.looseObject({
+export const UbicacionEmergenciaSchema = z.object({
     lat: z.number(),
     lng: z.number(),
     /** metros */
@@ -20,7 +20,7 @@ export const UbicacionEmergenciaSchema = z.looseObject({
     fuente: z.enum(["gps", "network", "cache"]).optional(),
   });
 
-export const EmergenciaSchema = z.looseObject({
+export const EmergenciaSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),

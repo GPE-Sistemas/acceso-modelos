@@ -5,7 +5,7 @@ import { RolSchema } from "./rol";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { UsuarioSchema } from "./usuario";
 
-export const ConfigPermisoSchema = z.looseObject({});
+export const ConfigPermisoSchema = z.object({});
 
 export const NivelPermisoSchema = z.enum([
   "Cliente",
@@ -31,7 +31,7 @@ const PermisoBaseFields = {
   roles: z.array(RolSchema).optional(),
 };
 
-export const PermisoClienteSchema = z.looseObject({
+export const PermisoClienteSchema = z.object({
   ...PermisoBaseFields,
   nivel: z.literal("Cliente"),
   idCliente: z.string(),
@@ -39,7 +39,7 @@ export const PermisoClienteSchema = z.looseObject({
   cliente: ClienteSchema.optional(),
 });
 
-export const PermisoComplejoSchema = z.looseObject({
+export const PermisoComplejoSchema = z.object({
   ...PermisoBaseFields,
   nivel: z.literal("Complejo"),
   idCliente: z.string(),
@@ -49,7 +49,7 @@ export const PermisoComplejoSchema = z.looseObject({
   complejo: ComplejoSchema.optional(),
 });
 
-export const PermisoUnidadFuncionalSchema = z.looseObject({
+export const PermisoUnidadFuncionalSchema = z.object({
   ...PermisoBaseFields,
   nivel: z.literal("Unidad Funcional"),
   idCliente: z.string(),

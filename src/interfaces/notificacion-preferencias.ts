@@ -38,7 +38,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   visita_resuelta: z.boolean(),
 });
 
-export const NotificacionPreferenciasSchema = z.looseObject({
+export const NotificacionPreferenciasSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     fechaActualizacion: z.string().optional(),

@@ -6,7 +6,7 @@ Paquete de **schemas Zod + tipos TypeScript** compartidos para el sistema de **c
 > - `XSchema` ([Zod v4](https://zod.dev/)) para validación runtime y generación de OpenAPI / Swagger.
 > - `IX` (TypeScript) inferido vía `z.infer<typeof XSchema>`.
 >
-> **Loose mode por defecto** (`z.looseObject`): todos los schemas aceptan campos no declarados sin error. Apto para forward-compat entre versiones del paquete y del backend.
+> **Strip mode por defecto** (`z.object`, v2.1.0): campos no declarados se descartan silenciosamente al `parse()`. Forward-compat opcional por endpoint vía `Schema.loose()` o rechazo estricto vía `Schema.strict()` desde `acceso-api`.
 
 ---
 
@@ -461,7 +461,7 @@ PermisoSchema.parse({ nivel: 'Unidad Funcional', idCliente: '...', idComplejo: '
 ## Notas técnicas
 
 - **Compilación**: `tsc` produce `dist/index.js` + `dist/index.d.ts`. El `prepare` hook corre el build al instalar.
-- **API canónica v4**: `z.looseObject({...})`, `z.discriminatedUnion(...)`, `z.enum([...])`. Sin `.passthrough()`/`.strict()`/`.strip()` (deprecated en v4).
+- **API canónica v4**: `z.object({...})`, `z.discriminatedUnion(...)`, `z.enum([...])`. Sin `.passthrough()`/`.strict()`/`.strip()` (deprecated en v4).
 - **Sin casts manuales**: v4 maneja la inferencia de tipos para entidades con cadenas profundas de populate sin triggerear `TS7056`. Tipos derivados con `z.infer<typeof Schema>` directo.
-- **Loose mode**: campos no declarados pasan al output sin error. Implica que `body._id` enviado a un endpoint `Create*` se reenvía a `acceso-datos` sin filtrar — sigue siendo responsabilidad del backend descartar/sobrescribir IDs server-side.
+- **Strip mode default** (v2.1.0): `z.object()` descarta campos no declarados al `parse()`. La decisión cambió de loose (v2.0) a strip porque `z.looseObject` en v4 agrega `[x: string]: unknown` al tipo inferido, lo que rompe la interop con clases Mongoose en `acceso-datos`. Si un endpoint puntual necesita aceptar campos extras, usar `Schema.loose()` localmente al definir el DTO en `acceso-api`.
 - **Sin `src/externos/`**: las interfaces legacy (Chirpstack, OSRM, Tripero, OAuth, eventos-lora) se removieron en v2.

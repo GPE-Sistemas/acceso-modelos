@@ -6,28 +6,28 @@ import { z } from "zod";
 
 const PointCoord = z.tuple([z.number(), z.number()]);
 
-export const GeoJSONPointSchema = z.looseObject({
+export const GeoJSONPointSchema = z.object({
     type: z.literal("Point"),
     coordinates: PointCoord,
   });
 
-export const GeoJSONCircleSchema = z.looseObject({
+export const GeoJSONCircleSchema = z.object({
     type: z.literal("Point"),
     coordinates: PointCoord,
     radius: z.number(),
   });
 
-export const GeoJSONLineStringSchema = z.looseObject({
+export const GeoJSONLineStringSchema = z.object({
     type: z.literal("LineString"),
     coordinates: z.array(PointCoord),
   });
 
-export const GeoJSONPolygonSchema = z.looseObject({
+export const GeoJSONPolygonSchema = z.object({
     type: z.literal("Polygon"),
     coordinates: z.array(z.array(PointCoord)),
   });
 
-export const GeoJSONMultiPolygonSchema = z.looseObject({
+export const GeoJSONMultiPolygonSchema = z.object({
     type: z.literal("MultiPolygon"),
     coordinates: z.array(z.array(z.array(z.array(z.number())))),
   });

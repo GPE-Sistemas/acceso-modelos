@@ -10,13 +10,13 @@ export const TipoDispositivoSchema = z.enum([
   "Otro",
 ]);
 
-export const ConfigDispositivoSchema = z.looseObject({
+export const ConfigDispositivoSchema = z.object({
     username: z.string().optional(),
     password: z.string().optional(),
     apikey: z.string().optional(),
   });
 
-export const DispositivoSchema = z.looseObject({
+export const DispositivoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),

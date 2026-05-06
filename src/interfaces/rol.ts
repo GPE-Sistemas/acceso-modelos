@@ -125,19 +125,19 @@ const RolBaseFields = {
   acciones: z.array(AccionesRolSchema).optional(),
 };
 
-export const RolGlobalSchema = z.looseObject({
+export const RolGlobalSchema = z.object({
     ...RolBaseFields,
     alcance: z.literal("Global"),
   });
 
-export const RolClienteSchema = z.looseObject({
+export const RolClienteSchema = z.object({
     ...RolBaseFields,
     alcance: z.literal("Cliente"),
     idCliente: z.string(),
     cliente: ClienteSchema.optional(),
   });
 
-export const RolComplejoSchema = z.looseObject({
+export const RolComplejoSchema = z.object({
     ...RolBaseFields,
     alcance: z.literal("Complejo"),
     idCliente: z.string(),

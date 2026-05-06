@@ -8,7 +8,7 @@ import { ComplejoSchema } from "./complejo";
  * Una por complejo (índice único en idComplejo). El orden del array idsBotones
  * define el orden de aparición en la pantalla de emergencias del mobile.
  */
-export const ConfigBotonesComplejoSchema = z.looseObject({
+export const ConfigBotonesComplejoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     fechaActualizacion: z.string().optional(),

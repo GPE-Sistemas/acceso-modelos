@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const QueryParamSchema = z.looseObject({
+export const QueryParamSchema = z.object({
     page: z.union([z.string(), z.number()]).optional(),
     limit: z.union([z.string(), z.number()]).optional(),
     sort: z.string().optional(),

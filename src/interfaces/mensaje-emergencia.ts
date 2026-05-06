@@ -5,7 +5,7 @@ import { PermisoSchema } from "./permiso";
  * Mensaje de chat acotado a una emergencia. Vive y muere con la emergencia.
  * No reutiliza el chat general del sistema.
  */
-export const MensajeEmergenciaSchema = z.looseObject({
+export const MensajeEmergenciaSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idEmergencia: z.string().optional(),

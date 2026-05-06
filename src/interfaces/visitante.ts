@@ -4,7 +4,7 @@ import { ComplejoSchema } from "./complejo";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { DatosPersonalesSchema } from "./usuario";
 
-export const VisitanteSchema = z.looseObject({
+export const VisitanteSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),

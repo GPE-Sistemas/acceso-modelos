@@ -10,14 +10,14 @@ import { VinculoVehiculoSchema } from "./vinculo-vehiculo";
 
 // ─── Dashboard nivel Complejo ────────────────────────────────────────────────
 
-export const DashboardComplejoMovimientosPorHoraSchema = z.looseObject({
+export const DashboardComplejoMovimientosPorHoraSchema = z.object({
   /** ISO inicio de hora */
   hora: z.string(),
   ingresos: z.number(),
   egresos: z.number(),
 });
 
-export const DashboardComplejoMovimientosSchema = z.looseObject({
+export const DashboardComplejoMovimientosSchema = z.object({
   hoyIngresos: z.number(),
   hoyEgresos: z.number(),
   personasDentroEstimado: z.number(),
@@ -26,40 +26,40 @@ export const DashboardComplejoMovimientosSchema = z.looseObject({
   ultimos: z.array(IngresoEgresoSchema),
 });
 
-export const DashboardComplejoVisitasSchema = z.looseObject({
+export const DashboardComplejoVisitasSchema = z.object({
   activas: z.number(),
   pendientesAprobacion: z.number(),
   proximas: z.array(EventoVisitaSchema),
 });
 
-export const DashboardComplejoEmergenciasSchema = z.looseObject({
+export const DashboardComplejoEmergenciasSchema = z.object({
   activas: z.number(),
-  porEstado: z.looseObject({
+  porEstado: z.object({
     Pendiente: z.number(),
     EnAtencion: z.number(),
   }),
   lista: z.array(EmergenciaSchema),
 });
 
-export const DashboardComplejoHardwareItemSchema = z.looseObject({
+export const DashboardComplejoHardwareItemSchema = z.object({
   _id: z.string(),
   nombre: z.string().optional(),
   tipo: z.string().optional(),
   ultimoEvento: z.string().optional(),
 });
 
-export const DashboardComplejoHardwareSchema = z.looseObject({
+export const DashboardComplejoHardwareSchema = z.object({
   dispositivosTotal: z.number(),
   dispositivosOnline: z.number(),
   dispositivosOffline: z.array(DashboardComplejoHardwareItemSchema),
 });
 
-export const DashboardComplejoPublicacionesSchema = z.looseObject({
+export const DashboardComplejoPublicacionesSchema = z.object({
   activas: z.number(),
   proximaAVencer: PublicacionSchema.optional(),
 });
 
-export const DashboardComplejoSchema = z.looseObject({
+export const DashboardComplejoSchema = z.object({
   idComplejo: z.string(),
   /** ISO timestamp del cálculo */
   generadoEn: z.string(),
@@ -72,7 +72,7 @@ export const DashboardComplejoSchema = z.looseObject({
 
 // ─── Dashboard nivel Unidad Funcional ────────────────────────────────────────
 
-export const DashboardUFVisitasSchema = z.looseObject({
+export const DashboardUFVisitasSchema = z.object({
   /** Eventos creados por mí, estado in [Pendiente, Activa] */
   misActivas: z.number(),
   /** Eventos creados por mí con estadoAprobacion = Pendiente */
@@ -83,25 +83,25 @@ export const DashboardUFVisitasSchema = z.looseObject({
   proximas: z.array(EventoVisitaSchema),
 });
 
-export const DashboardUFMovimientosSchema = z.looseObject({
+export const DashboardUFMovimientosSchema = z.object({
   /** Ingresos donde idPermiso = mi permiso */
   misRecientes: z.array(IngresoEgresoSchema),
 });
 
-export const DashboardUFVehiculosSchema = z.looseObject({
+export const DashboardUFVehiculosSchema = z.object({
   total: z.number(),
   lista: z.array(VehiculoSchema),
   /** Populated con vehiculo */
   vinculos: z.array(VinculoVehiculoSchema),
 });
 
-export const DashboardUFPublicacionesSchema = z.looseObject({
+export const DashboardUFPublicacionesSchema = z.object({
   activas: z.number(),
   /** Top N del complejo */
   recientes: z.array(PublicacionSchema),
 });
 
-export const DashboardUFSchema = z.looseObject({
+export const DashboardUFSchema = z.object({
   idPermiso: z.string(),
   idUnidadFuncional: z.string(),
   idComplejo: z.string(),
@@ -114,7 +114,7 @@ export const DashboardUFSchema = z.looseObject({
 
 // ─── Dashboard nivel Cliente (Cliente final) ─────────────────────────────────
 
-export const DashboardClienteComplejoRowSchema = z.looseObject({
+export const DashboardClienteComplejoRowSchema = z.object({
   _id: z.string(),
   nombre: z.string().optional(),
   ingresosHoy: z.number(),
@@ -123,10 +123,10 @@ export const DashboardClienteComplejoRowSchema = z.looseObject({
   dispositivosTotal: z.number(),
 });
 
-export const DashboardClienteSchema = z.looseObject({
+export const DashboardClienteSchema = z.object({
   idCliente: z.string(),
   generadoEn: z.string(),
-  totales: z.looseObject({
+  totales: z.object({
     complejos: z.number(),
     unidadesFuncionales: z.number(),
     unidadesPrivadas: z.number(),
@@ -134,7 +134,7 @@ export const DashboardClienteSchema = z.looseObject({
     dispositivos: z.number(),
     permisosActivos: z.number(),
   }),
-  pendientes: z.looseObject({
+  pendientes: z.object({
     emergenciasActivas: z.number(),
     visitasPendientesAprobacion: z.number(),
   }),
@@ -143,7 +143,7 @@ export const DashboardClienteSchema = z.looseObject({
 
 // ─── Dashboard Proveedor (visión global GPE Sistemas) ────────────────────────
 
-export const DashboardProveedorClienteRowSchema = z.looseObject({
+export const DashboardProveedorClienteRowSchema = z.object({
   _id: z.string(),
   nombre: z.string().optional(),
   complejos: z.number(),
@@ -151,16 +151,16 @@ export const DashboardProveedorClienteRowSchema = z.looseObject({
   emergenciasAbiertas: z.number(),
 });
 
-export const DashboardProveedorSchema = z.looseObject({
+export const DashboardProveedorSchema = z.object({
   generadoEn: z.string(),
-  totales: z.looseObject({
+  totales: z.object({
     clientes: z.number(),
     complejos: z.number(),
     unidadesFuncionales: z.number(),
     dispositivos: z.number(),
     permisosActivos: z.number(),
   }),
-  pendientes: z.looseObject({
+  pendientes: z.object({
     emergenciasActivas: z.number(),
     visitasPendientesAprobacion: z.number(),
   }),

@@ -10,7 +10,7 @@ export type ITipoVinculoEventoIngreso = z.infer<
   typeof TipoVinculoEventoIngresoSchema
 >;
 
-export const VinculoEventoIngresoSchema = z.looseObject({
+export const VinculoEventoIngresoSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
   idCliente: z.string().optional(),

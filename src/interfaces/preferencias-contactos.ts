@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PreferenciasContactosSchema = z.looseObject({
+export const PreferenciasContactosSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     fechaActualizacion: z.string().optional(),

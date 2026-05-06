@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const DatosPersonalesSchema = z.looseObject({
+export const DatosPersonalesSchema = z.object({
     nombre: z.string().optional(),
     dni: z.string().optional(),
     sexo: z.string().optional(),
@@ -12,9 +12,9 @@ export const DatosPersonalesSchema = z.looseObject({
     foto: z.string().optional(),
   });
 
-export const ConfigUsuarioSchema = z.looseObject({});
+export const ConfigUsuarioSchema = z.object({});
 
-export const UsuarioSchema = z.looseObject({
+export const UsuarioSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     usuario: z.string().optional(),

@@ -4,7 +4,7 @@ import { ComplejoSchema } from "./complejo";
 import { PermisoSchema } from "./permiso";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 
-export const EventoSchema = z.looseObject({
+export const EventoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     expireAt: z.string().optional(),

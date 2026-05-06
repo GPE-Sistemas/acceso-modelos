@@ -4,7 +4,7 @@ import { ComplejoSchema } from "./complejo";
 import { DispositivoSchema } from "./dispositivo";
 import { PermisoSchema } from "./permiso";
 
-export const CredencialDispositivoSchema = z.looseObject({
+export const CredencialDispositivoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),

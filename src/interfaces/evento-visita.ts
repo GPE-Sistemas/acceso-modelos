@@ -26,7 +26,7 @@ export const EstadoAprobacionEventoVisitaSchema = z.enum([
   "Rechazado",
 ]);
 
-export const RecurrenciaEventoVisitaSchema = z.looseObject({
+export const RecurrenciaEventoVisitaSchema = z.object({
   /** 0..6 (0=domingo). Si incluye los 7, equivale a "todos los días". */
   diasSemana: z.array(z.number()),
   /** 'HH:mm' — ventana intra-día opcional */
@@ -45,7 +45,7 @@ export type IRecurrenciaEventoVisita = z.infer<
   typeof RecurrenciaEventoVisitaSchema
 >;
 
-export const EventoVisitaSchema = z.looseObject({
+export const EventoVisitaSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
   idCliente: z.string().optional(),

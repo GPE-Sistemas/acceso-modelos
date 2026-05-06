@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ConfigClienteSchema = z.looseObject({});
+export const ConfigClienteSchema = z.object({});
 
 /**
  * Proveedor: el tenant del proveedor del software, con visibilidad global sobre todos los clientes.
@@ -8,7 +8,7 @@ export const ConfigClienteSchema = z.looseObject({});
  */
 export const TipoClienteSchema = z.enum(["Proveedor", "Cliente"]);
 
-export const ClienteSchema = z.looseObject({
+export const ClienteSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     habilitado: z.boolean().optional(),

@@ -10,7 +10,7 @@ export const TipoPersonaAccesoSchema = z.enum([
   "Ambos",
 ]);
 
-export const AccesoSchema = z.looseObject({
+export const AccesoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),

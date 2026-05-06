@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const ListadoSchema = <T extends z.ZodTypeAny>(inner: T) =>
-  z.looseObject({
+  z.object({
       totalCount: z.number().optional(),
       datos: z.array(inner),
       duration: z.number().optional(),

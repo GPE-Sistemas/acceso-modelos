@@ -2,13 +2,13 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { GeoJSONMultiPolygonSchema } from "../auxiliares/geojson";
 
-export const ConfigEmergenciasComplejoSchema = z.looseObject({
+export const ConfigEmergenciasComplejoSchema = z.object({
     /** Si false, las emergencias enviadas desde mobile deben validarse contra el polígono del complejo. Default: true. */
     permitirFueraDelComplejo: z.boolean().optional(),
   });
 
-export const ConfigComplejoSchema = z.looseObject({
-    imagenes: z.looseObject({
+export const ConfigComplejoSchema = z.object({
+    imagenes: z.object({
         logo: z.string().optional(),
         banner: z.string().optional(),
       })
@@ -20,7 +20,7 @@ export const ConfigComplejoSchema = z.looseObject({
 
 export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
 
-export const ComplejoSchema = z.looseObject({
+export const ComplejoSchema = z.object({
     _id: z.string().optional(),
     idCliente: z.string().optional(),
     fechaCreacion: z.string().optional(),

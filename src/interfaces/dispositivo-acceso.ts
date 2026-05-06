@@ -13,7 +13,7 @@ export const ComportamientoCredencialInvalidaSchema = z.enum([
   "Crear Ingreso",
 ]);
 
-export const DispositivoAccesoSchema = z.looseObject({
+export const DispositivoAccesoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),

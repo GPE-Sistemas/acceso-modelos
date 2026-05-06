@@ -1,26 +1,22 @@
 import { z } from "zod";
 
 export const DocumentoSchema = <T extends z.ZodTypeAny>(inner: T) =>
-  z
-    .object({
+  z.looseObject({
       dato: inner,
       duration: z.number().optional(),
-    })
-    .passthrough();
+    });
 
 export interface IDocumento<T> {
   dato: T;
   duration?: number;
 }
 
-export const ResultadoMasivoSchema = z
-  .object({
+export const ResultadoMasivoSchema = z.looseObject({
     insertedCount: z.number().optional(),
     modifiedCount: z.number().optional(),
     matchedCount: z.number().optional(),
     deletedCount: z.number().optional(),
     duration: z.number().optional(),
-  })
-  .passthrough();
+  });
 
 export type IResultadoMasivo = z.infer<typeof ResultadoMasivoSchema>;

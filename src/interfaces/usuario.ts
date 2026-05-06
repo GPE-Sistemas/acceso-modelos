@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-export const DatosPersonalesSchema = z
-  .object({
+export const DatosPersonalesSchema = z.looseObject({
     nombre: z.string().optional(),
     dni: z.string().optional(),
     sexo: z.string().optional(),
@@ -11,21 +10,18 @@ export const DatosPersonalesSchema = z
     telefono: z.string().optional(),
     fechaNacimiento: z.string().optional(),
     foto: z.string().optional(),
-  })
-  .passthrough();
+  });
 
-export const ConfigUsuarioSchema = z.object({}).passthrough();
+export const ConfigUsuarioSchema = z.looseObject({});
 
-export const UsuarioSchema = z
-  .object({
+export const UsuarioSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     usuario: z.string().optional(),
     hash: z.string().optional(),
     datosPersonales: DatosPersonalesSchema.optional(),
     config: ConfigUsuarioSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateUsuarioSchema = UsuarioSchema.omit({
   _id: true,

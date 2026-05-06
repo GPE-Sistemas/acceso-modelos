@@ -8,8 +8,7 @@ export const EstadoContactoUsuarioSchema = z.enum([
   "Bloqueado",
 ]);
 
-export const ContactoUsuarioSchema = z
-  .object({
+export const ContactoUsuarioSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idUsuarioEmisor: z.string().optional(),
@@ -20,8 +19,7 @@ export const ContactoUsuarioSchema = z
     // Populate
     usuarioEmisor: UsuarioSchema.optional(),
     usuarioReceptor: UsuarioSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateContactoUsuarioSchema = ContactoUsuarioSchema.omit({
   _id: true,

@@ -10,16 +10,13 @@ export const TipoDispositivoSchema = z.enum([
   "Otro",
 ]);
 
-export const ConfigDispositivoSchema = z
-  .object({
+export const ConfigDispositivoSchema = z.looseObject({
     username: z.string().optional(),
     password: z.string().optional(),
     apikey: z.string().optional(),
-  })
-  .passthrough();
+  });
 
-export const DispositivoSchema = z
-  .object({
+export const DispositivoSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),
@@ -33,8 +30,7 @@ export const DispositivoSchema = z
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateDispositivoSchema = DispositivoSchema.omit({
   _id: true,

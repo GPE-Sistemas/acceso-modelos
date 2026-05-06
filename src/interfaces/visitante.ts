@@ -4,8 +4,7 @@ import { ComplejoSchema } from "./complejo";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { DatosPersonalesSchema } from "./usuario";
 
-export const VisitanteSchema = z
-  .object({
+export const VisitanteSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),
@@ -16,8 +15,7 @@ export const VisitanteSchema = z
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
     unidadFuncional: UnidadFuncionalSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateVisitanteSchema = VisitanteSchema.omit({
   _id: true,

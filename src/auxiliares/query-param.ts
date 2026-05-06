@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-export const QueryParamSchema = z
-  .object({
+export const QueryParamSchema = z.looseObject({
     page: z.union([z.string(), z.number()]).optional(),
     limit: z.union([z.string(), z.number()]).optional(),
     sort: z.string().optional(),
@@ -13,8 +12,7 @@ export const QueryParamSchema = z
     executionStats: z.boolean().optional(),
     /** Si está en true setea el limit en 0, lo que significa que no hay límite en la cantidad de resultados */
     unlimited: z.boolean().optional(),
-  })
-  .passthrough();
+  });
 
 export type IQueryParam = z.infer<typeof QueryParamSchema> & {
   [key: string]: any;

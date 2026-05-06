@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-export const PreferenciasContactosSchema = z
-  .object({
+export const PreferenciasContactosSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     fechaActualizacion: z.string().optional(),
@@ -10,8 +9,7 @@ export const PreferenciasContactosSchema = z
     recibirAlertas: z.boolean().optional(),
     /** Push categoria 'contacto_invitacion' */
     recibirInvitaciones: z.boolean().optional(),
-  })
-  .passthrough();
+  });
 
 export const CreatePreferenciasContactosSchema =
   PreferenciasContactosSchema.omit({

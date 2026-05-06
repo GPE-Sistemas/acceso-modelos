@@ -2,32 +2,25 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { GeoJSONMultiPolygonSchema } from "../auxiliares/geojson";
 
-export const ConfigEmergenciasComplejoSchema = z
-  .object({
+export const ConfigEmergenciasComplejoSchema = z.looseObject({
     /** Si false, las emergencias enviadas desde mobile deben validarse contra el polígono del complejo. Default: true. */
     permitirFueraDelComplejo: z.boolean().optional(),
-  })
-  .passthrough();
+  });
 
-export const ConfigComplejoSchema = z
-  .object({
-    imagenes: z
-      .object({
+export const ConfigComplejoSchema = z.looseObject({
+    imagenes: z.looseObject({
         logo: z.string().optional(),
         banner: z.string().optional(),
       })
-      .passthrough()
       .optional(),
     emergencias: ConfigEmergenciasComplejoSchema.optional(),
     /** Polígono(s) que delimita(n) el complejo. Usado para geo-fence de emergencias. */
     geoJson: GeoJSONMultiPolygonSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
 
-export const ComplejoSchema = z
-  .object({
+export const ComplejoSchema = z.looseObject({
     _id: z.string().optional(),
     idCliente: z.string().optional(),
     fechaCreacion: z.string().optional(),
@@ -37,8 +30,7 @@ export const ComplejoSchema = z
     config: ConfigComplejoSchema.optional(),
     // Populate
     cliente: ClienteSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateComplejoSchema = ComplejoSchema.omit({
   _id: true,

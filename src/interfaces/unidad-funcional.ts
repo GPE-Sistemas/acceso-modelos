@@ -5,10 +5,9 @@ import { ComplejoSchema } from "./complejo";
 
 export const TipoUnidadFuncionalSchema = z.enum(["Privada", "Común"]);
 
-export const ConfigUnidadFuncionalSchema = z.object({}).passthrough();
+export const ConfigUnidadFuncionalSchema = z.looseObject({});
 
-export const UnidadFuncionalSchema = z
-  .object({
+export const UnidadFuncionalSchema = z.looseObject({
     _id: z.string().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
@@ -21,8 +20,7 @@ export const UnidadFuncionalSchema = z
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateUnidadFuncionalSchema = UnidadFuncionalSchema.omit({
   _id: true,

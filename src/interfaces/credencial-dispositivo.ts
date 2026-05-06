@@ -4,8 +4,7 @@ import { ComplejoSchema } from "./complejo";
 import { DispositivoSchema } from "./dispositivo";
 import { PermisoSchema } from "./permiso";
 
-export const CredencialDispositivoSchema = z
-  .object({
+export const CredencialDispositivoSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),
@@ -19,8 +18,7 @@ export const CredencialDispositivoSchema = z
     complejo: ComplejoSchema.optional(),
     dispositivo: DispositivoSchema.optional(),
     permiso: PermisoSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateCredencialDispositivoSchema = CredencialDispositivoSchema.omit(
   {

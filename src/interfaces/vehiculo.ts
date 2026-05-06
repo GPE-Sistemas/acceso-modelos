@@ -3,17 +3,14 @@ import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 
-export const DatosVehiculoSchema = z
-  .object({
+export const DatosVehiculoSchema = z.looseObject({
     marca: z.string().optional(),
     modelo: z.string().optional(),
     color: z.string().optional(),
     patente: z.string().optional(),
-  })
-  .passthrough();
+  });
 
-export const VehiculoSchema = z
-  .object({
+export const VehiculoSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),
@@ -24,8 +21,7 @@ export const VehiculoSchema = z
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
     unidadFuncional: UnidadFuncionalSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateVehiculoSchema = VehiculoSchema.omit({
   _id: true,

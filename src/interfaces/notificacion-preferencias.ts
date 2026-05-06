@@ -38,16 +38,14 @@ export const CategoriasNotificacionMapSchema = z.object({
   visita_resuelta: z.boolean(),
 });
 
-export const NotificacionPreferenciasSchema = z
-  .object({
+export const NotificacionPreferenciasSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     fechaActualizacion: z.string().optional(),
     idPermiso: z.string().optional(),
     pushEnabled: z.boolean().optional(),
     categorias: CategoriasNotificacionMapSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateNotificacionPreferenciasSchema =
   NotificacionPreferenciasSchema.omit({

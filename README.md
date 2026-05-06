@@ -3,10 +3,10 @@
 Paquete de **schemas Zod + tipos TypeScript** compartidos para el sistema de **control de acceso**. Define el modelo de dominio completo y la validación runtime utilizada por todos los servicios de la plataforma.
 
 > **v2.0** — el paquete pasó de interfaces TS-only a schemas Zod compilados. Cada entidad expone:
-> - `XSchema` (Zod) para validación runtime y generación de OpenAPI / Swagger.
-> - `IX` (TypeScript) inferido o declarado, idéntico al schema.
+> - `XSchema` ([Zod v4](https://zod.dev/)) para validación runtime y generación de OpenAPI / Swagger.
+> - `IX` (TypeScript) inferido vía `z.infer<typeof XSchema>`.
 >
-> **Pasthrough por defecto**: todos los schemas aceptan campos no declarados sin error. Apto para forward-compat entre versiones del paquete y del backend.
+> **Loose mode por defecto** (`z.looseObject`): todos los schemas aceptan campos no declarados sin error. Apto para forward-compat entre versiones del paquete y del backend.
 
 ---
 
@@ -461,6 +461,7 @@ PermisoSchema.parse({ nivel: 'Unidad Funcional', idCliente: '...', idComplejo: '
 ## Notas técnicas
 
 - **Compilación**: `tsc` produce `dist/index.js` + `dist/index.d.ts`. El `prepare` hook corre el build al instalar.
-- **Casts `as z.ZodType<I>`**: algunos schemas con muchos populates triggerean `TS7056` (tipo inferido excede límite de serialización). En esos casos se declara la interface a mano y se castea el schema. La forma del schema y la interface se mantienen sincronizadas manualmente — desviarlas rompe consumidores.
-- **Passthrough**: campos no declarados pasan al output sin error. Implica que `body._id` enviado a un endpoint `Create*` se reenvía a `acceso-datos` sin filtrar — sigue siendo responsabilidad del backend descartar/sobrescribir IDs server-side.
+- **API canónica v4**: `z.looseObject({...})`, `z.discriminatedUnion(...)`, `z.enum([...])`. Sin `.passthrough()`/`.strict()`/`.strip()` (deprecated en v4).
+- **Sin casts manuales**: v4 maneja la inferencia de tipos para entidades con cadenas profundas de populate sin triggerear `TS7056`. Tipos derivados con `z.infer<typeof Schema>` directo.
+- **Loose mode**: campos no declarados pasan al output sin error. Implica que `body._id` enviado a un endpoint `Create*` se reenvía a `acceso-datos` sin filtrar — sigue siendo responsabilidad del backend descartar/sobrescribir IDs server-side.
 - **Sin `src/externos/`**: las interfaces legacy (Chirpstack, OSRM, Tripero, OAuth, eventos-lora) se removieron en v2.

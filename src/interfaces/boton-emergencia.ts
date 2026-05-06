@@ -2,15 +2,12 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 
-export const ConfigBotonEmergenciaSchema = z
-  .object({
+export const ConfigBotonEmergenciaSchema = z.looseObject({
     permiteImagenes: z.boolean().optional(),
     // Extensible: futuras flags (permiteAudio, requiereConfirmacion, etc.)
-  })
-  .passthrough();
+  });
 
-export const BotonEmergenciaSchema = z
-  .object({
+export const BotonEmergenciaSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     habilitado: z.boolean().optional(),
@@ -29,8 +26,7 @@ export const BotonEmergenciaSchema = z
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateBotonEmergenciaSchema = BotonEmergenciaSchema.omit({
   _id: true,

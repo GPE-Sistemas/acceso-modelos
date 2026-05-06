@@ -69,15 +69,27 @@ import {
 
 ## Schemas Zod — convenciones
 
-### Pattern básico (entidad simple)
+Versión: **Zod v4.x** (`zod ^4.4.3`). Usa la API canónica de v4: `z.looseObject`, `z.strictObject`, `z.object`. Los métodos `.passthrough()` / `.strict()` / `.strip()` siguen funcionando como deprecated aliases pero **no se usan** en este repo.
+
+### Pattern único — toda entidad
+
+Patrón uniforme: declarar el schema con `z.looseObject()` (passthrough en v4), derivar Create/Update con `.omit()` / `.partial()`, exportar tipos vía `z.infer<>`.
 
 ```typescript
-export const FooSchema = z.object({
+export const FooSchema = z.looseObject({
   _id: z.string().optional(),
+  fechaCreacion: z.string().optional(),
   // ...
-}).passthrough();
+  // Populate
+  cliente: ClienteSchema.optional(),
+});
 
-export const CreateFooSchema = FooSchema.omit({ _id: true, fechaCreacion: true });
+export const CreateFooSchema = FooSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  cliente: true,
+});
+
 export const UpdateFooSchema = CreateFooSchema.partial();
 
 export type IFoo = z.infer<typeof FooSchema>;
@@ -85,43 +97,33 @@ export type ICreateFoo = z.infer<typeof CreateFooSchema>;
 export type IUpdateFoo = z.infer<typeof UpdateFooSchema>;
 ```
 
-### Pattern con cast (entidades con muchos populates)
-
-Cuando una entidad popula varias entidades (transitivamente, IPermiso → IUsuario, IRol, ICliente, etc), TS hace explotar el tipo inferido (`TS7056: type exceeds maximum length`). Workaround: declarar la interface a mano y castear el schema en el export.
-
-```typescript
-export interface IFoo {
-  _id?: string;
-  // ...
-  cliente?: ICliente;       // populate
-  permiso?: IPermiso;       // populate
-  [key: string]: any;       // passthrough refleja en el tipo
-}
-
-const _FooSchema = z.object({ /* ... */ }).passthrough();
-const _CreateFooSchema = _FooSchema.omit({ /* ... */ });
-
-export const FooSchema: z.ZodType<IFoo> = _FooSchema as unknown as z.ZodType<IFoo>;
-export const CreateFooSchema: z.ZodType<ICreateFoo> = _CreateFooSchema as unknown as z.ZodType<ICreateFoo>;
-```
-
-Aplica a: `permiso`, `evento-visita`, `ingreso-egreso`, `vinculo-vehiculo`, `vinculo-evento-ingreso`, partes de `dashboard`. Mantener interface y schema sincronizados — TS no detecta divergencias gracias al `as unknown as`.
+**No casts manuales** (`as z.ZodType<...>`). v4 mejoró la inferencia de tipos al punto que entidades con cadenas profundas de populate (IPermiso ⊃ IUsuario / IRol / ICliente / ...) ya no triggerean `TS7056`. Si en el futuro alguna combinación lo hace, primer intento es simplificar populates antes de volver al cast pattern.
 
 ### Discriminated unions
 
+`IPermiso` (`nivel`) e `IRol` (`alcance`):
+
 ```typescript
+export const PermisoClienteSchema = z.looseObject({ ...PermisoBaseFields, nivel: z.literal("Cliente"), idCliente: z.string() });
+export const PermisoComplejoSchema = z.looseObject({ ...PermisoBaseFields, nivel: z.literal("Complejo"), idCliente: z.string(), idComplejo: z.string() });
+export const PermisoUnidadFuncionalSchema = z.looseObject({ ...PermisoBaseFields, nivel: z.literal("Unidad Funcional"), idCliente: z.string(), idComplejo: z.string(), idUnidadFuncional: z.string() });
+
 export const PermisoSchema = z.discriminatedUnion("nivel", [
-  PermisoClienteSchema,            // nivel: z.literal("Cliente")
-  PermisoComplejoSchema,           // nivel: z.literal("Complejo")
-  PermisoUnidadFuncionalSchema,    // nivel: z.literal("Unidad Funcional")
+  PermisoClienteSchema,
+  PermisoComplejoSchema,
+  PermisoUnidadFuncionalSchema,
 ]);
 ```
+
+`z.discriminatedUnion` requiere que cada miembro sea ZodObject (incluido looseObject). Las discriminadas heredan `.omit()`, `.partial()`, `.extend()` chainables si se aplican sobre los miembros antes del `discriminatedUnion`.
+
+**Update de discriminated unions**: re-añadir el discriminante con `.extend({ nivel: z.literal(...) })` después de `.partial()` para que `nivel` siga siendo requerido y la unión siga siendo válida (sino los miembros parciales ya no son discriminables).
 
 ---
 
 ## Pasthrough por defecto
 
-**Todos los schemas usan `.passthrough()`** — campos no declarados pasan al output sin error. Implica:
+**Todos los schemas usan `z.looseObject()`** — campos no declarados pasan al output sin error. Implica:
 
 - Forward-compat: el backend puede recibir bodies con campos nuevos y reenviarlos a `acceso-datos` sin romper.
 - **Riesgo**: un `Create*Dto` no descarta campos como `_id` si el cliente los manda. La capa de `acceso-datos` (Mongo) genera su propio `_id` ignorando el del body, pero campos sensibles como `idCliente` / `idComplejo` / `idPermisoCarga` deben sobrescribirse en el service vía `injectScope` (ya implementado en `acceso-api`).
@@ -141,15 +143,15 @@ Si en el futuro se prefiere rechazo estricto sobre algún DTO específico, usar 
 | `dispositivo.ts` | `DispositivoSchema` / `IDispositivo`, `TipoDispositivoSchema`, `ConfigDispositivoSchema` |
 | `dispositivo-acceso.ts` | `DispositivoAccesoSchema` / `IDispositivoAcceso`, `ComportamientoCredencialValidaSchema`, `ComportamientoCredencialInvalidaSchema` |
 | `evento.ts` | `EventoSchema` / `IEvento` — estructura pendiente de definición |
-| `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita` (con cast — populate complejo), `RecurrenciaEventoVisitaSchema`, estados, aprobación |
-| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso` (con cast). Entidad de alto volumen |
-| `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional. Casted (TS7056) |
+| `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita`, `RecurrenciaEventoVisitaSchema`, estados, aprobación |
+| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`. Entidad de alto volumen |
+| `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional |
 | `rol.ts` | `RolSchema` / `IRol` — discriminated union por `alcance`. `AccionesRolSchema` enumera todas las acciones del catálogo |
 | `unidad-funcional.ts` | `UnidadFuncionalSchema` / `IUnidadFuncional` |
 | `usuario.ts` | `UsuarioSchema` / `IUsuario`, `DatosPersonalesSchema` |
 | `vehiculo.ts` | `VehiculoSchema` / `IVehiculo`, `DatosVehiculoSchema` |
-| `vinculo-vehiculo.ts` | `VinculoVehiculoSchema` / `IVinculoVehiculo` (casted) |
-| `vinculo-evento-ingreso.ts` | `VinculoEventoIngresoSchema` / `IVinculoEventoIngreso` (casted) |
+| `vinculo-vehiculo.ts` | `VinculoVehiculoSchema` / `IVinculoVehiculo` |
+| `vinculo-evento-ingreso.ts` | `VinculoEventoIngresoSchema` / `IVinculoEventoIngreso` |
 | `visitante.ts` | `VisitanteSchema` / `IVisitante` |
 | `publicacion.ts` | `PublicacionSchema` / `IPublicacion`, `BloqueSchema`, enums (`TipoBloqueSchema`, `CategoriaPublicacionSchema`, `EstadoPublicacionSchema`) |
 | `device-token.ts` | `DeviceTokenSchema` / `IDeviceToken`, `DevicePlatformSchema` |
@@ -161,7 +163,7 @@ Si en el futuro se prefiere rechazo estricto sobre algún DTO específico, usar 
 | `mensaje-emergencia.ts` | `MensajeEmergenciaSchema` / `IMensajeEmergencia` |
 | `contacto-usuario.ts` | `ContactoUsuarioSchema` / `IContactoUsuario`, `EstadoContactoUsuarioSchema` |
 | `preferencias-contactos.ts` | `PreferenciasContactosSchema` / `IPreferenciasContactos`, `PREFERENCIAS_CONTACTOS_DEFAULT` |
-| `dashboard.ts` | `DashboardComplejoSchema` / `IDashboardComplejo`, `DashboardUFSchema` / `IDashboardUF`, `DashboardClienteSchema` / `IDashboardCliente`, `DashboardProveedorSchema` / `IDashboardProveedor` (varias casted) |
+| `dashboard.ts` | `DashboardComplejoSchema` / `IDashboardComplejo`, `DashboardUFSchema` / `IDashboardUF`, `DashboardClienteSchema` / `IDashboardCliente`, `DashboardProveedorSchema` / `IDashboardProveedor` |
 
 ---
 
@@ -176,7 +178,7 @@ interface IDocumento<T> { dato: T; duration?: number; }
 interface IListado<T>   { datos: T[]; totalCount?: number; duration?: number; }
 
 // Parámetros de consulta
-QueryParamSchema                        // Zod schema con passthrough
+QueryParamSchema                        // z.looseObject (loose mode)
 interface IQueryParam { filter?: string; sort?: string; limit?: number; populate?: string; ... }
 
 // Type-safety entre interface y clase Mongoose (acceso-datos)

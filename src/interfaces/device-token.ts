@@ -2,8 +2,7 @@ import { z } from "zod";
 
 export const DevicePlatformSchema = z.enum(["ios", "android"]);
 
-export const DeviceTokenSchema = z
-  .object({
+export const DeviceTokenSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idUsuario: z.string().optional(),
@@ -12,8 +11,7 @@ export const DeviceTokenSchema = z
     locale: z.string().optional(),
     appVersion: z.string().optional(),
     ultimaActividad: z.string().optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateDeviceTokenSchema = DeviceTokenSchema.omit({
   _id: true,

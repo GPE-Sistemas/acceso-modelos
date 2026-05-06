@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ConfigClienteSchema = z.object({}).passthrough();
+export const ConfigClienteSchema = z.looseObject({});
 
 /**
  * Proveedor: el tenant del proveedor del software, con visibilidad global sobre todos los clientes.
@@ -8,16 +8,14 @@ export const ConfigClienteSchema = z.object({}).passthrough();
  */
 export const TipoClienteSchema = z.enum(["Proveedor", "Cliente"]);
 
-export const ClienteSchema = z
-  .object({
+export const ClienteSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     habilitado: z.boolean().optional(),
     nombre: z.string().optional(),
     tipoCliente: TipoClienteSchema.optional(),
     config: ConfigClienteSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateClienteSchema = ClienteSchema.omit({
   _id: true,

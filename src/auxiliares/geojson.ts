@@ -6,41 +6,31 @@ import { z } from "zod";
 
 const PointCoord = z.tuple([z.number(), z.number()]);
 
-export const GeoJSONPointSchema = z
-  .object({
+export const GeoJSONPointSchema = z.looseObject({
     type: z.literal("Point"),
     coordinates: PointCoord,
-  })
-  .passthrough();
+  });
 
-export const GeoJSONCircleSchema = z
-  .object({
+export const GeoJSONCircleSchema = z.looseObject({
     type: z.literal("Point"),
     coordinates: PointCoord,
     radius: z.number(),
-  })
-  .passthrough();
+  });
 
-export const GeoJSONLineStringSchema = z
-  .object({
+export const GeoJSONLineStringSchema = z.looseObject({
     type: z.literal("LineString"),
     coordinates: z.array(PointCoord),
-  })
-  .passthrough();
+  });
 
-export const GeoJSONPolygonSchema = z
-  .object({
+export const GeoJSONPolygonSchema = z.looseObject({
     type: z.literal("Polygon"),
     coordinates: z.array(z.array(PointCoord)),
-  })
-  .passthrough();
+  });
 
-export const GeoJSONMultiPolygonSchema = z
-  .object({
+export const GeoJSONMultiPolygonSchema = z.looseObject({
     type: z.literal("MultiPolygon"),
     coordinates: z.array(z.array(z.array(z.array(z.number())))),
-  })
-  .passthrough();
+  });
 
 export const GeoJSONSchema = z.union([
   GeoJSONPointSchema,

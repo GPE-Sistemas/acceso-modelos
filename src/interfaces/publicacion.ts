@@ -21,8 +21,7 @@ export const CategoriaPublicacionSchema = z.enum([
 
 export const EstadoPublicacionSchema = z.enum(["activa", "inactiva"]);
 
-export const BloqueSchema = z
-  .object({
+export const BloqueSchema = z.looseObject({
     tipo: TipoBloqueSchema.optional(),
     orden: z.number().optional(),
     /** texto */
@@ -43,11 +42,9 @@ export const BloqueSchema = z
     longitud: z.number().optional(),
     /** ubicacion (label legible) */
     direccion: z.string().optional(),
-  })
-  .passthrough();
+  });
 
-export const PublicacionSchema = z
-  .object({
+export const PublicacionSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),
@@ -64,8 +61,7 @@ export const PublicacionSchema = z
     // Populate
     complejo: ComplejoSchema.optional(),
     permisoCarga: PermisoSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreatePublicacionSchema = PublicacionSchema.omit({
   _id: true,

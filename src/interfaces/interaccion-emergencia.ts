@@ -23,8 +23,7 @@ export const AccionExternaEmergenciaSchema = z.enum([
   "Otro",
 ]);
 
-export const InteraccionEmergenciaSchema = z
-  .object({
+export const InteraccionEmergenciaSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idEmergencia: z.string().optional(),
@@ -41,8 +40,7 @@ export const InteraccionEmergenciaSchema = z
     comentario: z.string().optional(),
     // Populate
     permiso: PermisoSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const CreateInteraccionEmergenciaSchema = InteraccionEmergenciaSchema.omit(
   {

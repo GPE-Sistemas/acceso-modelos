@@ -125,32 +125,26 @@ const RolBaseFields = {
   acciones: z.array(AccionesRolSchema).optional(),
 };
 
-export const RolGlobalSchema = z
-  .object({
+export const RolGlobalSchema = z.looseObject({
     ...RolBaseFields,
     alcance: z.literal("Global"),
-  })
-  .passthrough();
+  });
 
-export const RolClienteSchema = z
-  .object({
+export const RolClienteSchema = z.looseObject({
     ...RolBaseFields,
     alcance: z.literal("Cliente"),
     idCliente: z.string(),
     cliente: ClienteSchema.optional(),
-  })
-  .passthrough();
+  });
 
-export const RolComplejoSchema = z
-  .object({
+export const RolComplejoSchema = z.looseObject({
     ...RolBaseFields,
     alcance: z.literal("Complejo"),
     idCliente: z.string(),
     idComplejo: z.string(),
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
-  })
-  .passthrough();
+  });
 
 export const RolSchema = z.discriminatedUnion("alcance", [
   RolGlobalSchema,

@@ -12,18 +12,15 @@ export const EstadoEmergenciaSchema = z.enum([
   "Descartada",
 ]);
 
-export const UbicacionEmergenciaSchema = z
-  .object({
+export const UbicacionEmergenciaSchema = z.looseObject({
     lat: z.number(),
     lng: z.number(),
     /** metros */
     accuracy: z.number().optional(),
     fuente: z.enum(["gps", "network", "cache"]).optional(),
-  })
-  .passthrough();
+  });
 
-export const EmergenciaSchema = z
-  .object({
+export const EmergenciaSchema = z.looseObject({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),
@@ -51,8 +48,7 @@ export const EmergenciaSchema = z
     boton: BotonEmergenciaSchema.optional(),
     permiso: PermisoSchema.optional(),
     permisoAtencion: PermisoSchema.optional(),
-  })
-  .passthrough();
+  });
 
 const EmergenciaPopulateOmit = {
   cliente: true,

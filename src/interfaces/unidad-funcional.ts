@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GeoJSONPolygonSchema } from "../auxiliares/geojson";
+import { GeoJSONMultiPolygonSchema } from "../auxiliares/geojson";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 
@@ -15,7 +15,7 @@ export const UnidadFuncionalSchema = z.object({
     habilitado: z.boolean().optional(),
     nombre: z.string().optional(),
     tipo: TipoUnidadFuncionalSchema.optional(),
-    ubicacion: GeoJSONPolygonSchema.optional(),
+    ubicacion: GeoJSONMultiPolygonSchema.optional(),
     config: ConfigUnidadFuncionalSchema.optional(),
     // Populate
     cliente: ClienteSchema.optional(),

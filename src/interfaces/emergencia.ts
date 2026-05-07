@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GeoJSONPointSchema } from "../auxiliares/geojson";
 import { BotonEmergenciaSchema } from "./boton-emergencia";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
@@ -12,9 +13,7 @@ export const EstadoEmergenciaSchema = z.enum([
   "Descartada",
 ]);
 
-export const UbicacionEmergenciaSchema = z.object({
-    lat: z.number(),
-    lng: z.number(),
+export const MetadataUbicacionEmergenciaSchema = z.object({
     /** metros */
     accuracy: z.number().optional(),
     fuente: z.enum(["gps", "network", "cache"]).optional(),
@@ -32,7 +31,9 @@ export const EmergenciaSchema = z.object({
     /** Emisor (mobile) */
     idPermiso: z.string().optional(),
     /** Obligatoria al crear */
-    ubicacion: UbicacionEmergenciaSchema.optional(),
+    ubicacion: GeoJSONPointSchema.optional(),
+    /** Datos de calidad/origen del fix GPS */
+    metadataUbicacion: MetadataUbicacionEmergenciaSchema.optional(),
     /** URLs GCS, opcional, se agregan post-creación */
     imagenes: z.array(z.string()).optional(),
     estado: EstadoEmergenciaSchema.optional(),
@@ -77,7 +78,9 @@ export const UpdateEmergenciaSchema = EmergenciaSchema.omit({
 }).partial();
 
 export type IEstadoEmergencia = z.infer<typeof EstadoEmergenciaSchema>;
-export type IUbicacionEmergencia = z.infer<typeof UbicacionEmergenciaSchema>;
+export type IMetadataUbicacionEmergencia = z.infer<
+  typeof MetadataUbicacionEmergenciaSchema
+>;
 export type IEmergencia = z.infer<typeof EmergenciaSchema>;
 export type ICreateEmergencia = z.infer<typeof CreateEmergenciaSchema>;
 export type IUpdateEmergencia = z.infer<typeof UpdateEmergenciaSchema>;

@@ -14,8 +14,6 @@ export const ConfigComplejoSchema = z.object({
       })
       .optional(),
     emergencias: ConfigEmergenciasComplejoSchema.optional(),
-    /** Polígono(s) que delimita(n) el complejo. Usado para geo-fence de emergencias. */
-    geoJson: GeoJSONMultiPolygonSchema.optional(),
   });
 
 export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
@@ -27,6 +25,8 @@ export const ComplejoSchema = z.object({
     habilitado: z.boolean().optional(),
     nombre: z.string().optional(),
     tipo: TipoComplejoSchema.optional(),
+    /** Polígono(s) que delimita(n) el complejo. Usado para geo-fence de emergencias. */
+    ubicacion: GeoJSONMultiPolygonSchema.optional(),
     config: ConfigComplejoSchema.optional(),
     // Populate
     cliente: ClienteSchema.optional(),

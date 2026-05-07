@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  GeoJSONMultiPolygonSchema,
+  GeoJSONPointSchema,
+} from "../auxiliares/geojson";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { EmergenciaSchema } from "./emergencia";
@@ -68,6 +72,52 @@ export const DashboardComplejoSchema = z.object({
   emergencias: DashboardComplejoEmergenciasSchema,
   hardware: DashboardComplejoHardwareSchema,
   publicaciones: DashboardComplejoPublicacionesSchema,
+});
+
+// ─── Dashboard mapa nivel Complejo ───────────────────────────────────────────
+
+export const EstadoUFMapaSchema = z.enum([
+  "sin",
+  "pendiente",
+  "activa",
+  "emergencia",
+]);
+
+export const DashboardMapaUFSchema = z.object({
+  _id: z.string(),
+  nombre: z.string().optional(),
+  ubicacion: GeoJSONMultiPolygonSchema.optional(),
+  estado: EstadoUFMapaSchema,
+  visitasActivas: z.number(),
+  visitasPendientes: z.number(),
+  emergenciasActivas: z.number(),
+});
+
+export const DashboardMapaAccesoSchema = z.object({
+  _id: z.string(),
+  nombre: z.string().optional(),
+  tipo: z.enum(["Ingreso", "Egreso", "Ambos"]).optional(),
+  ubicacion: GeoJSONPointSchema.optional(),
+  dispositivosTotal: z.number(),
+  dispositivosOnline: z.number(),
+});
+
+export const DashboardMapaEmergenciaSchema = z.object({
+  _id: z.string(),
+  ubicacion: GeoJSONPointSchema.optional(),
+  idUnidadFuncional: z.string().optional(),
+  idBoton: z.string().optional(),
+  fechaCreacion: z.string().optional(),
+  estado: z.enum(["Pendiente", "EnAtencion"]),
+});
+
+export const DashboardMapaComplejoSchema = z.object({
+  idComplejo: z.string(),
+  generadoEn: z.string(),
+  ubicacion: GeoJSONMultiPolygonSchema.optional(),
+  unidadesFuncionales: z.array(DashboardMapaUFSchema),
+  accesos: z.array(DashboardMapaAccesoSchema),
+  emergenciasActivas: z.array(DashboardMapaEmergenciaSchema),
 });
 
 // ─── Dashboard nivel Unidad Funcional ────────────────────────────────────────
@@ -194,6 +244,13 @@ export type IDashboardComplejoPublicaciones = z.infer<
   typeof DashboardComplejoPublicacionesSchema
 >;
 export type IDashboardComplejo = z.infer<typeof DashboardComplejoSchema>;
+export type IEstadoUFMapa = z.infer<typeof EstadoUFMapaSchema>;
+export type IDashboardMapaUF = z.infer<typeof DashboardMapaUFSchema>;
+export type IDashboardMapaAcceso = z.infer<typeof DashboardMapaAccesoSchema>;
+export type IDashboardMapaEmergencia = z.infer<
+  typeof DashboardMapaEmergenciaSchema
+>;
+export type IDashboardMapaComplejo = z.infer<typeof DashboardMapaComplejoSchema>;
 export type IDashboardUFVisitas = z.infer<typeof DashboardUFVisitasSchema>;
 export type IDashboardUFMovimientos = z.infer<
   typeof DashboardUFMovimientosSchema

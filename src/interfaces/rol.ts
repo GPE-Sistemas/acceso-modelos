@@ -114,6 +114,24 @@ export const AccionesRolSchema = z.enum([
   "Emergencias - Ver emergencias", // panel guardia
   "Emergencias - Atender emergencias", // tomar caso, cambiar estado, registrar interacciones, chatear
   "Emergencias - Eliminar emergencias",
+
+  // MODULO EDGE APPLIANCES (control de accesos on-premise)
+  // Típicamente Cliente nivel 1 (integrador). El complejo no las ve.
+  "EdgeAppliance - Ver appliances",
+  "EdgeAppliance - Provisionar appliance",
+  "EdgeAppliance - Despromover / desactivar",
+  "EdgeAppliance - Ver telemetría / sync status",
+  "EdgeAppliance - Forzar resync",
+  "EdgeAppliance - Acceso debug",
+  "EdgeAppliance - Asignar dispositivo",
+  "EdgeAppliance - Reasignar shard",
+  "EdgeAppliance - Ver capacidad y utilización",
+  "EdgeAppliance - Ver hardware detectado",
+  "EdgeAppliance - Re-detectar hardware",
+
+  // Catálogos curados por GPE (master data Tipo B)
+  "EdgeApplianceModelo - Ver catálogo certificado",
+  "PerfilCamara - Ver catálogo",
 ]);
 
 export const AlcanceRolSchema = z.enum(["Global", "Cliente", "Complejo"]);

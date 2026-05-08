@@ -27,6 +27,10 @@ export const DispositivoSchema = z.object({
     marca: z.string().optional(),
     modelo: z.string().optional(),
     config: ConfigDispositivoSchema.optional(),
+    // Sharding edge — qué appliance recibe el HTTP Push del terminal.
+    // Vacío en complejos N=1 (Standalone): el único edge es dueño implícito.
+    idEdgeAppliancePrimario: z.string().optional(),
+    idEdgeApplianceSecundario: z.string().optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),

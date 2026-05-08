@@ -26,4 +26,8 @@ export * from './mensaje-emergencia';
 export * from './contacto-usuario';
 export * from './preferencias-contactos';
 export * from './dashboard';
-
+export * from './edge-appliance';
+export * from './edge-appliance-modelo';
+export * from './perfil-camara';
+export * from './sync-status';
+export * from './camara-descubierta';

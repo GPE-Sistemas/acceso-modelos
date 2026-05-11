@@ -163,7 +163,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `dispositivo-acceso.ts` | `DispositivoAccesoSchema` / `IDispositivoAcceso`, `ComportamientoCredencialValidaSchema`, `ComportamientoCredencialInvalidaSchema` |
 | `evento.ts` | `EventoSchema` / `IEvento` — estructura pendiente de definición |
 | `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita`, `RecurrenciaEventoVisitaSchema`, estados, aprobación |
-| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`. Entidad de alto volumen |
+| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`, `VisitanteSnapshotSchema`, `VehiculoSnapshotSchema` (snapshot inmutable de visitantes/vehículo). Entidad de alto volumen |
 | `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional |
 | `rol.ts` | `RolSchema` / `IRol` — discriminated union por `alcance`. `AccionesRolSchema` enumera todas las acciones del catálogo |
 | `unidad-funcional.ts` | `UnidadFuncionalSchema` / `IUnidadFuncional` |
@@ -177,7 +177,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `notificacion-preferencias.ts` | `NotificacionPreferenciasSchema` / `INotificacionPreferencias`, `CategoriaNotificacionSchema`, `CategoriasNotificacionMapSchema`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT` |
 | `boton-emergencia.ts` | `BotonEmergenciaSchema` / `IBotonEmergencia`, `ConfigBotonEmergenciaSchema` |
 | `config-botones-complejo.ts` | `ConfigBotonesComplejoSchema` / `IConfigBotonesComplejo` — uno por complejo; `idsBotones[]` define orden mobile |
-| `emergencia.ts` | `EmergenciaSchema` / `IEmergencia`, `EstadoEmergenciaSchema`, `UbicacionEmergenciaSchema` |
+| `emergencia.ts` | `EmergenciaSchema` / `IEmergencia`, `EstadoEmergenciaSchema`, `UbicacionEmergenciaSchema`, `BotonEmergenciaSnapshotSchema` (snapshot inmutable del botón) |
 | `interaccion-emergencia.ts` | `InteraccionEmergenciaSchema` / `IInteraccionEmergencia`, `TipoInteraccionEmergenciaSchema`, `AccionExternaEmergenciaSchema` |
 | `mensaje-emergencia.ts` | `MensajeEmergenciaSchema` / `IMensajeEmergencia` |
 | `contacto-usuario.ts` | `ContactoUsuarioSchema` / `IContactoUsuario`, `EstadoContactoUsuarioSchema` |
@@ -228,6 +228,30 @@ Para agregar acciones:
 
 ---
 
+## Snapshots inmutables — visitantes / vehículo / botón
+
+Para que el historial sobreviva a edits o hard delete del catálogo UF, las entidades "consumidoras" persisten un snapshot inmutable de las referencias al momento de materializarse.
+
+| Entidad | Campo snapshot | Cuándo se setea |
+|---|---|---|
+| `IIngresoEgreso` | `visitantesSnapshot[]` (`{ idVisitante, datosPersonales }`), `vehiculoSnapshot` (`{ idVehiculo, datosVehiculo }`) | `POST /ingresos-egresos` y `PUT /ingresos-egresos/:id/resolver` (si cambian visitantes/vehículo) |
+| `IEmergencia` | `botonSnapshot` (`{ idBoton, texto, icono, color }`) | `POST /emergencias` |
+
+Quien renderiza historial **siempre** debe usar el snapshot. `idsVisitantes` / `idVehiculo` / `idBoton` siguen como referencias de trazabilidad, pero el catálogo subyacente puede haberse eliminado o editado. `IEventoVisita` NO tiene snapshot — los eventos Pendientes/Activos referencian catálogo vivo (editable). Una vez generados los ingresos asociados, el snapshot vive en `IIngresoEgreso`.
+
+## Ventana de vigencia — `PermisoUnidadFuncionalSchema`
+
+Variante UF tiene dos campos opcionales que delimitan el período en el que ese permiso "ve" historial:
+
+- `fechaInicioVigencia?: string` (ISO). Si ausente, `AccionesGuard` en acceso-api hace fallback a `fechaCreacion`. Soporta alta diferida o retroactiva.
+- `fechaFinVigencia?: string`. `null`/ausente = vigente. Una vez seteado el permiso queda **inmutable** (no se reactiva). Se setea solo al desactivar el permiso (`DELETE /permisos/:id` en acceso-api cuando nivel UF).
+
+`UpdatePermisoSchema` variante UF omite ambos campos — no editables vía update genérico. `CreatePermisoSchema` UF omite `fechaFinVigencia` (no se nace desactivado) pero acepta `fechaInicioVigencia`.
+
+Para cortar historial al cambiar de dueño una UF: setear `fechaFinVigencia` en permisos salientes y crear nuevos con `fechaInicioVigencia=now`. La UF y catálogos no se tocan; cada permiso ve únicamente su ventana temporal.
+
+---
+
 ## Convenciones
 
 - **Campos populate** (virtuals): no se persisten en Mongo, solo para respuestas enriquecidas. En schemas Zod son `Schema.optional()` referenciando otros schemas.
@@ -236,3 +260,4 @@ Para agregar acciones:
 - **Fechas**: `string` ISO 8601.
 - **MongoDB ObjectIds**: `string`.
 - **`IPermiso` / `IRol`**: discriminated unions. No usar `Exactly<>` en sus schemas Mongoose en `acceso-datos`.
+- **Snapshots** (`visitantesSnapshot`, `vehiculoSnapshot`, `botonSnapshot`): inmutables. Render histórico los usa siempre; populate vivo es fallback solo para datos pre-snapshot.

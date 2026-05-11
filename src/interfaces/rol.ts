@@ -128,6 +128,11 @@ export const AccionesRolSchema = z.enum([
   "EdgeAppliance - Ver capacidad y utilización",
   "EdgeAppliance - Ver hardware detectado",
   "EdgeAppliance - Re-detectar hardware",
+  // E.S1c / D30 — dispara comandos operativos NATS (sync-snapshot,
+  // restart-service, cert-renew, update-image, rekey). Acción
+  // separada de "Provisionar" para granularidad: operadores que solo
+  // despachan comandos sin permisos de creación/borrado de appliances.
+  "EdgeAppliance - Enviar comandos",
 
   // Catálogos curados por GPE (master data Tipo B)
   "EdgeApplianceModelo - Ver catálogo certificado",

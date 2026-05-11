@@ -151,6 +151,52 @@ export const EdgeApplianceUtilizacionSchema = z.object({
   actualizadoEn: z.string(),
 });
 
+// IEdgeApplianceDiagnostico — sync detallado reportado por el agent en cada
+// heartbeat (D32). La UI lo muestra en la tab "Sync" del detalle del
+// appliance para troubleshoot sin SSH. Sumario barato (~500 bytes JSON);
+// detalle profundo por entidad va por NATS request/reply on-demand.
+export const EdgeApplianceNatsConnStateSchema = z.enum([
+  "Inicial",
+  "Conectado",
+  "Reconectando",
+  "Desconectado",
+]);
+
+export const EdgeApplianceIntegrityEntrySchema = z.object({
+  // Conteo local Postgres edge.
+  localCount: z.number().int().nonnegative(),
+  // Conteo cloud reportado por GET /sync/integrity (último compare).
+  // Optional: si el integrity cron todavía no corrió, sólo hay local.
+  cloudCount: z.number().int().nonnegative().optional(),
+  // Última vez que se detectó drift (local != cloud). ISO. Optional: nunca
+  // hubo drift hasta ahora.
+  lastDriftAt: z.string().optional(),
+});
+
+export const EdgeApplianceLastErrorSchema = z.object({
+  // Código corto opcional (ej. "nats.publish.failed", "outbox.lock"). El
+  // agent lo arma; sin convención cerrada aún.
+  code: z.string().optional(),
+  message: z.string(),
+  at: z.string(),
+});
+
+export const EdgeApplianceDiagnosticoSchema = z.object({
+  // Cantidad de filas pendientes en outbox edge (publish a NATS pendiente).
+  outboxDepth: z.number().int().nonnegative(),
+  // Resumen integrity por entidad. Key = nombre entidad (ej. "permisos",
+  // "credenciales-dispositivos"). Valor = stats.
+  integritySummary: z.record(z.string(), EdgeApplianceIntegrityEntrySchema),
+  // Estado del cliente NATS del agent. Inicial = pre-connect; Conectado =
+  // operativo; Reconectando = retry en curso; Desconectado = fallo
+  // sostenido (heartbeat HTTP sigue funcionando).
+  natsConnState: EdgeApplianceNatsConnStateSchema,
+  // Último error capturado. Auto-clear si pasaron 15min sin error nuevo.
+  lastError: EdgeApplianceLastErrorSchema.optional(),
+  // Timestamp ISO del snapshot.
+  actualizadoEn: z.string(),
+});
+
 // IEdgeAppliance — scalable-first: indice/fqdn/rol requeridos desde el día uno
 // (caso N=1 → rol='Standalone', indice=0).
 export const EdgeApplianceSchema = z.object({
@@ -188,6 +234,7 @@ export const EdgeApplianceSchema = z.object({
   hardwareMatchModelo: z.boolean().optional(),
 
   utilizacion: EdgeApplianceUtilizacionSchema.optional(),
+  diagnostico: EdgeApplianceDiagnosticoSchema.optional(),
   flagsEstado: z.array(EdgeApplianceFlagEstadoSchema).optional(),
 
   // Populate

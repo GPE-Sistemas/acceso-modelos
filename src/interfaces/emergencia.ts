@@ -19,6 +19,17 @@ export const MetadataUbicacionEmergenciaSchema = z.object({
     fuente: z.enum(["gps", "network", "cache"]).optional(),
   });
 
+/**
+ * Snapshot inmutable del botón al disparar la emergencia.
+ * Permite hard delete del botón sin perder evidencia de qué se accionó.
+ */
+export const BotonEmergenciaSnapshotSchema = z.object({
+  idBoton: z.string(),
+  texto: z.string().optional(),
+  icono: z.string().optional(),
+  color: z.string().optional(),
+});
+
 export const EmergenciaSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
@@ -28,6 +39,11 @@ export const EmergenciaSchema = z.object({
     idUnidadFuncional: z.string().optional(),
     /** Botón que disparó la emergencia */
     idBoton: z.string().optional(),
+    /**
+     * Snapshot inmutable del botón al momento del disparo.
+     * Fuente de verdad para historial; idBoton puede no existir tras hard delete.
+     */
+    botonSnapshot: BotonEmergenciaSnapshotSchema.optional(),
     /** Emisor (mobile) */
     idPermiso: z.string().optional(),
     /** Obligatoria al crear */
@@ -80,6 +96,9 @@ export const UpdateEmergenciaSchema = EmergenciaSchema.omit({
 export type IEstadoEmergencia = z.infer<typeof EstadoEmergenciaSchema>;
 export type IMetadataUbicacionEmergencia = z.infer<
   typeof MetadataUbicacionEmergenciaSchema
+>;
+export type IBotonEmergenciaSnapshot = z.infer<
+  typeof BotonEmergenciaSnapshotSchema
 >;
 export type IEmergencia = z.infer<typeof EmergenciaSchema>;
 export type ICreateEmergencia = z.infer<typeof CreateEmergenciaSchema>;

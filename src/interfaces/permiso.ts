@@ -53,6 +53,18 @@ export const PermisoUnidadFuncionalSchema = z.object({
   idCliente: z.string(),
   idComplejo: z.string(),
   idUnidadFuncional: z.string(),
+  /**
+   * Inicio de vigencia del permiso. Permite alta diferida o retroactiva.
+   * Si no se setea al crear, acceso-api lo iguala a fechaCreacion.
+   * Inmutable una vez creado.
+   */
+  fechaInicioVigencia: z.string().optional(),
+  /**
+   * Fin de vigencia. null/ausente = vigente.
+   * Una vez seteado el permiso queda inmutable (no se reactiva).
+   * Setear solo vía PUT /permisos/:id/desactivar.
+   */
+  fechaFinVigencia: z.string().optional(),
   // Virtuals
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
@@ -94,6 +106,7 @@ export const CreatePermisoSchema = z.discriminatedUnion("nivel", [
       cliente: true,
       complejo: true,
       unidadFuncional: true,
+      fechaFinVigencia: true,
     })
     .extend({ password: z.string().optional() }),
 ]);
@@ -129,6 +142,8 @@ export const UpdatePermisoSchema = z.discriminatedUnion("nivel", [
       cliente: true,
       complejo: true,
       unidadFuncional: true,
+      fechaInicioVigencia: true,
+      fechaFinVigencia: true,
     })
     .partial()
     .extend({ nivel: z.literal("Unidad Funcional") }),

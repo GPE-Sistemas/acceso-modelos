@@ -4,12 +4,30 @@ import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { PermisoSchema } from "./permiso";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
-import { VehiculoSchema } from "./vehiculo";
+import { DatosVehiculoSchema, VehiculoSchema } from "./vehiculo";
+import { DatosPersonalesSchema } from "./usuario";
 import { VisitanteSchema } from "./visitante";
 
 export const TipoIngresoEgresoSchema = z.enum(["Ingreso", "Egreso"]);
 export const AprobadoPorIngresoEgresoSchema = z.enum(["Sistema", "Guardia"]);
 export const CategoriaIngresoEgresoSchema = z.enum(["Propietario", "Visita"]);
+
+/**
+ * Snapshot inmutable de visitante al momento del ingreso/egreso.
+ * Permite hard delete del visitante catálogo sin perder historial.
+ */
+export const VisitanteSnapshotSchema = z.object({
+  idVisitante: z.string(),
+  datosPersonales: DatosPersonalesSchema,
+});
+
+/**
+ * Snapshot inmutable del vehículo al momento del ingreso/egreso.
+ */
+export const VehiculoSnapshotSchema = z.object({
+  idVehiculo: z.string(),
+  datosVehiculo: DatosVehiculoSchema,
+});
 
 export const IngresoEgresoSchema = z.object({
   _id: z.string().optional(),
@@ -36,6 +54,16 @@ export const IngresoEgresoSchema = z.object({
   categoria: CategoriaIngresoEgresoSchema.optional(),
   idAcceso: z.string().optional(),
   idVehiculo: z.string().optional(),
+  /**
+   * Snapshot inmutable de los visitantes al momento del ingreso/egreso.
+   * Fuente de verdad para historial. idsVisitantes[] se mantiene para trazabilidad
+   * pero el visitante catálogo puede haber sido borrado/editado posteriormente.
+   */
+  visitantesSnapshot: z.array(VisitanteSnapshotSchema).optional(),
+  /**
+   * Snapshot inmutable del vehículo al momento del ingreso/egreso.
+   */
+  vehiculoSnapshot: VehiculoSnapshotSchema.optional(),
   imagenes: z.array(z.string()).optional(),
   observaciones: z.string().optional(),
   // Populate
@@ -66,6 +94,8 @@ export const CreateIngresoEgresoSchema = IngresoEgresoSchema.omit({
 
 export const UpdateIngresoEgresoSchema = CreateIngresoEgresoSchema.partial();
 
+export type IVisitanteSnapshot = z.infer<typeof VisitanteSnapshotSchema>;
+export type IVehiculoSnapshot = z.infer<typeof VehiculoSnapshotSchema>;
 export type IIngresoEgreso = z.infer<typeof IngresoEgresoSchema>;
 export type ICreateIngresoEgreso = z.infer<typeof CreateIngresoEgresoSchema>;
 export type IUpdateIngresoEgreso = z.infer<typeof UpdateIngresoEgresoSchema>;

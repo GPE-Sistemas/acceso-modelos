@@ -272,6 +272,18 @@ export type IEdgeCapacidad = z.infer<typeof EdgeCapacidadSchema>;
 export type IEdgeApplianceUtilizacion = z.infer<
   typeof EdgeApplianceUtilizacionSchema
 >;
+export type IEdgeApplianceNatsConnState = z.infer<
+  typeof EdgeApplianceNatsConnStateSchema
+>;
+export type IEdgeApplianceIntegrityEntry = z.infer<
+  typeof EdgeApplianceIntegrityEntrySchema
+>;
+export type IEdgeApplianceLastError = z.infer<
+  typeof EdgeApplianceLastErrorSchema
+>;
+export type IEdgeApplianceDiagnostico = z.infer<
+  typeof EdgeApplianceDiagnosticoSchema
+>;
 export type IEdgeAppliance = z.infer<typeof EdgeApplianceSchema>;
 export type ICreateEdgeAppliance = z.infer<typeof CreateEdgeApplianceSchema>;
 export type IUpdateEdgeAppliance = z.infer<typeof UpdateEdgeApplianceSchema>;

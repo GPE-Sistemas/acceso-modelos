@@ -133,6 +133,10 @@ export const AccionesRolSchema = z.enum([
   // separada de "Provisionar" para granularidad: operadores que solo
   // despachan comandos sin permisos de creación/borrado de appliances.
   "EdgeAppliance - Enviar comandos",
+  // E.S1d / D32 — lee logs unitarios del appliance vía NATS request/reply
+  // (journalctl + install.log). Separada de "Ver appliances" porque los
+  // logs contienen IPs, stack traces y otros datos sensibles.
+  "EdgeAppliance - Ver logs",
 
   // Catálogos curados por GPE (master data Tipo B)
   "EdgeApplianceModelo - Ver catálogo certificado",

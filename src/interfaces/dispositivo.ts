@@ -19,6 +19,7 @@ export const ConfigDispositivoSchema = z.object({
 export const DispositivoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
+    habilitado: z.boolean().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
     // Datos específicos del dispositivo

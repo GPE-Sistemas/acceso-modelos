@@ -47,6 +47,7 @@ export const BloqueSchema = z.object({
 export const PublicacionSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
+    habilitado: z.boolean().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
     titulo: z.string().optional(),

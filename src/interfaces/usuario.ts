@@ -17,6 +17,7 @@ export const ConfigUsuarioSchema = z.record(z.string(), z.any());
 export const UsuarioSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
+    habilitado: z.boolean().optional(),
     usuario: z.string().optional(),
     hash: z.string().optional(),
     datosPersonales: DatosPersonalesSchema.optional(),

@@ -206,6 +206,7 @@ export const EdgeApplianceSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
   fechaActualizacion: z.string().optional(),
+  habilitado: z.boolean().optional(),
 
   idCliente: z.string(),
   idComplejo: z.string(),

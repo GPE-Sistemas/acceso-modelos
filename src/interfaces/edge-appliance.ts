@@ -106,10 +106,13 @@ export const EdgeHardwareSpecNicSchema = z.object({
 export const EdgeHardwareSpecSchema = z.object({
   cpu: EdgeHardwareSpecCpuSchema,
   ramGB: z.number().nonnegative(),
-  storage: z.array(EdgeHardwareSpecStorageSchema),
+  // storage / nics opcionales: el agent puede no detectarlos cuando el
+  // container runtime carece de lsblk / ip (caso Alpine sin util-linux,
+  // BusyBox limitado). En ese caso reporta `DeteccionParcial` en flags.
+  storage: z.array(EdgeHardwareSpecStorageSchema).optional(),
   accelerator: EdgeHardwareSpecAcceleratorSchema.optional(),
   gpu: EdgeHardwareSpecGpuSchema.optional(),
-  nics: z.array(EdgeHardwareSpecNicSchema),
+  nics: z.array(EdgeHardwareSpecNicSchema).optional(),
   tdpW: z.number().nonnegative().optional(),
   detectadoEn: z.string(),
 });

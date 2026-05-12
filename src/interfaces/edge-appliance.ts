@@ -290,3 +290,78 @@ export type IEdgeApplianceDiagnostico = z.infer<
 export type IEdgeAppliance = z.infer<typeof EdgeApplianceSchema>;
 export type ICreateEdgeAppliance = z.infer<typeof CreateEdgeApplianceSchema>;
 export type IUpdateEdgeAppliance = z.infer<typeof UpdateEdgeApplianceSchema>;
+
+// E.S1d / D32 — logs-tail vía NATS request/reply.
+//
+// Units soportados son una whitelist cerrada (sin "arbitrary unit" para
+// evitar que un admin lea logs del host). El agent edge resuelve cada uno
+// a `journalctl -u <unit>` o a un file path concreto (install.log).
+//
+// Cap server-side: `lines` se clamp a [1, EDGE_LOGS_MAX_LINES] en cloud y
+// edge. Defaults UI: lines=200.
+export const EDGE_LOGS_MAX_LINES = 1000;
+export const EDGE_LOGS_DEFAULT_LINES = 200;
+
+export const EdgeApplianceLogsUnitSchema = z.enum([
+  "acceso-edge",
+  "tailscaled",
+  "acceso-edge-cert-sync",
+  "acceso-edge-update",
+  "install.log",
+]);
+
+// Args que el cloud envía al agent en el payload NATS request.
+//   - `lines`: tail count, cap por edge a EDGE_LOGS_MAX_LINES.
+//   - `since`: filtro temporal "más nuevo que" (ISO). Usa journalctl --since.
+//   - `before`: cursor pagination "más viejo que" (ISO). Para "cargar más".
+export const EdgeApplianceLogsRequestSchema = z.object({
+  unit: EdgeApplianceLogsUnitSchema,
+  lines: z.number().int().positive().max(EDGE_LOGS_MAX_LINES).optional(),
+  since: z.string().optional(),
+  before: z.string().optional(),
+});
+
+// Nivel inferido server-side cuando el log lo trae (journalctl `PRIORITY`).
+// Sintético — no toda línea va a tener nivel (install.log no lo trae).
+export const EdgeApplianceLogLevelSchema = z.enum([
+  "debug",
+  "info",
+  "warn",
+  "error",
+]);
+
+export const EdgeApplianceLogLineSchema = z.object({
+  // ISO timestamp del log. Para journalctl viene de __REALTIME_TIMESTAMP.
+  // Para install.log es el ts del FS si la línea no trae prefix de fecha.
+  ts: z.string(),
+  level: EdgeApplianceLogLevelSchema.optional(),
+  message: z.string(),
+});
+
+export const EdgeApplianceLogsResponseSchema = z.object({
+  unit: EdgeApplianceLogsUnitSchema,
+  lines: z.array(EdgeApplianceLogLineSchema),
+  // Cursor para paginación hacia atrás. Si presente: la siguiente request
+  // debe pasar `before=<cursor>` para traer logs anteriores. Ausente si no
+  // hay más historia (o el agent no lo soporta para esa unit).
+  cursor: z.string().optional(),
+  // true = el edge truncó porque `lines` saturó el buffer. UI lo señaliza.
+  truncated: z.boolean(),
+  // ts ISO de cuando el agent terminó de armar la respuesta. Útil para
+  // mostrar "snapshot @ HH:MM:SS" en la UI.
+  fetchedAt: z.string(),
+});
+
+export type IEdgeApplianceLogsUnit = z.infer<
+  typeof EdgeApplianceLogsUnitSchema
+>;
+export type IEdgeApplianceLogsRequest = z.infer<
+  typeof EdgeApplianceLogsRequestSchema
+>;
+export type IEdgeApplianceLogLevel = z.infer<
+  typeof EdgeApplianceLogLevelSchema
+>;
+export type IEdgeApplianceLogLine = z.infer<typeof EdgeApplianceLogLineSchema>;
+export type IEdgeApplianceLogsResponse = z.infer<
+  typeof EdgeApplianceLogsResponseSchema
+>;

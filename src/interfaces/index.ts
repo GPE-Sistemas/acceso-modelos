@@ -28,6 +28,8 @@ export * from './preferencias-contactos';
 export * from './dashboard';
 export * from './edge-appliance';
 export * from './edge-appliance-modelo';
+export * from './edge-auth';
+export * from './edge-integridad';
 export * from './perfil-camara';
 export * from './sync-status';
 export * from './camara-descubierta';

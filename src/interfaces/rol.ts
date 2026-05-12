@@ -137,6 +137,12 @@ export const AccionesRolSchema = z.enum([
   // (journalctl + install.log). Separada de "Ver appliances" porque los
   // logs contienen IPs, stack traces y otros datos sensibles.
   "EdgeAppliance - Ver logs",
+  // 25-hub-edge-arquitectura.md — sección "Estado / Integridad" del Hub
+  // edge servida por GET /diagnostico del agent local. Granularidad
+  // distinta a "Ver telemetría / sync status" (admin integrador
+  // cross-edge): esta es la vista operativa del propio edge del complejo,
+  // típicamente asignada al operador del complejo.
+  "EdgeAppliance - Ver integridad",
 
   // Catálogos curados por GPE (master data Tipo B)
   "EdgeApplianceModelo - Ver catálogo certificado",

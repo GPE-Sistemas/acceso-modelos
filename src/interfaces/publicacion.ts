@@ -19,8 +19,6 @@ export const CategoriaPublicacionSchema = z.enum([
   "informacion",
 ]);
 
-export const EstadoPublicacionSchema = z.enum(["activa", "inactiva"]);
-
 export const BloqueSchema = z.object({
     tipo: TipoBloqueSchema.optional(),
     orden: z.number().optional(),
@@ -52,7 +50,6 @@ export const PublicacionSchema = z.object({
     idComplejo: z.string().optional(),
     titulo: z.string().optional(),
     categoria: CategoriaPublicacionSchema.optional(),
-    estado: EstadoPublicacionSchema.optional(),
     prioridad: z.number().optional(),
     fechaInicio: z.string().optional(),
     /** null = permanente */
@@ -80,7 +77,6 @@ export const UpdatePublicacionSchema = PublicacionSchema.omit({
 
 export type ETipoBloque = z.infer<typeof TipoBloqueSchema>;
 export type ECategoriaPublicacion = z.infer<typeof CategoriaPublicacionSchema>;
-export type EEstadoPublicacion = z.infer<typeof EstadoPublicacionSchema>;
 export type IBloque = z.infer<typeof BloqueSchema>;
 export type IPublicacion = z.infer<typeof PublicacionSchema>;
 export type ICreatePublicacion = z.infer<typeof CreatePublicacionSchema>;

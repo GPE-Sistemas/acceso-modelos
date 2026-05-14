@@ -217,6 +217,11 @@ export const EdgeApplianceSchema = z.object({
 
   hostname: z.string().optional(),
   ipOverlay: z.string().optional(),
+  // A.S8: IP LAN primaria detectada por el agent (no loopback, no Tailscale,
+  // no link-local). El cloud publica record A `<slug>.edge.coliving.sh →
+  // ipLan` para clientes LAN-only. Si vacío → solo publica overlay record
+  // `<slug>.overlay.edge.coliving.sh → ipOverlay`.
+  ipLan: z.string().optional(),
 
   estado: EdgeApplianceEstadoSchema,
   ultimoHeartbeat: z.string().optional(),

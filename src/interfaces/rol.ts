@@ -17,10 +17,18 @@ export const AccionesRolSchema = z.enum([
   "Administración - Eliminar complejos",
   "Administración - Deshabilitar / habilitar complejos",
   "Administración - Editar configuración complejos",
-  // Permisos — no se elimina ('Administración - Eliminar permisos'): solo se deshabilitan, ya que se referencian desde otras entidades
+  // Permisos — no se eliminan ('Administración - Eliminar permisos' no existe): solo se deshabilitan vía Editar.
+  // Crear/Editar son granulares por categoriaPermiso para permitir que un admin de complejo
+  // pueda dar de alta guardias/prestadores pero no otros administradores.
   "Administración - Ver permisos",
-  "Administración - Crear permisos",
-  "Administración - Editar permisos",
+  "Administración - Crear permisos propietarios",
+  "Administración - Crear permisos administración",
+  "Administración - Crear permisos guardia",
+  "Administración - Crear permisos prestadores",
+  "Administración - Editar permisos propietarios",
+  "Administración - Editar permisos administración",
+  "Administración - Editar permisos guardia",
+  "Administración - Editar permisos prestadores",
   // Roles
   "Administración - Ver roles",
   "Administración - Crear roles",
@@ -84,6 +92,9 @@ export const AccionesRolSchema = z.enum([
   "Movimientos - Ver ingresos egresos",
   "Movimientos - Registrar ingreso egreso",
   "Movimientos - Ver propietarios",
+  "Movimientos - Ver administración",
+  "Movimientos - Ver guardia",
+  "Movimientos - Ver prestadores",
   "Movimientos - Ver visitas activas",
   "Movimientos - Buscar visitantes",
   "Movimientos - Buscar vehiculos",

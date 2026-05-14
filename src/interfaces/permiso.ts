@@ -13,8 +13,23 @@ export const NivelPermisoSchema = z.enum([
   "Unidad Funcional",
 ]);
 
+/**
+ * Categoría del portador del permiso. Independiente del nivel y de los roles.
+ * Defaults aplicados por acceso-api al crear:
+ * - nivel 'Unidad Funcional' → 'Propietario'
+ * - nivel 'Cliente'          → 'Administración'
+ * - nivel 'Complejo'         → requerido (Administración | Guardia | Prestador de Servicio)
+ */
+export const CategoriaPermisoSchema = z.enum([
+  "Propietario",
+  "Administración",
+  "Guardia",
+  "Prestador de Servicio",
+]);
+
 export type IConfigPermiso = z.infer<typeof ConfigPermisoSchema>;
 export type INivelPermiso = z.infer<typeof NivelPermisoSchema>;
+export type ICategoriaPermiso = z.infer<typeof CategoriaPermisoSchema>;
 
 const PermisoBaseFields = {
   _id: z.string().optional(),
@@ -22,6 +37,7 @@ const PermisoBaseFields = {
   habilitado: z.boolean().optional(),
   fechaExpiracion: z.string().optional(),
   username: z.string().optional(),
+  categoriaPermiso: CategoriaPermisoSchema.optional(),
   idsRoles: z.array(z.string()).optional(),
   config: ConfigPermisoSchema.optional(),
   // Virtuals
@@ -42,9 +58,19 @@ export const PermisoComplejoSchema = z.object({
   nivel: z.literal("Complejo"),
   idCliente: z.string(),
   idComplejo: z.string(),
+  /**
+   * Solo poblado cuando categoriaPermiso === 'Prestador de Servicio'.
+   * Ausente o vacío = prestador general del complejo (sin restricción de UF).
+   * Cada id debe apuntar a una UF del idComplejo con tipo='Común' (validado en acceso-api).
+   */
+  idsUnidadesFuncionales: z.array(z.string()).optional(),
   // Virtuals
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
+  // unidadesFuncionales (populate virtual) declarado solo en Mongoose para evitar
+  // TS7056 por profundidad de inferencia en la cadena de populates (IPermiso ⊂
+  // IIngresoEgreso ⊂ IVinculoEventoIngreso). Los consumers que lo necesiten lo
+  // tratan como `(permiso as any).unidadesFuncionales` o tipan ad-hoc.
 });
 
 export const PermisoUnidadFuncionalSchema = z.object({

@@ -163,8 +163,8 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `dispositivo-acceso.ts` | `DispositivoAccesoSchema` / `IDispositivoAcceso`, `ComportamientoCredencialValidaSchema`, `ComportamientoCredencialInvalidaSchema` |
 | `evento.ts` | `EventoSchema` / `IEvento` — estructura pendiente de definición |
 | `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita`, `RecurrenciaEventoVisitaSchema`, estados, aprobación |
-| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`, `VisitanteSnapshotSchema`, `VehiculoSnapshotSchema` (snapshot inmutable de visitantes/vehículo). Entidad de alto volumen |
-| `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional |
+| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`, `VisitanteSnapshotSchema`, `VehiculoSnapshotSchema` (snapshot inmutable). `CategoriaIngresoEgresoSchema` enum: `Propietario` \| `Visita` \| `Administración` \| `Guardia` \| `Prestador de Servicio`. Coherencia con `idPermiso.categoriaPermiso` validada en `acceso-api`. Entidad de alto volumen |
+| `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional. `CategoriaPermisoSchema` (`Propietario` \| `Administración` \| `Guardia` \| `Prestador de Servicio`). `PermisoComplejoSchema.idsUnidadesFuncionales?` para Prestador. |
 | `rol.ts` | `RolSchema` / `IRol` — discriminated union por `alcance`. `AccionesRolSchema` enumera todas las acciones del catálogo |
 | `unidad-funcional.ts` | `UnidadFuncionalSchema` / `IUnidadFuncional` |
 | `usuario.ts` | `UsuarioSchema` / `IUsuario`, `DatosPersonalesSchema` |
@@ -213,6 +213,32 @@ GeoJSONPointSchema, GeoJSONPolygonSchema, GeoJSONMultiPolygonSchema, ...
 
 `AccionesRolSchema` (`src/interfaces/rol.ts`) es la fuente de verdad. Módulos: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`, `Publicaciones`, `Emergencias`.
 
+**Permisos — granularidad por categoría** (reemplazo de las genéricas `Administración - Crear permisos` y `Administración - Editar permisos`, eliminadas):
+
+```
+Administración - Crear permisos propietarios
+Administración - Crear permisos administración
+Administración - Crear permisos guardia
+Administración - Crear permisos prestadores
+Administración - Editar permisos propietarios
+Administración - Editar permisos administración
+Administración - Editar permisos guardia
+Administración - Editar permisos prestadores
+```
+
+`POST /permisos` y `PUT /permisos/:id` usan `@RequiereCualquierAccion(...4)`; `PermisosService` valida que la acción específica matchee la `categoriaPermiso` del body (4xx si no). Permite que un admin de complejo de alta a guardias/prestadores sin poder crear otros administradores. Permisos no se eliminan (solo se deshabilitan vía Editar) — no existe `Administración - Eliminar permisos`.
+
+**Movimientos — ver por categoría**:
+
+```
+Movimientos - Ver propietarios
+Movimientos - Ver administración    (NEW)
+Movimientos - Ver guardia           (NEW)
+Movimientos - Ver prestadores       (NEW)
+```
+
+Los endpoints `GET /panel-guardia/<categoria>` requieren la acción correspondiente.
+
 **Hardware** — `accesos`, `dispositivos`, `credenciales`, `dispositivos acceso`.
 
 **Visitas** — `Ver/Crear/Editar/Eliminar eventos`, `Aprobar eventos`, `Aprobar eventos recurrentes` (auto-aprobación al crear y autoriza `PUT /eventos-visita/:id/aprobacion-recurrente`; típicamente nivel Complejo), `Ver/Crear/Editar/Eliminar visitantes`.
@@ -238,6 +264,28 @@ Para que el historial sobreviva a edits o hard delete del catálogo UF, las enti
 | `IEmergencia` | `botonSnapshot` (`{ idBoton, texto, icono, color }`) | `POST /emergencias` |
 
 Quien renderiza historial **siempre** debe usar el snapshot. `idsVisitantes` / `idVehiculo` / `idBoton` siguen como referencias de trazabilidad, pero el catálogo subyacente puede haberse eliminado o editado. `IEventoVisita` NO tiene snapshot — los eventos Pendientes/Activos referencian catálogo vivo (editable). Una vez generados los ingresos asociados, el snapshot vive en `IIngresoEgreso`.
+
+## `CategoriaPermiso` — clasificación del portador
+
+Enum independiente del `nivel` y de los roles asignados:
+
+```ts
+"Propietario" | "Administración" | "Guardia" | "Prestador de Servicio"
+```
+
+**Defaults aplicados por `acceso-api` al crear (`PermisosService.create`):**
+
+| Nivel | Default | Notas |
+|---|---|---|
+| `Unidad Funcional` | `Propietario` | Auto-asignado, único válido |
+| `Cliente` | `Administración` | Auto-asignado, único válido |
+| `Complejo` | — (requerido) | Elegir entre `Administración \| Guardia \| Prestador de Servicio` |
+
+**`IPermisoComplejo.idsUnidadesFuncionales?`**: solo se popula cuando `categoriaPermiso === 'Prestador de Servicio'`. Cada id debe apuntar a una `IUnidadFuncional` del mismo `idComplejo` con `tipo='Común'` (validación en `acceso-api`). Ausente o vacío = prestador general del complejo (sin restricción de UF).
+
+**Inmutabilidad post-creación**: `categoriaPermiso` no se puede cambiar (`PermisosService.update` → 409). Para cambiar de categoría, crear un permiso nuevo y deshabilitar el anterior.
+
+**Populate `unidadesFuncionales`**: declarado en Mongoose (`acceso-datos`) pero **no** en el `PermisoComplejoSchema` Zod para evitar `TS7056` por profundidad de inferencia en cadenas de populate (IPermiso ⊂ IIngresoEgreso ⊂ IVinculoEventoIngreso). Consumers que populen `unidadesFuncionales` tratan el campo como `(permiso as any).unidadesFuncionales` o tipan ad-hoc.
 
 ## Ventana de vigencia — `PermisoUnidadFuncionalSchema`
 

@@ -10,7 +10,13 @@ import { VisitanteSchema } from "./visitante";
 
 export const TipoIngresoEgresoSchema = z.enum(["Ingreso", "Egreso"]);
 export const AprobadoPorIngresoEgresoSchema = z.enum(["Sistema", "Guardia"]);
-export const CategoriaIngresoEgresoSchema = z.enum(["Propietario", "Visita"]);
+export const CategoriaIngresoEgresoSchema = z.enum([
+  "Propietario",
+  "Visita",
+  "Administración",
+  "Guardia",
+  "Prestador de Servicio",
+]);
 
 /**
  * Snapshot inmutable de visitante al momento del ingreso/egreso.
@@ -94,6 +100,9 @@ export const CreateIngresoEgresoSchema = IngresoEgresoSchema.omit({
 
 export const UpdateIngresoEgresoSchema = CreateIngresoEgresoSchema.partial();
 
+export type ITipoIngresoEgreso = z.infer<typeof TipoIngresoEgresoSchema>;
+export type IAprobadoPorIngresoEgreso = z.infer<typeof AprobadoPorIngresoEgresoSchema>;
+export type ICategoriaIngresoEgreso = z.infer<typeof CategoriaIngresoEgresoSchema>;
 export type IVisitanteSnapshot = z.infer<typeof VisitanteSnapshotSchema>;
 export type IVehiculoSnapshot = z.infer<typeof VehiculoSnapshotSchema>;
 export type IIngresoEgreso = z.infer<typeof IngresoEgresoSchema>;

@@ -14,6 +14,11 @@ export const EdgeApplianceEstadoSchema = z.enum([
   "Online",
   "Offline",
   "Degradado",
+  // Decomiso reversible: agent revocado (Headscale node down, tokens denylist,
+  // NATS decommission emitido). El registro Mongo se conserva. Volver a
+  // `Provisionando` vía reissue de install token. Borrado físico = purge
+  // (hard delete + nullify FKs + snapshot a `edge-appliance-purges`).
+  "Decomisado",
 ]);
 
 // D18: el appliance puede ser hardware productivo, una VM (KVM/QEMU/VBox/VMware)
@@ -245,6 +250,12 @@ export const EdgeApplianceSchema = z.object({
   utilizacion: EdgeApplianceUtilizacionSchema.optional(),
   diagnostico: EdgeApplianceDiagnosticoSchema.optional(),
   flagsEstado: z.array(EdgeApplianceFlagEstadoSchema).optional(),
+
+  // Decomiso reversible. Seteados cuando `estado='Decomisado'`. Quedan en
+  // historial al volver a otro estado (no se limpian) para trazabilidad.
+  fechaDecomiso: z.string().optional(),
+  motivoDecomiso: z.string().optional(),
+  idUsuarioDecomiso: z.string().optional(),
 
   // Populate
   cliente: ClienteSchema.optional(),

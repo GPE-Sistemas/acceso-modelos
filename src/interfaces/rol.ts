@@ -130,7 +130,11 @@ export const AccionesRolSchema = z.enum([
   // Típicamente Cliente nivel 1 (integrador). El complejo no las ve.
   "EdgeAppliance - Ver appliances",
   "EdgeAppliance - Provisionar appliance",
-  "EdgeAppliance - Despromover / desactivar",
+  // Cubre decomiso reversible (revoca credenciales del agent, marca
+  // estado='Decomisado') y purge físico (hard delete + cascade FKs + snapshot
+  // a edge-appliance-purges). Un solo permiso por destructividad: si tenés
+  // alcance para decomisar, lo tenés para borrar.
+  "EdgeAppliance - Decomisar / borrar",
   "EdgeAppliance - Ver telemetría / sync status",
   "EdgeAppliance - Forzar resync",
   "EdgeAppliance - Acceso debug",

@@ -1,11 +1,6 @@
 import { z } from "zod";
-import { ClienteSchema } from "./cliente";
-import { ComplejoSchema } from "./complejo";
-import { PermisoSchema } from "./permiso";
-import { PlantillaTurnoSchema } from "./plantilla-turno";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { DatosPersonalesSchema } from "./usuario";
-import { VisitanteSchema } from "./visitante";
 
 /**
  * Ciclo de vida del turno.
@@ -165,26 +160,28 @@ export const TurnoSchema = z.object({
   expireAt: z.string().optional(),
   /** Snapshot defensivo del catálogo al momento de reservar. */
   plantillaSnapshot: PlantillaTurnoSnapshotSchema.optional(),
-  // Populate
-  cliente: ClienteSchema.optional(),
-  complejo: ComplejoSchema.optional(),
+  // Populate — los populates pesados (Permiso, Plantilla con sus propios populates)
+  // se exponen como `z.any()` para no inflar la inferencia (TS7056 en otros DTOs).
+  // Consumers que necesiten tipos los castean ad-hoc (`(turno as any).plantilla`).
   unidadFuncional: UnidadFuncionalSchema.optional(),
   unidadFuncionalRecurso: UnidadFuncionalSchema.optional(),
-  permiso: PermisoSchema.optional(),
-  plantilla: PlantillaTurnoSchema.optional(),
-  aprobadoPorPermiso: PermisoSchema.optional(),
-  aprobadoRecurrentePorPermiso: PermisoSchema.optional(),
-  permisoInstructor: PermisoSchema.optional(),
-  visitantes: z.array(VisitanteSchema).optional(),
+  cliente: z.any().optional(),
+  complejo: z.any().optional(),
+  permiso: z.any().optional(),
+  plantilla: z.any().optional(),
+  aprobadoPorPermiso: z.any().optional(),
+  aprobadoRecurrentePorPermiso: z.any().optional(),
+  permisoInstructor: z.any().optional(),
+  visitantes: z.any().optional(),
 });
 
 export const CreateTurnoSchema = TurnoSchema.omit({
   _id: true,
   fechaCreacion: true,
-  cliente: true,
-  complejo: true,
   unidadFuncional: true,
   unidadFuncionalRecurso: true,
+  cliente: true,
+  complejo: true,
   permiso: true,
   plantilla: true,
   aprobadoPorPermiso: true,

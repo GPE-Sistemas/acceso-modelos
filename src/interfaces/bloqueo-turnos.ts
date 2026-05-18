@@ -1,8 +1,4 @@
 import { z } from "zod";
-import { ClienteSchema } from "./cliente";
-import { ComplejoSchema } from "./complejo";
-import { PermisoSchema } from "./permiso";
-import { UnidadFuncionalSchema } from "./unidad-funcional";
 
 /**
  * Bloqueo de disponibilidad sobre uno o varios recursos (UF Común) en un rango horario.
@@ -23,11 +19,11 @@ export const BloqueoTurnosSchema = z.object({
   fechaFin: z.string().optional(),
   motivo: z.string().optional(),
   creadoPorIdPermiso: z.string().optional(),
-  // Populate
-  cliente: ClienteSchema.optional(),
-  complejo: ComplejoSchema.optional(),
-  unidadesFuncionales: z.array(UnidadFuncionalSchema).optional(),
-  creadoPorPermiso: PermisoSchema.optional(),
+  // Populate — pesados van como `z.any()` para no inflar inferencia.
+  cliente: z.any().optional(),
+  complejo: z.any().optional(),
+  unidadesFuncionales: z.any().optional(),
+  creadoPorPermiso: z.any().optional(),
 });
 
 export const CreateBloqueoTurnosSchema = BloqueoTurnosSchema.omit({

@@ -1,7 +1,4 @@
 import { z } from "zod";
-import { ClienteSchema } from "./cliente";
-import { ComplejoSchema } from "./complejo";
-import { UnidadFuncionalSchema } from "./unidad-funcional";
 
 /**
  * Catálogo de tipos de actividad reservable por complejo (Pádel, Tenis, Parrilla, SUM, etc.).
@@ -24,10 +21,10 @@ export const TipoActividadSchema = z.object({
   foto: z.string().optional(),
   /** UF Común que son recursos de este tipo (canchas, salones, etc.). Todas del mismo `idComplejo`. */
   idsUnidadesFuncionales: z.array(z.string()).optional(),
-  // Populate
-  cliente: ClienteSchema.optional(),
-  complejo: ComplejoSchema.optional(),
-  unidadesFuncionales: z.array(UnidadFuncionalSchema).optional(),
+  // Populate — pesados van como `z.any()` para no inflar inferencia.
+  cliente: z.any().optional(),
+  complejo: z.any().optional(),
+  unidadesFuncionales: z.any().optional(),
 });
 
 export const CreateTipoActividadSchema = TipoActividadSchema.omit({

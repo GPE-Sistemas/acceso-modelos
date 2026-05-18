@@ -1,8 +1,5 @@
 import { z } from "zod";
-import { ClienteSchema } from "./cliente";
-import { ComplejoSchema } from "./complejo";
 import { TipoActividadSchema } from "./tipo-actividad";
-import { UnidadFuncionalSchema } from "./unidad-funcional";
 
 /**
  * Ventana de disponibilidad. Soporta horarios cortados (lunes 8-12 + 15-20) usando
@@ -78,11 +75,11 @@ export const PlantillaTurnoSchema = z.object({
   horasLimiteCancelacionGratis: z.number().nonnegative().optional(),
   /** Días que la UF queda bloqueada para esta plantilla tras un no-show. */
   bloqueoDiasPorNoShow: z.number().int().nonnegative().optional(),
-  // Populate
-  cliente: ClienteSchema.optional(),
-  complejo: ComplejoSchema.optional(),
+  // Populate — los pesados (UF, populates anidados) van como `z.any()` para no inflar inferencia.
   tipoActividad: TipoActividadSchema.optional(),
-  unidadesFuncionales: z.array(UnidadFuncionalSchema).optional(),
+  cliente: z.any().optional(),
+  complejo: z.any().optional(),
+  unidadesFuncionales: z.any().optional(),
 });
 
 export const CreatePlantillaTurnoSchema = PlantillaTurnoSchema.omit({

@@ -126,6 +126,31 @@ export const AccionesRolSchema = z.enum([
   "Emergencias - Atender emergencias", // tomar caso, cambiar estado, registrar interacciones, chatear
   "Emergencias - Eliminar emergencias",
 
+  // MODULO TURNOS
+  // Catálogo + plantillas (admin del complejo)
+  "Turnos - Ver tipos actividad",
+  "Turnos - Crear tipos actividad",
+  "Turnos - Editar tipos actividad",
+  "Turnos - Eliminar tipos actividad",
+  "Turnos - Ver plantillas",
+  "Turnos - Crear plantillas",
+  "Turnos - Editar plantillas",
+  "Turnos - Eliminar plantillas",
+  // Bloqueos de disponibilidad
+  "Turnos - Ver bloqueos",
+  "Turnos - Crear bloqueos",
+  "Turnos - Editar bloqueos",
+  "Turnos - Eliminar bloqueos",
+  // Operación turnos
+  "Turnos - Ver turnos",
+  "Turnos - Crear turno", // mobile UF, default en rol UF
+  "Turnos - Cancelar turnos", // admin cancela cualquier turno
+  "Turnos - Editar turnos", // admin edita turno tomado
+  "Turnos - Aprobar turnos", // permiso UF aprueba a otro de la misma UF (paralelo Visitas)
+  "Turnos - Aprobar turnos recurrentes", // típicamente nivel Complejo
+  "Turnos - Marcar no-show", // guardia
+  "Turnos - Marcar luz", // guardia activa flag luzActivada
+
   // MODULO EDGE APPLIANCES (control de accesos on-premise)
   // Típicamente Cliente nivel 1 (integrador). El complejo no las ve.
   "EdgeAppliance - Ver appliances",

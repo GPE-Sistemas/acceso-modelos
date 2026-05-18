@@ -18,6 +18,16 @@ export const CategoriaNotificacionSchema = z.enum([
   "visita_pendiente_aprobacion",
   /** Mobile UF: mi evento de visita fue aprobado o rechazado */
   "visita_resuelta",
+  /** Mobile UF: mi turno quedó confirmado (auto-aprobado) */
+  "turno_reservado",
+  /** Mobile UF: alguien de mi UF creó un turno que requiere mi aprobación */
+  "turno_pendiente_aprobacion",
+  /** Mobile UF: mi turno fue aprobado */
+  "turno_aprobado",
+  /** Mobile UF: mi turno fue rechazado */
+  "turno_rechazado",
+  /** Mobile UF: mi turno fue cancelado (por mí, otro participante, admin o cancelación tardía/no-show) */
+  "turno_cancelado",
 ]);
 
 export const CATEGORIAS_NOTIFICACION =
@@ -36,6 +46,11 @@ export const CategoriasNotificacionMapSchema = z.object({
   emergencia_estado: z.boolean(),
   visita_pendiente_aprobacion: z.boolean(),
   visita_resuelta: z.boolean(),
+  turno_reservado: z.boolean(),
+  turno_pendiente_aprobacion: z.boolean(),
+  turno_aprobado: z.boolean(),
+  turno_rechazado: z.boolean(),
+  turno_cancelado: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -89,4 +104,9 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   emergencia_estado: true,
   visita_pendiente_aprobacion: true,
   visita_resuelta: true,
+  turno_reservado: true,
+  turno_pendiente_aprobacion: true,
+  turno_aprobado: true,
+  turno_rechazado: true,
+  turno_cancelado: true,
 };

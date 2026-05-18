@@ -34,3 +34,7 @@ export * from './edge-integridad';
 export * from './perfil-camara';
 export * from './sync-status';
 export * from './camara-descubierta';
+export * from './tipo-actividad';
+export * from './plantilla-turno';
+export * from './turno';
+export * from './bloqueo-turnos';

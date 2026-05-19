@@ -38,3 +38,4 @@ export * from './tipo-actividad';
 export * from './plantilla-turno';
 export * from './turno';
 export * from './bloqueo-turnos';
+export * from './refresh-token';

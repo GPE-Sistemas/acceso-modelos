@@ -26,6 +26,14 @@ export const AccionExternaEmergenciaSchema = z.enum([
 export const InteraccionEmergenciaSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
+    /**
+     * Timestamp de la última mutación (ISO 8601). Anti-eco cross-edge:
+     * el caller (edge) puede setearlo explícito para preservar el momento
+     * exacto del write original a través del bridge; si se omite, el
+     * server (acceso-datos) lo defaultea a `new Date().toISOString()`.
+     * Doc 17 § Tipo A — último-write-wins por este campo.
+     */
+    fechaActualizacion: z.string().optional(),
     idEmergencia: z.string().optional(),
     /** Autor (guardia) */
     idPermiso: z.string().optional(),

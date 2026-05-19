@@ -45,6 +45,14 @@ export const BloqueSchema = z.object({
 export const PublicacionSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
+    /**
+     * Timestamp de la última mutación (ISO 8601). Anti-eco bridge bilateral:
+     * el caller (edge o cloud) puede setearlo explícito para preservar el
+     * momento exacto del write original a través del bridge; si se omite,
+     * el server (acceso-datos) lo defaultea a `new Date().toISOString()`.
+     * Doc 17 § Tipo A bilateral — último-write-wins por este campo.
+     */
+    fechaActualizacion: z.string().optional(),
     habilitado: z.boolean().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),

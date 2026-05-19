@@ -148,6 +148,8 @@ export const TurnoSchema = z.object({
   // Marcado operativo
   noShowMarcadoPorIdPermiso: z.string().optional(),
   fechaNoShow: z.string().optional(),
+  completadoPorIdPermiso: z.string().optional(),
+  fechaCompletado: z.string().optional(),
   canceladoPorIdPermiso: z.string().optional(),
   fechaCancelacion: z.string().optional(),
   motivoCancelacion: z.string().optional(),

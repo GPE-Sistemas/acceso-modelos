@@ -149,6 +149,7 @@ export const AccionesRolSchema = z.enum([
   "Turnos - Aprobar turnos", // permiso UF aprueba a otro de la misma UF (paralelo Visitas)
   "Turnos - Aprobar turnos recurrentes", // típicamente nivel Complejo
   "Turnos - Marcar no-show", // guardia
+  "Turnos - Marcar completado", // guardia confirma que el turno se cumplió
   "Turnos - Marcar luz", // guardia activa flag luzActivada
 
   // MODULO EDGE APPLIANCES (control de accesos on-premise)

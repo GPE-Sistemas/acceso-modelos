@@ -162,7 +162,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `dispositivo.ts` | `DispositivoSchema` / `IDispositivo`, `TipoDispositivoSchema`, `ConfigDispositivoSchema` |
 | `dispositivo-acceso.ts` | `DispositivoAccesoSchema` / `IDispositivoAcceso`, `ComportamientoCredencialValidaSchema`, `ComportamientoCredencialInvalidaSchema` |
 | `evento.ts` | `EventoSchema` / `IEvento` — estructura pendiente de definición |
-| `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita`, `RecurrenciaEventoVisitaSchema`, estados, aprobación |
+| `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita`, `RecurrenciaEventoVisitaSchema`, estados, aprobación. Campo `idTurno?` cuando el evento fue auto-generado desde un turno |
 | `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`, `VisitanteSnapshotSchema`, `VehiculoSnapshotSchema` (snapshot inmutable). `CategoriaIngresoEgresoSchema` enum: `Propietario` \| `Visita` \| `Administración` \| `Guardia` \| `Prestador de Servicio`. Coherencia con `idPermiso.categoriaPermiso` validada en `acceso-api`. Entidad de alto volumen |
 | `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional. `CategoriaPermisoSchema` (`Propietario` \| `Administración` \| `Guardia` \| `Prestador de Servicio`). `PermisoComplejoSchema.idsUnidadesFuncionales?` para Prestador. |
 | `rol.ts` | `RolSchema` / `IRol` — discriminated union por `alcance`. `AccionesRolSchema` enumera todas las acciones del catálogo |
@@ -185,7 +185,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `dashboard.ts` | `DashboardComplejoSchema` / `IDashboardComplejo`, `DashboardUFSchema` / `IDashboardUF`, `DashboardClienteSchema` / `IDashboardCliente`, `DashboardProveedorSchema` / `IDashboardProveedor` |
 | `tipo-actividad.ts` | `TipoActividadSchema` / `ITipoActividad` — catálogo de actividades por complejo (Tenis, Padel, Pileta, SUM…). Asocia un set de UFs Común como recursos. Campos: `nombre`, `descripcion`, `icono` (Material Symbol), `color`, `idsUnidadesFuncionales[]` |
 | `plantilla-turno.ts` | `PlantillaTurnoSchema` / `IPlantillaTurno`, `ModalidadTurnoSchema`, `HorarioPlantillaSchema`. Define cómo se reserva: recursos (subset del tipo), modalidades (variantes c/ duración + cupo), horarios cortados por día, cupos por UF, anticipación, cancelación, no-show, datos participantes, max invitados |
-| `turno.ts` | `TurnoSchema` / `ITurno`, `EstadoTurnoSchema`, `EstadoAprobacionTurnoSchema`, `ParticipantePropietarioTurnoSchema`, `ParticipanteInvitadoTurnoSchema`, `PlantillaTurnoSnapshotSchema`, `RecurrenciaTurnoSchema`. **Populates pesados (`plantilla`, `permiso`, etc.) declarados como `z.any()`** para no inflar inferencia TS7056 |
+| `turno.ts` | `TurnoSchema` / `ITurno`, `EstadoTurnoSchema`, `EstadoAprobacionTurnoSchema`, `ParticipantePropietarioTurnoSchema`, `ParticipanteInvitadoTurnoSchema`, `PlantillaTurnoSnapshotSchema`, `RecurrenciaTurnoSchema`. **Populates pesados (`plantilla`, `permiso`, etc.) declarados como `z.any()`** para no inflar inferencia TS7056. Campo `idEventoVisita?` para link al evento auto-generado al aprobar |
 | `bloqueo-turnos.ts` | `BloqueoTurnosSchema` / `IBloqueoTurnos` — bloquea recursos en un rango horario (mantenimiento, eventos privados, feriados) |
 
 ---

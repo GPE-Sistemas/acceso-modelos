@@ -174,7 +174,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `visitante.ts` | `VisitanteSchema` / `IVisitante` |
 | `publicacion.ts` | `PublicacionSchema` / `IPublicacion`, `BloqueSchema`, enums (`TipoBloqueSchema`, `CategoriaPublicacionSchema`, `EstadoPublicacionSchema`) |
 | `device-token.ts` | `DeviceTokenSchema` / `IDeviceToken`, `DevicePlatformSchema` |
-| `notificacion-preferencias.ts` | `NotificacionPreferenciasSchema` / `INotificacionPreferencias`, `CategoriaNotificacionSchema`, `CategoriasNotificacionMapSchema`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT` |
+| `notificacion-preferencias.ts` | `NotificacionPreferenciasSchema` / `INotificacionPreferencias`, `CategoriaNotificacionSchema`, `CategoriasNotificacionMapSchema`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT`. Categorías de turnos: `turno_reservado`, `turno_pendiente_aprobacion`, `turno_aprobado`, `turno_rechazado`, `turno_cancelado` |
 | `boton-emergencia.ts` | `BotonEmergenciaSchema` / `IBotonEmergencia`, `ConfigBotonEmergenciaSchema` |
 | `config-botones-complejo.ts` | `ConfigBotonesComplejoSchema` / `IConfigBotonesComplejo` — uno por complejo; `idsBotones[]` define orden mobile |
 | `emergencia.ts` | `EmergenciaSchema` / `IEmergencia`, `EstadoEmergenciaSchema`, `UbicacionEmergenciaSchema`, `BotonEmergenciaSnapshotSchema` (snapshot inmutable del botón) |
@@ -183,6 +183,10 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `contacto-usuario.ts` | `ContactoUsuarioSchema` / `IContactoUsuario`, `EstadoContactoUsuarioSchema` |
 | `preferencias-contactos.ts` | `PreferenciasContactosSchema` / `IPreferenciasContactos`, `PREFERENCIAS_CONTACTOS_DEFAULT` |
 | `dashboard.ts` | `DashboardComplejoSchema` / `IDashboardComplejo`, `DashboardUFSchema` / `IDashboardUF`, `DashboardClienteSchema` / `IDashboardCliente`, `DashboardProveedorSchema` / `IDashboardProveedor` |
+| `tipo-actividad.ts` | `TipoActividadSchema` / `ITipoActividad` — catálogo de actividades por complejo (Tenis, Padel, Pileta, SUM…). Asocia un set de UFs Común como recursos. Campos: `nombre`, `descripcion`, `icono` (Material Symbol), `color`, `idsUnidadesFuncionales[]` |
+| `plantilla-turno.ts` | `PlantillaTurnoSchema` / `IPlantillaTurno`, `ModalidadTurnoSchema`, `HorarioPlantillaSchema`. Define cómo se reserva: recursos (subset del tipo), modalidades (variantes c/ duración + cupo), horarios cortados por día, cupos por UF, anticipación, cancelación, no-show, datos participantes, max invitados |
+| `turno.ts` | `TurnoSchema` / `ITurno`, `EstadoTurnoSchema`, `EstadoAprobacionTurnoSchema`, `ParticipantePropietarioTurnoSchema`, `ParticipanteInvitadoTurnoSchema`, `PlantillaTurnoSnapshotSchema`, `RecurrenciaTurnoSchema`. **Populates pesados (`plantilla`, `permiso`, etc.) declarados como `z.any()`** para no inflar inferencia TS7056 |
+| `bloqueo-turnos.ts` | `BloqueoTurnosSchema` / `IBloqueoTurnos` — bloquea recursos en un rango horario (mantenimiento, eventos privados, feriados) |
 
 ---
 
@@ -244,6 +248,8 @@ Los endpoints `GET /panel-guardia/<categoria>` requieren la acción correspondie
 **Visitas** — `Ver/Crear/Editar/Eliminar eventos`, `Aprobar eventos`, `Aprobar eventos recurrentes` (auto-aprobación al crear y autoriza `PUT /eventos-visita/:id/aprobacion-recurrente`; típicamente nivel Complejo), `Ver/Crear/Editar/Eliminar visitantes`.
 
 **Emergencias** — `Ver/Crear/Editar/Eliminar botones`, `Ver/Editar configuración`, `Enviar emergencia` (mobile UF), `Ver emergencias` + `Atender emergencias` (panel guardia), `Eliminar emergencias`.
+
+**Turnos** — Configuración: `Ver/Crear/Editar/Eliminar tipos actividad`, `Ver/Crear/Editar/Eliminar plantillas`, `Ver/Crear/Editar/Eliminar bloqueos`. Operación: `Ver turnos`, `Crear turno` (default rol UF), `Editar turnos`, `Cancelar turnos`. Aprobaciones: `Aprobar turnos` (UF, paralelo a Visitas), `Aprobar turnos recurrentes` (típicamente Complejo). Guardia: `Marcar no-show`, `Marcar completado`, `Marcar luz`.
 
 Para agregar acciones:
 1. Agregar al `z.enum([...])` en `AccionesRolSchema`

@@ -153,6 +153,12 @@ export const TurnoSchema = z.object({
   canceladoPorIdPermiso: z.string().optional(),
   fechaCancelacion: z.string().optional(),
   motivoCancelacion: z.string().optional(),
+  /**
+   * Evento de visita auto-generado al aprobar el turno (cuando hay invitados).
+   * Permite trazar turno → evento → ingresos. `acceso-api` lo setea desde el
+   * hook `crearEventoVisitaDesdeTurno`; el cliente nunca lo manda.
+   */
+  idEventoVisita: z.string().optional(),
   /** True si la cancelación cayó dentro de `horasLimiteCancelacionGratis` → cuenta como no-show. */
   cancelacionTardia: z.boolean().optional(),
   /**

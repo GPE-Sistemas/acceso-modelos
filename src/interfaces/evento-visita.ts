@@ -90,6 +90,11 @@ export const EventoVisitaSchema = z.object({
   aprobadoRecurrentePorIdPermiso: z.string().optional(),
   fechaAprobacionRecurrente: z.string().optional(),
   motivoRechazoRecurrente: z.string().optional(),
+  /**
+   * Link al turno que originó este evento (cuando se auto-genera al aprobar
+   * un turno con invitados). `null`/ausente = evento creado manualmente.
+   */
+  idTurno: z.string().optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),

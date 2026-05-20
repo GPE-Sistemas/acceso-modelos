@@ -166,7 +166,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`, `VisitanteSnapshotSchema`, `VehiculoSnapshotSchema` (snapshot inmutable). `CategoriaIngresoEgresoSchema` enum: `Propietario` \| `Visita` \| `Administración` \| `Guardia` \| `Prestador de Servicio`. Coherencia con `idPermiso.categoriaPermiso` validada en `acceso-api`. Entidad de alto volumen |
 | `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional. `CategoriaPermisoSchema` (`Propietario` \| `Administración` \| `Guardia` \| `Prestador de Servicio`). `PermisoComplejoSchema.idsUnidadesFuncionales?` para Prestador. |
 | `rol.ts` | `RolSchema` / `IRol` — discriminated union por `alcance`. `AccionesRolSchema` enumera todas las acciones del catálogo |
-| `unidad-funcional.ts` | `UnidadFuncionalSchema` / `IUnidadFuncional` |
+| `unidad-funcional.ts` | `UnidadFuncionalSchema` / `IUnidadFuncional`. Campo `imagenes?: string[]` con objectNames GCS (hasta 10 por UF, bucket público, carpeta `unidades-funcionales`) |
 | `usuario.ts` | `UsuarioSchema` / `IUsuario`, `DatosPersonalesSchema` |
 | `vehiculo.ts` | `VehiculoSchema` / `IVehiculo`, `DatosVehiculoSchema` |
 | `vinculo-vehiculo.ts` | `VinculoVehiculoSchema` / `IVinculoVehiculo` |

@@ -17,6 +17,7 @@ export const UnidadFuncionalSchema = z.object({
     tipo: TipoUnidadFuncionalSchema.optional(),
     ubicacion: GeoJSONMultiPolygonSchema.optional(),
     config: ConfigUnidadFuncionalSchema.optional(),
+    imagenes: z.array(z.string()).optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),

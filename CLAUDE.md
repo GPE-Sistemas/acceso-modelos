@@ -157,7 +157,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 |---|---|
 | `acceso.ts` | `AccesoSchema` / `IAcceso`, `CreateAccesoSchema`, `UpdateAccesoSchema`, `TipoAccesoSchema` |
 | `cliente.ts` | `ClienteSchema` / `ICliente`, `TipoClienteSchema`, `ConfigClienteSchema` |
-| `complejo.ts` | `ComplejoSchema` / `IComplejo`, `TipoComplejoSchema`, `ConfigComplejoSchema`, `ConfigEmergenciasComplejoSchema` |
+| `complejo.ts` | `ComplejoSchema` / `IComplejo`, `TipoComplejoSchema`, `ConfigComplejoSchema`. **Sin `ConfigEmergenciasComplejoSchema`** (geofence movido a cada botón via `requiereDentroDelComplejo`) |
 | `credencial-dispositivo.ts` | `CredencialDispositivoSchema` / `ICredencialDispositivo` |
 | `dispositivo.ts` | `DispositivoSchema` / `IDispositivo`, `TipoDispositivoSchema`, `ConfigDispositivoSchema` |
 | `dispositivo-acceso.ts` | `DispositivoAccesoSchema` / `IDispositivoAcceso`, `ComportamientoCredencialValidaSchema`, `ComportamientoCredencialInvalidaSchema` |
@@ -174,12 +174,12 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `visitante.ts` | `VisitanteSchema` / `IVisitante` |
 | `publicacion.ts` | `PublicacionSchema` / `IPublicacion`, `BloqueSchema`, enums (`TipoBloqueSchema`, `CategoriaPublicacionSchema`, `EstadoPublicacionSchema`) |
 | `device-token.ts` | `DeviceTokenSchema` / `IDeviceToken`, `DevicePlatformSchema` |
-| `notificacion-preferencias.ts` | `NotificacionPreferenciasSchema` / `INotificacionPreferencias`, `CategoriaNotificacionSchema`, `CategoriasNotificacionMapSchema`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT`. Categorías de turnos: `turno_reservado`, `turno_pendiente_aprobacion`, `turno_aprobado`, `turno_rechazado`, `turno_cancelado` |
-| `boton-emergencia.ts` | `BotonEmergenciaSchema` / `IBotonEmergencia`, `ConfigBotonEmergenciaSchema` |
-| `config-botones-complejo.ts` | `ConfigBotonesComplejoSchema` / `IConfigBotonesComplejo` — uno por complejo; `idsBotones[]` define orden mobile |
-| `emergencia.ts` | `EmergenciaSchema` / `IEmergencia`, `EstadoEmergenciaSchema`, `UbicacionEmergenciaSchema`, `BotonEmergenciaSnapshotSchema` (snapshot inmutable del botón) |
-| `interaccion-emergencia.ts` | `InteraccionEmergenciaSchema` / `IInteraccionEmergencia`, `TipoInteraccionEmergenciaSchema`, `AccionExternaEmergenciaSchema` |
-| `mensaje-emergencia.ts` | `MensajeEmergenciaSchema` / `IMensajeEmergencia` |
+| `notificacion-preferencias.ts` | `NotificacionPreferenciasSchema` / `INotificacionPreferencias`, `CategoriaNotificacionSchema`, `CategoriasNotificacionMapSchema`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT`. Categorías de turnos: `turno_reservado`, `turno_pendiente_aprobacion`, `turno_aprobado`, `turno_rechazado`, `turno_cancelado`. Categorías de tickets para atendedores nivel Complejo: `ticket_emergencia_recibido` (guardia), `ticket_solicitud_recibido` (administración, cubre Solicitud + Reclamo) |
+| `boton-ticket.ts` | `BotonTicketSchema` / `IBotonTicket`, `ConfigBotonTicketSchema`. Campo discriminante `categoria: CategoriaTicket` (`Emergencia` \| `Solicitud` \| `Reclamo`). Config incluye `permiteImagenes` y `requiereDentroDelComplejo` (geofence per-botón — reemplaza `complejo.config.emergencias.permitirFueraDelComplejo`). `categoria` inmutable post-creación |
+| `config-botones-ticket-complejo.ts` | `ConfigBotonesTicketComplejoSchema` / `IConfigBotonesTicketComplejo` — uno por complejo; `idsBotones[]` define orden mobile (cubre las 3 categorías en una sola grilla) |
+| `ticket.ts` | `TicketSchema` / `ITicket`, `CategoriaTicketSchema` (`Emergencia` \| `Solicitud` \| `Reclamo`), `EstadoTicketSchema` (`Pendiente` \| `EnAtencion` \| `Resuelta` \| `Descartada`), `UbicacionTicketSchema`, `BotonTicketSnapshotSchema` (snapshot inmutable del botón con `categoria` denormalizada). `ITicket.categoria` denormalizada desde el botón al crear |
+| `interaccion-ticket.ts` | `InteraccionTicketSchema` / `IInteraccionTicket`, `TipoInteraccionTicketSchema`, `AccionExternaTicketSchema`. Tipo `Comentario` con texto libre — usado para registrar acción en solicitudes/reclamos (admin) |
+| `mensaje-ticket.ts` | `MensajeTicketSchema` / `IMensajeTicket` |
 | `contacto-usuario.ts` | `ContactoUsuarioSchema` / `IContactoUsuario`, `EstadoContactoUsuarioSchema` |
 | `preferencias-contactos.ts` | `PreferenciasContactosSchema` / `IPreferenciasContactos`, `PREFERENCIAS_CONTACTOS_DEFAULT` |
 | `dashboard.ts` | `DashboardComplejoSchema` / `IDashboardComplejo`, `DashboardUFSchema` / `IDashboardUF`, `DashboardClienteSchema` / `IDashboardCliente`, `DashboardProveedorSchema` / `IDashboardProveedor` |
@@ -215,7 +215,7 @@ GeoJSONPointSchema, GeoJSONPolygonSchema, GeoJSONMultiPolygonSchema, ...
 
 ## `AccionesRol` — agregar acciones nuevas
 
-`AccionesRolSchema` (`src/interfaces/rol.ts`) es la fuente de verdad. Módulos: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`, `Publicaciones`, `Emergencias`.
+`AccionesRolSchema` (`src/interfaces/rol.ts`) es la fuente de verdad. Módulos: `Administración`, `Hardware`, `Visitas`, `Vehículos`, `Movimientos`, `Eventos`, `Publicaciones`, `Tickets`.
 
 **Permisos — granularidad por categoría** (reemplazo de las genéricas `Administración - Crear permisos` y `Administración - Editar permisos`, eliminadas):
 
@@ -247,7 +247,11 @@ Los endpoints `GET /panel-guardia/<categoria>` requieren la acción correspondie
 
 **Visitas** — `Ver/Crear/Editar/Eliminar eventos`, `Aprobar eventos`, `Aprobar eventos recurrentes` (auto-aprobación al crear y autoriza `PUT /eventos-visita/:id/aprobacion-recurrente`; típicamente nivel Complejo), `Ver/Crear/Editar/Eliminar visitantes`.
 
-**Emergencias** — `Ver/Crear/Editar/Eliminar botones`, `Ver/Editar configuración`, `Enviar emergencia` (mobile UF), `Ver emergencias` + `Atender emergencias` (panel guardia), `Eliminar emergencias`.
+**Tickets** — `Ver/Crear/Editar/Eliminar botones`, `Ver/Editar configuración`, `Enviar ticket` (mobile UF). Operación separada por categoría:
+- Emergencias: `Ver emergencias` + `Atender emergencias` (guardia) + `Eliminar emergencias`.
+- Solicitudes/Reclamos: `Ver solicitudes` + `Atender solicitudes` (administración) — cubre ambas categorías.
+
+Separación intencional para que un permiso guardia atienda emergencias sin tocar reclamos y un permiso admin atienda solicitudes/reclamos sin acceso a emergencias.
 
 **Turnos** — Configuración: `Ver/Crear/Editar/Eliminar tipos actividad`, `Ver/Crear/Editar/Eliminar plantillas`, `Ver/Crear/Editar/Eliminar bloqueos`. Operación: `Ver turnos`, `Crear turno` (default rol UF), `Editar turnos`, `Cancelar turnos`. Aprobaciones: `Aprobar turnos` (UF, paralelo a Visitas), `Aprobar turnos recurrentes` (típicamente Complejo). Guardia: `Marcar no-show`, `Marcar completado`, `Marcar luz`.
 
@@ -267,7 +271,7 @@ Para que el historial sobreviva a edits o hard delete del catálogo UF, las enti
 | Entidad | Campo snapshot | Cuándo se setea |
 |---|---|---|
 | `IIngresoEgreso` | `visitantesSnapshot[]` (`{ idVisitante, datosPersonales }`), `vehiculoSnapshot` (`{ idVehiculo, datosVehiculo }`) | `POST /ingresos-egresos` y `PUT /ingresos-egresos/:id/resolver` (si cambian visitantes/vehículo) |
-| `IEmergencia` | `botonSnapshot` (`{ idBoton, texto, icono, color }`) | `POST /emergencias` |
+| `ITicket` | `botonSnapshot` (`{ idBoton, texto, icono, color, categoria }`) | `POST /tickets`. Snapshot incluye `categoria` para que el render histórico no dependa del catálogo vivo |
 
 Quien renderiza historial **siempre** debe usar el snapshot. `idsVisitantes` / `idVehiculo` / `idBoton` siguen como referencias de trazabilidad, pero el catálogo subyacente puede haberse eliminado o editado. `IEventoVisita` NO tiene snapshot — los eventos Pendientes/Activos referencian catálogo vivo (editable). Una vez generados los ingresos asociados, el snapshot vive en `IIngresoEgreso`.
 

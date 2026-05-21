@@ -112,19 +112,26 @@ export const AccionesRolSchema = z.enum([
   "Publicaciones - Editar publicaciones",
   "Publicaciones - Eliminar publicaciones",
 
-  // MODULO EMERGENCIAS
-  "Emergencias - Ver botones",
-  "Emergencias - Crear botones",
-  "Emergencias - Editar botones",
-  "Emergencias - Eliminar botones",
+  // MODULO TICKETS (emergencias + solicitudes + reclamos)
+  // Botones — catálogo común
+  "Tickets - Ver botones",
+  "Tickets - Crear botones",
+  "Tickets - Editar botones",
+  "Tickets - Eliminar botones",
   // Configuración por complejo (qué botones y orden ve la app mobile)
-  "Emergencias - Ver configuración",
-  "Emergencias - Editar configuración",
-  // Operación
-  "Emergencias - Enviar emergencia", // mobile (UF)
-  "Emergencias - Ver emergencias", // panel guardia
-  "Emergencias - Atender emergencias", // tomar caso, cambiar estado, registrar interacciones, chatear
-  "Emergencias - Eliminar emergencias",
+  "Tickets - Ver configuración",
+  "Tickets - Editar configuración",
+  // Envío desde mobile (UF) — separados por categoría
+  "Tickets - Enviar emergencia",
+  "Tickets - Enviar solicitud",
+  // Atención emergencias (guardia del complejo)
+  "Tickets - Ver emergencias",
+  "Tickets - Atender emergencias", // tomar caso, cambiar estado, registrar interacciones, chatear
+  "Tickets - Eliminar emergencias",
+  // Atención solicitudes / reclamos (administración del complejo)
+  "Tickets - Ver solicitudes",
+  "Tickets - Atender solicitudes",
+  "Tickets - Eliminar solicitudes",
 
   // MODULO TURNOS
   // Catálogo + plantillas (admin del complejo)

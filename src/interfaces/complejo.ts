@@ -2,19 +2,13 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { GeoJSONMultiPolygonSchema } from "../auxiliares/geojson";
 
-export const ConfigEmergenciasComplejoSchema = z.object({
-    /** Si false, las emergencias enviadas desde mobile deben validarse contra el polígono del complejo. Default: true. */
-    permitirFueraDelComplejo: z.boolean().optional(),
-  });
-
 export const ConfigComplejoSchema = z.object({
-    imagenes: z.object({
-        logo: z.string().optional(),
-        banner: z.string().optional(),
-      })
-      .optional(),
-    emergencias: ConfigEmergenciasComplejoSchema.optional(),
-  });
+  imagenes: z.object({
+      logo: z.string().optional(),
+      banner: z.string().optional(),
+    })
+    .optional(),
+});
 
 export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
 
@@ -25,7 +19,10 @@ export const ComplejoSchema = z.object({
     habilitado: z.boolean().optional(),
     nombre: z.string().optional(),
     tipo: TipoComplejoSchema.optional(),
-    /** Polígono(s) que delimita(n) el complejo. Usado para geo-fence de emergencias. */
+    /**
+     * Polígono(s) que delimita(n) el complejo. Usado para geo-fence de tickets
+     * cuyo botón tenga `config.requiereDentroDelComplejo = true`.
+     */
     ubicacion: GeoJSONMultiPolygonSchema.optional(),
     config: ConfigComplejoSchema.optional(),
     // Populate
@@ -44,9 +41,6 @@ export const UpdateComplejoSchema = ComplejoSchema.omit({
   cliente: true,
 }).partial();
 
-export type IConfigEmergenciasComplejo = z.infer<
-  typeof ConfigEmergenciasComplejoSchema
->;
 export type IConfigComplejo = z.infer<typeof ConfigComplejoSchema>;
 export type ITipoComplejo = z.infer<typeof TipoComplejoSchema>;
 export type IComplejo = z.infer<typeof ComplejoSchema>;

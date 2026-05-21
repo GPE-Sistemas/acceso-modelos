@@ -5,7 +5,7 @@ import {
 } from "../auxiliares/geojson";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
-import { EmergenciaSchema } from "./emergencia";
+import { TicketSchema } from "./ticket";
 import { EventoVisitaSchema } from "./evento-visita";
 import { IngresoEgresoSchema } from "./ingreso-egreso";
 import { PublicacionSchema } from "./publicacion";
@@ -42,7 +42,7 @@ export const DashboardComplejoEmergenciasSchema = z.object({
     Pendiente: z.number(),
     EnAtencion: z.number(),
   }),
-  lista: z.array(EmergenciaSchema),
+  lista: z.array(TicketSchema),
 });
 
 export const DashboardComplejoHardwareItemSchema = z.object({
@@ -215,7 +215,7 @@ export const DashboardProveedorSchema = z.object({
     visitasPendientesAprobacion: z.number(),
   }),
   topClientes: z.array(DashboardProveedorClienteRowSchema),
-  emergenciasRecientes: z.array(EmergenciaSchema),
+  emergenciasRecientes: z.array(TicketSchema),
   clientesRecientes: z.array(ClienteSchema),
   complejosRecientes: z.array(ComplejoSchema),
 });

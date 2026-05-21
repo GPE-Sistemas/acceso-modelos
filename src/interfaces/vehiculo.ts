@@ -16,6 +16,8 @@ export const VehiculoSchema = z.object({
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
     idUnidadFuncional: z.string().optional(),
+    idPermisoCreador: z.string().optional(),
+    activo: z.boolean().optional(),
     datosVehiculo: DatosVehiculoSchema.optional(),
     // Populate
     cliente: ClienteSchema.optional(),
@@ -26,6 +28,8 @@ export const VehiculoSchema = z.object({
 export const CreateVehiculoSchema = VehiculoSchema.omit({
   _id: true,
   fechaCreacion: true,
+  idPermisoCreador: true,
+  activo: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,
@@ -34,6 +38,8 @@ export const CreateVehiculoSchema = VehiculoSchema.omit({
 export const UpdateVehiculoSchema = VehiculoSchema.omit({
   _id: true,
   fechaCreacion: true,
+  idPermisoCreador: true,
+  activo: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,

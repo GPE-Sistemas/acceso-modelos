@@ -14,6 +14,10 @@ export const CategoriaNotificacionSchema = z.enum([
   "emergencia_mensaje",
   /** Mobile UF: cambio de estado en emergencia propia */
   "emergencia_estado",
+  /** Mobile Complejo: nueva emergencia recibida (guardia atendedor) */
+  "ticket_emergencia_recibido",
+  /** Mobile Complejo: nueva solicitud/reclamo recibido (admin atendedor) */
+  "ticket_solicitud_recibido",
   /** Mobile UF: alguien creó un evento de visita que requiere mi aprobación */
   "visita_pendiente_aprobacion",
   /** Mobile UF: mi evento de visita fue aprobado o rechazado */
@@ -44,6 +48,8 @@ export const CategoriasNotificacionMapSchema = z.object({
   emergencia_recibida: z.boolean(),
   emergencia_mensaje: z.boolean(),
   emergencia_estado: z.boolean(),
+  ticket_emergencia_recibido: z.boolean(),
+  ticket_solicitud_recibido: z.boolean(),
   visita_pendiente_aprobacion: z.boolean(),
   visita_resuelta: z.boolean(),
   turno_reservado: z.boolean(),
@@ -102,6 +108,8 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   emergencia_recibida: true,
   emergencia_mensaje: true,
   emergencia_estado: true,
+  ticket_emergencia_recibido: true,
+  ticket_solicitud_recibido: true,
   visita_pendiente_aprobacion: true,
   visita_resuelta: true,
   turno_reservado: true,

@@ -10,6 +10,8 @@ export const VisitanteSchema = z.object({
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
     idUnidadFuncional: z.string().optional(),
+    idPermisoCreador: z.string().optional(),
+    activo: z.boolean().optional(),
     datosPersonales: DatosPersonalesSchema.optional(),
     // Populate
     cliente: ClienteSchema.optional(),
@@ -20,6 +22,8 @@ export const VisitanteSchema = z.object({
 export const CreateVisitanteSchema = VisitanteSchema.omit({
   _id: true,
   fechaCreacion: true,
+  idPermisoCreador: true,
+  activo: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,
@@ -28,6 +32,8 @@ export const CreateVisitanteSchema = VisitanteSchema.omit({
 export const UpdateVisitanteSchema = VisitanteSchema.omit({
   _id: true,
   fechaCreacion: true,
+  idPermisoCreador: true,
+  activo: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,

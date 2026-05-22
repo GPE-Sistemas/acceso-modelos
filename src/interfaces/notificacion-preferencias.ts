@@ -32,6 +32,12 @@ export const CategoriaNotificacionSchema = z.enum([
   "turno_rechazado",
   /** Mobile UF: mi turno fue cancelado (por mí, otro participante, admin o cancelación tardía/no-show) */
   "turno_cancelado",
+  /** Mobile UF: nueva encuesta disponible para responder */
+  "encuesta_abierta",
+  /** Mobile UF: recordatorio antes del cierre de una encuesta que no respondí */
+  "encuesta_recordatorio",
+  /** Mobile UF: encuesta donde respondí ya cerró (resultados disponibles si aplica) */
+  "encuesta_cerrada",
 ]);
 
 export const CATEGORIAS_NOTIFICACION =
@@ -57,6 +63,9 @@ export const CategoriasNotificacionMapSchema = z.object({
   turno_aprobado: z.boolean(),
   turno_rechazado: z.boolean(),
   turno_cancelado: z.boolean(),
+  encuesta_abierta: z.boolean(),
+  encuesta_recordatorio: z.boolean(),
+  encuesta_cerrada: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -117,4 +126,7 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   turno_aprobado: true,
   turno_rechazado: true,
   turno_cancelado: true,
+  encuesta_abierta: true,
+  encuesta_recordatorio: true,
+  encuesta_cerrada: true,
 };

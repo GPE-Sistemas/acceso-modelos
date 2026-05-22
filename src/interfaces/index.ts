@@ -11,6 +11,8 @@ export * from './permiso';
 export * from './rol';
 export * from './unidad-funcional';
 export * from './grupo-unidad-funcional';
+export * from './encuesta';
+export * from './respuesta-encuesta';
 export * from './usuario';
 export * from './visitante';
 export * from './vehiculo';

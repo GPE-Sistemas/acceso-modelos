@@ -115,7 +115,12 @@ export const DashboardComplejoTurnosSchema = z.object({
   proximos: z.array(z.any()),
 });
 
-export const DashboardComplejoSchema = z.object({
+// Type annotation explícita: los sub-schemas referencian populates profundos
+// (Ticket → Permiso → Rol → AccionesRolSchema) cuya inferencia, agregada,
+// supera el límite de serialización de TS (TS7056). Anotando como ZodObject
+// con shape laxo se corta la cadena. Mismo patrón pragmático que `z.any()`
+// usado en `proximos` arriba — dashboards son schemas de salida read-only.
+export const DashboardComplejoSchema: z.ZodObject<z.ZodRawShape> = z.object({
   idComplejo: z.string(),
   /** ISO timestamp del cálculo */
   generadoEn: z.string(),

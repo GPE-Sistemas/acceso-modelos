@@ -40,6 +40,11 @@ export const AccionesRolSchema = z.enum([
   "Administración - Editar unidades funcionales",
   "Administración - Eliminar unidades funcionales",
   "Administración - Deshabilitar / habilitar unidades funcionales",
+  // Grupos de unidades funcionales (targeting para encuestas y futuros usos)
+  "Administración - Ver grupos UF",
+  "Administración - Crear grupos UF",
+  "Administración - Editar grupos UF",
+  "Administración - Eliminar grupos UF",
   // Usuarios
   "Administración - Ver usuarios",
   "Administración - Crear usuarios",
@@ -111,6 +116,18 @@ export const AccionesRolSchema = z.enum([
   "Publicaciones - Crear publicaciones",
   "Publicaciones - Editar publicaciones",
   "Publicaciones - Eliminar publicaciones",
+
+  // MODULO ENCUESTAS
+  // Creación / gestión (Complejo)
+  "Encuestas - Ver encuestas",
+  "Encuestas - Crear encuestas",
+  "Encuestas - Editar encuestas", // solo estado=Borrador
+  "Encuestas - Eliminar encuestas", // hard delete solo Borrador
+  "Encuestas - Cerrar encuestas", // cierre manual antes de fechaCierre
+  "Encuestas - Ver resultados",
+  "Encuestas - Exportar resultados",
+  // Respuesta (UF) — no migrada al rol UF default, admin asigna manual
+  "Encuestas - Responder encuestas",
 
   // MODULO TICKETS (emergencias + solicitudes + reclamos)
   // Botones — catálogo común

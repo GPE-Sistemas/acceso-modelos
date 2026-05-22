@@ -10,6 +10,7 @@ export * from './ingreso-egreso';
 export * from './permiso';
 export * from './rol';
 export * from './unidad-funcional';
+export * from './grupo-unidad-funcional';
 export * from './usuario';
 export * from './visitante';
 export * from './vehiculo';

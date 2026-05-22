@@ -168,10 +168,10 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `rol.ts` | `RolSchema` / `IRol` — discriminated union por `alcance`. `AccionesRolSchema` enumera todas las acciones del catálogo |
 | `unidad-funcional.ts` | `UnidadFuncionalSchema` / `IUnidadFuncional`. Campo `imagenes?: string[]` con objectNames GCS (hasta 10 por UF, bucket público, carpeta `unidades-funcionales`) |
 | `usuario.ts` | `UsuarioSchema` / `IUsuario`, `DatosPersonalesSchema` |
-| `vehiculo.ts` | `VehiculoSchema` / `IVehiculo`, `DatosVehiculoSchema` |
+| `vehiculo.ts` | `VehiculoSchema` / `IVehiculo`, `DatosVehiculoSchema`. Campos `activo?: boolean` + `idPermisoCreador?: string` (soft-archive — índice único parcial sobre patente filtra por `activo: true`). Omitidos de Create/Update — los inyecta `acceso-api` |
 | `vinculo-vehiculo.ts` | `VinculoVehiculoSchema` / `IVinculoVehiculo` |
 | `vinculo-evento-ingreso.ts` | `VinculoEventoIngresoSchema` / `IVinculoEventoIngreso` |
-| `visitante.ts` | `VisitanteSchema` / `IVisitante` |
+| `visitante.ts` | `VisitanteSchema` / `IVisitante`. Campos `activo?: boolean` + `idPermisoCreador?: string` (soft-archive — índices únicos parciales sobre teléfono/DNI filtran por `activo: true`). Omitidos de Create/Update — los inyecta `acceso-api` |
 | `publicacion.ts` | `PublicacionSchema` / `IPublicacion`, `BloqueSchema`, enums (`TipoBloqueSchema`, `CategoriaPublicacionSchema`, `EstadoPublicacionSchema`) |
 | `device-token.ts` | `DeviceTokenSchema` / `IDeviceToken`, `DevicePlatformSchema` |
 | `notificacion-preferencias.ts` | `NotificacionPreferenciasSchema` / `INotificacionPreferencias`, `CategoriaNotificacionSchema`, `CategoriasNotificacionMapSchema`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT`. Categorías de turnos: `turno_reservado`, `turno_pendiente_aprobacion`, `turno_aprobado`, `turno_rechazado`, `turno_cancelado`. Categorías de tickets para atendedores nivel Complejo: `ticket_emergencia_recibido` (guardia), `ticket_solicitud_recibido` (administración, cubre Solicitud + Reclamo) |
@@ -274,6 +274,10 @@ Para que el historial sobreviva a edits o hard delete del catálogo UF, las enti
 | `ITicket` | `botonSnapshot` (`{ idBoton, texto, icono, color, categoria }`) | `POST /tickets`. Snapshot incluye `categoria` para que el render histórico no dependa del catálogo vivo |
 
 Quien renderiza historial **siempre** debe usar el snapshot. `idsVisitantes` / `idVehiculo` / `idBoton` siguen como referencias de trazabilidad, pero el catálogo subyacente puede haberse eliminado o editado. `IEventoVisita` NO tiene snapshot — los eventos Pendientes/Activos referencian catálogo vivo (editable). Una vez generados los ingresos asociados, el snapshot vive en `IIngresoEgreso`.
+
+## Soft-archive — visitantes / vehículos
+
+`IVisitante` e `IVehiculo` llevan `activo?: boolean` + `idPermisoCreador?: string` para soportar rotación de dueños de UF sin chocar con unicidad (teléfono/DNI/patente). `acceso-datos` indexa unique parcial sobre `activo: true` → archivados quedan fuera del índice, un nuevo activo en la misma UF puede reusar el mismo valor sin colisión. `acceso-api.scope.helper` filtra listados con `{ activo: { $ne: false } }`; el archive masivo (`PUT /<entidad>/archivar-por-uf/:idUF`) lo dispara `PermisosService.deshabilitar` cuando se desactiva el último permiso UF activo. Campos omitidos de `Create*` y `Update*` — los inyecta `acceso-api` en el create (`activo=true`, `idPermisoCreador=user.idPermiso`) y nadie los edita directo.
 
 ## `CategoriaPermiso` — clasificación del portador
 

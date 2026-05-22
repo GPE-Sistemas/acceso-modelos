@@ -371,7 +371,22 @@ export type IDashboardComplejoTurnos = z.infer<
 export type IDashboardComplejoArchivados = z.infer<
   typeof DashboardComplejoArchivadosSchema
 >;
-export type IDashboardComplejo = z.infer<typeof DashboardComplejoSchema>;
+// `DashboardComplejoSchema` está anotado como `z.ZodObject<z.ZodRawShape>` (ver
+// arriba) para evitar TS7056 — eso colapsa `z.infer<>` a `Record<string, unknown>`.
+// Re-declaramos el tipo manualmente componiéndolo de los sub-tipos, que sí
+// conservan inferencia precisa. La forma debe seguir el shape del schema.
+export interface IDashboardComplejo {
+  idComplejo: string;
+  generadoEn: string;
+  movimientos: IDashboardComplejoMovimientos;
+  visitas: IDashboardComplejoVisitas;
+  emergencias: IDashboardComplejoEmergencias;
+  solicitudes: IDashboardComplejoSolicitudes;
+  hardware: IDashboardComplejoHardware;
+  publicaciones: IDashboardComplejoPublicaciones;
+  turnos: IDashboardComplejoTurnos;
+  archivados: IDashboardComplejoArchivados;
+}
 export type IEstadoUFMapa = z.infer<typeof EstadoUFMapaSchema>;
 export type IDashboardMapaUF = z.infer<typeof DashboardMapaUFSchema>;
 export type IDashboardMapaAcceso = z.infer<typeof DashboardMapaAccesoSchema>;

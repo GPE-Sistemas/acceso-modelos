@@ -189,6 +189,43 @@ export const EdgeApplianceLastErrorSchema = z.object({
   at: z.string(),
 });
 
+// IEdgeApplianceDiagnosticoRed — diagnóstico de red del entorno del edge.
+// Se rebuildea en cada heartbeat (cost bajo: dig + tcp connect locales).
+// Permite al instalador y al panel admin identificar problemas operativos
+// del network del cliente sin SSH al appliance (ver doc 27 — DNS rebind
+// protection).
+export const EdgeApplianceDiagnosticoRedSchema = z.object({
+  // IP pública (WAN) del cliente, detectada via echo service externo
+  // (ej. https://api.ipify.org). Útil para identificar ISP rápido y
+  // correlacionar issues conocidos por carrier. Vacío si el edge no tiene
+  // internet alcance al momento del check.
+  ipPublica: z.string().optional(),
+  // Default gateway de la primary interface LAN (`ip route show default`).
+  gatewayDefault: z.string().optional(),
+  // DNS resolver default según `/etc/resolv.conf` — típicamente el router
+  // del cliente (puede ser el ISP en setups bridged).
+  resolverDefault: z.string().optional(),
+  // El resolver default devuelve la IP LAN para el FQDN del propio edge.
+  // Si false → DNS rebind protection probable (o record DNS mal
+  // configurado cloud-side, distinguible con `resolverPublicoResuelveLan`).
+  resolverDefaultResuelveLan: z.boolean().optional(),
+  // Un DNS público (1.1.1.1) devuelve la IP LAN para el FQDN del edge.
+  // Si false → record DNS no propagado o IP LAN no cargada cloud-side.
+  resolverPublicoResuelveLan: z.boolean().optional(),
+  // Decisión agregada: `resolverPublicoResuelveLan === true` Y
+  // `resolverDefaultResuelveLan === false` → router del cliente aplica
+  // DNS rebind protection. Síntoma del bug del doc 27.
+  dnsRebindDetectado: z.boolean().optional(),
+  // Latencia round-trip TCP a acceso-api (ms). Heartbeat propio mide su
+  // request total; útil para alertar links degradados.
+  latenciaCloudMs: z.number().int().nonnegative().optional(),
+  // MTU de la primary interface (bytes). Detecta tunneling fragmentation
+  // issues raros.
+  mtuPrimary: z.number().int().positive().optional(),
+  // Última corrida del check.
+  actualizadoEn: z.string().optional(),
+});
+
 export const EdgeApplianceDiagnosticoSchema = z.object({
   // Cantidad de filas pendientes en outbox edge (publish a NATS pendiente).
   outboxDepth: z.number().int().nonnegative(),
@@ -201,6 +238,10 @@ export const EdgeApplianceDiagnosticoSchema = z.object({
   natsConnState: EdgeApplianceNatsConnStateSchema,
   // Último error capturado. Auto-clear si pasaron 15min sin error nuevo.
   lastError: EdgeApplianceLastErrorSchema.optional(),
+  // Diagnóstico de network del entorno (resolver, gateway, ip pública,
+  // detección de DNS rebind, etc.). Optional para back-compat con agents
+  // < v1.24 que aún no reportan el bloque.
+  red: EdgeApplianceDiagnosticoRedSchema.optional(),
   // Timestamp ISO del snapshot.
   actualizadoEn: z.string(),
 });
@@ -300,6 +341,9 @@ export type IEdgeApplianceIntegrityEntry = z.infer<
 >;
 export type IEdgeApplianceLastError = z.infer<
   typeof EdgeApplianceLastErrorSchema
+>;
+export type IEdgeApplianceDiagnosticoRed = z.infer<
+  typeof EdgeApplianceDiagnosticoRedSchema
 >;
 export type IEdgeApplianceDiagnostico = z.infer<
   typeof EdgeApplianceDiagnosticoSchema

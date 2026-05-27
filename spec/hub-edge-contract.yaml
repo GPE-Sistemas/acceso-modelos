@@ -1,64 +1,68 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.1.0
-  description: |
-    Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
+  version: 0.2.0
+  description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
+
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
 
+
     - **Edge**: satisface interface Go generada (`oapi-codegen --generate types,server`)
-    - **Cloud**: debe ser superset compatible. CI `acceso-api/.github/workflows/hub-edge-contract-check.yml` falla si rompe shape de path subset.
+
+    - **Cloud**: debe ser superset compatible. CI `acceso-api/.github/workflows/hub-edge-contract-check.yml` falla si rompe
+    shape de path subset.
+
     - **Harness**: verifica edge vs spec (no edge vs cloud-live).
 
-    Schemas autoatos vía `z.toJSONSchema({target:'openapi-3.0'})` sobre `acceso-modelos`. Ver `./README.md`.
 
-    Estado v0.1.0: declara estructura completa + dominio Auth + Accesos como template. Resto de entities (dispositivos, ingresos-egresos, eventos-visita, panel-guardia, dashboard, master-data, cloud-direct) declarados con shape mínima — completar en sprints siguientes según patrón.
+    Schemas autoatos vía `z.toJSONSchema({target:''openapi-3.0''})` sobre `acceso-modelos`. Ver `./README.md`.
+
+
+    Estado v0.1.0: declara estructura completa + dominio Auth + Accesos como template. Resto de entities (dispositivos, ingresos-egresos,
+    eventos-visita, panel-guardia, dashboard, master-data, cloud-direct) declarados con shape mínima — completar en sprints
+    siguientes según patrón.
+
+    '
   contact:
     name: GPE Sistemas
   license:
     name: Private
-
 servers:
-  - url: https://{idComplejo}.edge.coliving.sh
-    description: Edge appliance (target=edge)
-    variables:
-      idComplejo:
-        default: example
-        description: Slug del complejo (idComplejo o alias agregado round-robin)
-  - url: https://api.coliving.sh
-    description: Cloud (paths cloud-direct D41)
-
+- url: https://{idComplejo}.edge.coliving.sh
+  description: Edge appliance (target=edge)
+  variables:
+    idComplejo:
+      default: example
+      description: Slug del complejo (idComplejo o alias agregado round-robin)
+- url: https://api.coliving.sh
+  description: Cloud (paths cloud-direct D41)
 tags:
-  - name: auth
-    description: Login + sesión local del Hub edge
-  - name: master-data
-    description: Master data Tipo B (replicado del cloud, read-only o write con sync)
-  - name: control-acceso
-    description: Accesos, dispositivos, credenciales (Tipo B + control físico)
-  - name: eventos-visita
-    description: Eventos de visita + autorización
-  - name: ingresos-egresos
-    description: Movimientos físicos (Tipo A, alto volumen, append-only)
-  - name: panel-guardia
-    description: Vista guardia por categoría (4 proyecciones)
-  - name: dashboard
-    description: Dashboards locales del complejo
-  - name: storage
-    description: Storage local del edge (cache + resolve)
-  - name: cloud-direct
-    description: Paths cloud-direct (D41). Edge no implementa. Bundle llama directo al cloud via HttpInterceptor.
-
+- name: auth
+  description: Login + sesión local del Hub edge
+- name: master-data
+  description: Master data Tipo B (replicado del cloud, read-only o write con sync)
+- name: control-acceso
+  description: Accesos, dispositivos, credenciales (Tipo B + control físico)
+- name: eventos-visita
+  description: Eventos de visita + autorización
+- name: ingresos-egresos
+  description: Movimientos físicos (Tipo A, alto volumen, append-only)
+- name: panel-guardia
+  description: Vista guardia por categoría (4 proyecciones)
+- name: dashboard
+  description: Dashboards locales del complejo
+- name: storage
+  description: Storage local del edge (cache + resolve)
+- name: cloud-direct
+  description: Paths cloud-direct (D41). Edge no implementa. Bundle llama directo al cloud via HttpInterceptor.
 security:
-  - bearerAuth: []
-    permisoIdHeader: []
-
+- bearerAuth: []
+  permisoIdHeader: []
 paths:
-  # ============================================================
-  # AUTH (edge-required)
-  # ============================================================
   /auth/login:
     post:
-      tags: [auth]
+      tags:
+      - auth
       summary: Login local edge
       operationId: login
       x-scope: edge-required
@@ -79,10 +83,10 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /auth/google:
     post:
-      tags: [auth]
+      tags:
+      - auth
       summary: Login Google OAuth
       operationId: loginGoogle
       x-scope: cloud-only
@@ -95,9 +99,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [idToken]
+              required:
+              - idToken
               properties:
-                idToken: { type: string }
+                idToken:
+                  type: string
       responses:
         '200':
           description: OK
@@ -105,10 +111,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
-
   /auth/me:
     get:
-      tags: [auth]
+      tags:
+      - auth
       summary: Datos del usuario + permiso activo
       operationId: me
       x-scope: edge-required
@@ -122,10 +128,10 @@ paths:
                 $ref: '#/components/schemas/MeResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /auth/me/datos-personales:
     put:
-      tags: [auth]
+      tags:
+      - auth
       summary: Actualizar datos personales
       operationId: updateDatosPersonales
       x-scope: cloud-only
@@ -140,10 +146,10 @@ paths:
       responses:
         '200':
           description: OK
-
   /auth/me/password:
     put:
-      tags: [auth]
+      tags:
+      - auth
       summary: Cambiar password
       operationId: updatePassword
       x-scope: cloud-only
@@ -154,17 +160,21 @@ paths:
           application/json:
             schema:
               type: object
-              required: [actual, nueva]
+              required:
+              - actual
+              - nueva
               properties:
-                actual: { type: string }
-                nueva: { type: string }
+                actual:
+                  type: string
+                nueva:
+                  type: string
       responses:
         '200':
           description: OK
-
   /auth/seleccionar-permiso:
     post:
-      tags: [auth]
+      tags:
+      - auth
       summary: Cambiar permiso activo en sesión multi-permiso
       operationId: seleccionarPermiso
       x-scope: cloud-only
@@ -176,16 +186,18 @@ paths:
           application/json:
             schema:
               type: object
-              required: [idPermiso]
+              required:
+              - idPermiso
               properties:
-                idPermiso: { type: string }
+                idPermiso:
+                  type: string
       responses:
         '200':
           description: OK
-
   /auth/sin-permiso:
     get:
-      tags: [auth]
+      tags:
+      - auth
       summary: Login sin permiso seleccionado
       operationId: sinPermiso
       x-scope: cloud-only
@@ -193,10 +205,10 @@ paths:
       responses:
         '200':
           description: OK
-
   /auth/refresh:
     post:
-      tags: [auth]
+      tags:
+      - auth
       summary: Refresh del JWT (edge JWT)
       operationId: refresh
       x-scope: edge-required
@@ -208,10 +220,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
-
   /auth/logout:
     post:
-      tags: [auth]
+      tags:
+      - auth
       summary: Logout (invalida sesión local)
       operationId: logout
       x-scope: edge-required
@@ -219,26 +231,30 @@ paths:
       responses:
         '204':
           description: OK
-
   /auth/edge-transfer:
     post:
-      tags: [auth]
+      tags:
+      - auth
       summary: Token transfer cloud→edge (A.S6 D41)
       operationId: edgeTransfer
       x-scope: cloud-direct
       x-source-bundle: true
-      description: |
-        Endpoint cloud. Recibe edgeJWT, valida y emite cloudAccessToken para que el bundle Hub edge
+      description: 'Endpoint cloud. Recibe edgeJWT, valida y emite cloudAccessToken para que el bundle Hub edge
+
         ejecute requests cloud-direct (tickets, publicaciones).
+
+        '
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [edgeAccessToken]
+              required:
+              - edgeAccessToken
               properties:
-                edgeAccessToken: { type: string }
+                edgeAccessToken:
+                  type: string
       responses:
         '200':
           description: OK
@@ -246,28 +262,26 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [cloudAccessToken]
+                required:
+                - cloudAccessToken
                 properties:
-                  cloudAccessToken: { type: string }
-
-  # ============================================================
-  # ACCESOS (edge-required, Tipo B replicado read-write)
-  # Template completo del pattern CRUD + count. Resto de entities siguen este patrón.
-  # ============================================================
+                  cloudAccessToken:
+                    type: string
   /accesos:
     get:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Listar accesos
       operationId: listAccesos
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
-        - $ref: '#/components/parameters/Sort'
-        - $ref: '#/components/parameters/Populate'
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Select'
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Select'
       responses:
         '200':
           description: OK
@@ -280,7 +294,8 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Crear acceso
       operationId: createAcceso
       x-scope: edge-required
@@ -298,16 +313,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Documento_Acceso'
-
   /accesos/count:
     get:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Contar accesos
       operationId: countAccesos
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Filter'
       responses:
         '200':
           description: OK
@@ -315,12 +330,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountResponse'
-
   /accesos/{id}:
     parameters:
-      - $ref: '#/components/parameters/IdPath'
+    - $ref: '#/components/parameters/IdPath'
     get:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Obtener acceso por id
       operationId: getAcceso
       x-scope: edge-required
@@ -335,7 +350,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Actualizar acceso
       operationId: updateAcceso
       x-scope: edge-required
@@ -354,7 +370,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Documento_Acceso'
     delete:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Eliminar acceso
       operationId: deleteAcceso
       x-scope: edge-required
@@ -366,24 +383,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Documento_Acceso'
-
-  # ============================================================
-  # ENTITIES Tipo B + Tipo A — siguen el patrón CRUD+count de /accesos.
-  # Declaradas como skeleton; completar shape detallada en sprints siguientes.
-  # ============================================================
   /dispositivos:
     get:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Listar dispositivos
       operationId: listDispositivos
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
-        - $ref: '#/components/parameters/Sort'
-        - $ref: '#/components/parameters/Populate'
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
       responses:
         '200':
           description: OK
@@ -391,50 +404,105 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Listado_Entidad'
-    # TODO Fase 1.S3.b: POST, PUT, DELETE, count, /:id según pattern accesos
-
+    post:
+      tags:
+      - control-acceso
+      summary: Create dispositivo
+      operationId: createDispositivo
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /credenciales-dispositivos:
     get:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Listar credenciales (CRUD pattern)
       operationId: listCredenciales
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
-        - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Populate'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /dispositivos-accesos:
     get:
-      tags: [control-acceso]
+      tags:
+      - control-acceso
       summary: Asociación dispositivo↔acceso (CRUD pattern)
       operationId: listDispositivosAccesos
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Filter'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - control-acceso
+      summary: Create dispositivoacceso
+      operationId: createDispositivoAcceso
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /ingresos-egresos:
     get:
-      tags: [ingresos-egresos]
+      tags:
+      - ingresos-egresos
       summary: Listar ingresos/egresos
       operationId: listIngresosEgresos
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
-        - $ref: '#/components/parameters/Sort'
-        - $ref: '#/components/parameters/Populate'
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
     post:
-      tags: [ingresos-egresos]
+      tags:
+      - ingresos-egresos
       summary: Registrar ingreso/egreso (alto volumen, append-only Tipo A)
       operationId: createIngresoEgreso
       x-scope: edge-required
@@ -443,415 +511,1757 @@ paths:
         required: true
         content:
           application/json:
-            schema: { type: object }
+            schema:
+              type: object
       responses:
-        '201': { description: Creado, content: { application/json: { schema: { $ref: '#/components/schemas/Documento_Entidad' } } } }
-    # TODO Fase 1.S3.b: count, /:id PUT resolver, etc.
-
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /eventos-visita:
     get:
-      tags: [eventos-visita]
+      tags:
+      - eventos-visita
       summary: Listar eventos de visita
       operationId: listEventosVisita
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
-        - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Populate'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-    # TODO: POST, PATCH /:id, PUT /:id/aprobacion-recurrente
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - eventos-visita
+      summary: Create eventovisita
+      operationId: createEventoVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /vinculos-evento-ingreso:
     get:
-      tags: [eventos-visita]
+      tags:
+      - eventos-visita
       summary: Vínculos evento↔ingreso (faltante hoy en edge — sumar migration + REST)
       operationId: listVinculosEventoIngreso
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Filter'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /unidades-funcionales:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Listar UF del complejo
       operationId: listUF
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Filter'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create unidadfuncional
+      operationId: createUnidadFuncional
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /usuarios:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Listar usuarios (subset operadores del complejo, read-only edge)
       operationId: listUsuarios
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
-        - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Populate'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create usuario
+      operationId: createUsuario
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /permisos:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Listar permisos del complejo
       operationId: listPermisos
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
-        - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Populate'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create permiso
+      operationId: createPermiso
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /roles:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Listar roles (Tipo B replicado read-only)
       operationId: listRoles
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create rol
+      operationId: createRol
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /clientes:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Listar clientes (1 fila — cliente del complejo)
       operationId: listClientes
       x-scope: edge-candidate
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create cliente
+      operationId: createCliente
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /complejos:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Listar complejos (1 fila edge = este complejo)
       operationId: listComplejos
       x-scope: edge-candidate
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create complejo
+      operationId: createComplejo
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /vehiculos:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Vehículos (Tipo A bilateral D34)
       operationId: listVehiculos
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create vehiculo
+      operationId: createVehiculo
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /visitantes:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Visitantes (Tipo A bilateral D34)
       operationId: listVisitantes
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create visitante
+      operationId: createVisitante
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /edge-appliances:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Pares del complejo (subset edge-side de IEdgeAppliance)
       operationId: listEdgeAppliances
       x-scope: edge-candidate
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
-  # ============================================================
-  # PANEL GUARDIA (edge-required, 4 proyecciones derivadas)
-  # ============================================================
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /panel-guardia/propietarios:
     get:
-      tags: [panel-guardia]
+      tags:
+      - panel-guardia
       summary: Vista guardia — propietarios
       operationId: panelGuardiaPropietarios
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Filter'
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /panel-guardia/administracion:
     get:
-      tags: [panel-guardia]
+      tags:
+      - panel-guardia
       summary: Vista guardia — administración
       operationId: panelGuardiaAdministracion
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /panel-guardia/guardia:
     get:
-      tags: [panel-guardia]
+      tags:
+      - panel-guardia
       summary: Vista guardia — guardia
       operationId: panelGuardiaGuardia
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /panel-guardia/prestadores:
     get:
-      tags: [panel-guardia]
+      tags:
+      - panel-guardia
       summary: Vista guardia — prestadores
       operationId: panelGuardiaPrestadores
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
-  # ============================================================
-  # DASHBOARD (edge-required local)
-  # ============================================================
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /dashboard/resumen:
     get:
-      tags: [dashboard]
+      tags:
+      - dashboard
       summary: Resumen del complejo
       operationId: dashboardResumen
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: object } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
   /dashboard/complejo/mapa:
     get:
-      tags: [dashboard]
+      tags:
+      - dashboard
       summary: Mapa del complejo
       operationId: dashboardMapa
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: object } } } }
-
-  # ============================================================
-  # STORAGE (edge-required local + signed URLs)
-  # ============================================================
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
   /storage/usage:
     get:
-      tags: [storage]
+      tags:
+      - storage
       summary: Uso de storage local edge
       operationId: storageUsage
       x-scope: edge-required
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: object } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
   /storage/resolve:
     get:
-      tags: [storage]
+      tags:
+      - storage
       summary: Resolve objectName → URL signed o cache local
       operationId: storageResolve
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-        - name: objectName
-          in: query
-          required: true
-          schema: { type: string }
+      - name: objectName
+        in: query
+        required: true
+        schema:
+          type: string
       responses:
-        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { url: { type: string } } } } } }
-
-  # ============================================================
-  # TURNOS / ENCUESTAS / GRUPOS-UF (edge-candidate — pendiente decisión scope)
-  # ============================================================
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
   /turnos:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Turnos UF Común
       operationId: listTurnos
       x-scope: edge-candidate
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /plantillas-turno:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Plantillas de turno
       operationId: listPlantillas
       x-scope: edge-candidate
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create plantillaturno
+      operationId: createPlantillaTurno
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /bloqueos-turnos:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Bloqueos de turnos
       operationId: listBloqueosTurnos
       x-scope: edge-candidate
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create bloqueoturnos
+      operationId: createBloqueoTurnos
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /tipos-actividad:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Catálogo tipos de actividad
       operationId: listTiposActividad
       x-scope: edge-candidate
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create tipoactividad
+      operationId: createTipoActividad
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /grupos-uf:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Grupos de UF
       operationId: listGruposUF
       x-scope: edge-candidate
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create grupouf
+      operationId: createGrupoUF
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /encuestas:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Encuestas (cloud-only mayormente; respuesta mobile UF)
       operationId: listEncuestas
       x-scope: cloud-only
       x-source-bundle: false
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - master-data
+      summary: Create encuesta
+      operationId: createEncuesta
+      x-scope: cloud-only
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
   /contactos-usuario:
     get:
-      tags: [master-data]
+      tags:
+      - master-data
       summary: Contactos peer-to-peer (cross-tenant)
       operationId: listContactos
       x-scope: cloud-only
       x-source-bundle: false
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
-  # ============================================================
-  # CLOUD-DIRECT (D41) — edge no implementa, bundle llama directo al cloud
-  # Documentados acá para que el harness verify-spec los marque skip pero
-  # el cloud-router.interceptor.ts conoce el listado canónico.
-  # ============================================================
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /tickets:
     get:
-      tags: [cloud-direct]
+      tags:
+      - cloud-direct
       summary: Tickets (cloud-direct D41)
       operationId: listTickets
       x-scope: cloud-direct
       x-source-bundle: true
       x-cloud-server: https://api.coliving.sh
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /interacciones-ticket:
     get:
-      tags: [cloud-direct]
+      tags:
+      - cloud-direct
       summary: Interacciones ticket (cloud-direct D41)
       operationId: listInteraccionesTicket
       x-scope: cloud-direct
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /mensajes-ticket:
     get:
-      tags: [cloud-direct]
+      tags:
+      - cloud-direct
       summary: Mensajes ticket (cloud-direct D41)
       operationId: listMensajesTicket
       x-scope: cloud-direct
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /botones-ticket:
     get:
-      tags: [cloud-direct]
+      tags:
+      - cloud-direct
       summary: Botones ticket (cloud-direct D41)
       operationId: listBotonesTicket
       x-scope: cloud-direct
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /config-botones-ticket-complejo:
     get:
-      tags: [cloud-direct]
+      tags:
+      - cloud-direct
       summary: Config botones ticket por complejo (cloud-direct D41)
       operationId: listConfigBotones
       x-scope: cloud-direct
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /publicaciones:
     get:
-      tags: [cloud-direct]
+      tags:
+      - cloud-direct
       summary: Publicaciones (cloud-direct D41 — refactor 2026-05-23)
       operationId: listPublicaciones
       x-scope: cloud-direct
       x-source-bundle: true
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Listado_Entidad' } } } }
-
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /dispositivos/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - control-acceso
+      summary: Get dispositivo by id
+      operationId: getDispositivo
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - control-acceso
+      summary: Update dispositivo
+      operationId: updateDispositivo
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - control-acceso
+      summary: Delete dispositivo
+      operationId: deleteDispositivo
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /dispositivos-accesos/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - control-acceso
+      summary: Get dispositivoacceso by id
+      operationId: getDispositivoAcceso
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - control-acceso
+      summary: Delete dispositivoacceso
+      operationId: deleteDispositivoAcceso
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /unidades-funcionales/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get unidadfuncional by id
+      operationId: getUnidadFuncional
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update unidadfuncional
+      operationId: updateUnidadFuncional
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete unidadfuncional
+      operationId: deleteUnidadFuncional
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /usuarios/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get usuario by id
+      operationId: getUsuario
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update usuario
+      operationId: updateUsuario
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete usuario
+      operationId: deleteUsuario
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /permisos/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get permiso by id
+      operationId: getPermiso
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update permiso
+      operationId: updatePermiso
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete permiso
+      operationId: deletePermiso
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /roles/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get rol by id
+      operationId: getRol
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update rol
+      operationId: updateRol
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete rol
+      operationId: deleteRol
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /vehiculos/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get vehiculo by id
+      operationId: getVehiculo
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update vehiculo
+      operationId: updateVehiculo
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete vehiculo
+      operationId: deleteVehiculo
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /visitantes/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get visitante by id
+      operationId: getVisitante
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update visitante
+      operationId: updateVisitante
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete visitante
+      operationId: deleteVisitante
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-visita/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - eventos-visita
+      summary: Get eventovisita by id
+      operationId: getEventoVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - eventos-visita
+      summary: Update eventovisita
+      operationId: updateEventoVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - eventos-visita
+      summary: Delete eventovisita
+      operationId: deleteEventoVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /clientes/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get cliente by id
+      operationId: getCliente
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update cliente
+      operationId: updateCliente
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete cliente
+      operationId: deleteCliente
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /complejos/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get complejo by id
+      operationId: getComplejo
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update complejo
+      operationId: updateComplejo
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete complejo
+      operationId: deleteComplejo
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /edge-appliances/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get edgeappliance by id
+      operationId: getEdgeAppliance
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update edgeappliance
+      operationId: updateEdgeAppliance
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /bloqueos-turnos/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get bloqueoturnos by id
+      operationId: getBloqueoTurnos
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update bloqueoturnos
+      operationId: updateBloqueoTurnos
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete bloqueoturnos
+      operationId: deleteBloqueoTurnos
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /plantillas-turno/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get plantillaturno by id
+      operationId: getPlantillaTurno
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update plantillaturno
+      operationId: updatePlantillaTurno
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete plantillaturno
+      operationId: deletePlantillaTurno
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /tipos-actividad/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get tipoactividad by id
+      operationId: getTipoActividad
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update tipoactividad
+      operationId: updateTipoActividad
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete tipoactividad
+      operationId: deleteTipoActividad
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /grupos-uf/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get grupouf by id
+      operationId: getGrupoUF
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update grupouf
+      operationId: updateGrupoUF
+      x-scope: edge-candidate
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete grupouf
+      operationId: deleteGrupoUF
+      x-scope: edge-candidate
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /encuestas/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get encuesta by id
+      operationId: getEncuesta
+      x-scope: cloud-only
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - master-data
+      summary: Update encuesta
+      operationId: updateEncuesta
+      x-scope: cloud-only
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - master-data
+      summary: Delete encuesta
+      operationId: deleteEncuesta
+      x-scope: cloud-only
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /contactos-usuario/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - master-data
+      summary: Get contactousuario by id
+      operationId: getContactoUsuario
+      x-scope: cloud-only
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - master-data
+      summary: Delete contactousuario
+      operationId: deleteContactoUsuario
+      x-scope: cloud-only
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: |
-        JWT edge-emitido (HS256, clave derivada HKDF del provisioning token).
+      description: 'JWT edge-emitido (HS256, clave derivada HKDF del provisioning token).
+
         Claims: idUsuario, idPermiso, idComplejo, idEdgeAppliance, iat, exp (TTL 12h).
+
+        '
     permisoIdHeader:
       type: apiKey
       in: header
       name: X-Permiso-Id
-      description: |
-        Contexto del permiso activo. Cloud lo requiere; edge lo extrae del JWT pero
+      description: 'Contexto del permiso activo. Cloud lo requiere; edge lo extrae del JWT pero
+
         acepta el header para paridad.
 
+        '
   parameters:
     Filter:
       name: filter
       in: query
-      schema: { type: string }
+      schema:
+        type: string
       description: JSON serializado (MongoDB-style operators)
     Sort:
       name: sort
       in: query
-      schema: { type: string }
+      schema:
+        type: string
       description: JSON serializado, e.g. `{"fechaCreacion":-1}`
     Populate:
       name: populate
       in: query
-      schema: { type: string }
+      schema:
+        type: string
       description: Campos populate separados por coma, e.g. `cliente,complejo`
     Page:
       name: page
       in: query
-      schema: { type: integer, minimum: 1 }
+      schema:
+        type: integer
+        minimum: 1
     Limit:
       name: limit
       in: query
-      schema: { type: integer, minimum: 1, maximum: 500 }
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
     Select:
       name: select
       in: query
-      schema: { type: string }
+      schema:
+        type: string
       description: Fields projection separados por espacio
     IdPath:
       name: id
@@ -859,9 +2269,8 @@ components:
       required: true
       schema:
         type: string
-        pattern: '^[a-f0-9]{24}$'
+        pattern: ^[a-f0-9]{24}$
       description: MongoDB ObjectId hex 24 chars
-
   responses:
     Unauthorized:
       description: JWT inválido o ausente
@@ -881,21 +2290,19 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-
   schemas:
-    # =================
-    # Wrappers genéricos (IDocumento, IListado, CountResponse)
-    # =================
     CountResponse:
       type: object
-      required: [totalCount]
+      required:
+      - totalCount
       properties:
         totalCount:
           type: integer
-
     ErrorResponse:
       type: object
-      required: [statusCode, message]
+      required:
+      - statusCode
+      - message
       properties:
         statusCode:
           type: integer
@@ -903,19 +2310,19 @@ components:
           type: string
         error:
           type: string
-
     Documento_Entidad:
       type: object
-      required: [dato]
+      required:
+      - dato
       properties:
         dato:
           type: object
         duration:
           type: number
-
     Listado_Entidad:
       type: object
-      required: [datos]
+      required:
+      - datos
       properties:
         datos:
           type: array
@@ -925,19 +2332,19 @@ components:
           type: integer
         duration:
           type: number
-
     Documento_Acceso:
       type: object
-      required: [dato]
+      required:
+      - dato
       properties:
         dato:
           $ref: '#/components/schemas/Acceso'
         duration:
           type: number
-
     Listado_Acceso:
       type: object
-      required: [datos]
+      required:
+      - datos
       properties:
         datos:
           type: array
@@ -947,22 +2354,21 @@ components:
           type: integer
         duration:
           type: number
-
-    # =================
-    # Auth shapes
-    # =================
     LoginRequest:
       type: object
-      required: [username, password]
+      required:
+      - username
+      - password
       properties:
         username:
           type: string
         password:
           type: string
-
     LoginResponse:
       type: object
-      required: [edgeAccessToken, syncOk]
+      required:
+      - edgeAccessToken
+      - syncOk
       properties:
         edgeAccessToken:
           type: string
@@ -972,10 +2378,11 @@ components:
         syncOk:
           type: boolean
           description: '`true` si cloud alcanzable al login; `false` modo degradado'
-
     MeResponse:
       type: object
-      required: [usuario, permiso]
+      required:
+      - usuario
+      - permiso
       properties:
         usuario:
           type: object
@@ -985,55 +2392,74 @@ components:
           type: array
           items:
             type: string
-
-    # =================
-    # Entities (derivadas de acceso-modelos via z.toJSONSchema)
-    # Shape mínima inline; detalle completo en acceso-modelos/dist/json-schema/.
-    # Bumpear acceso-modelos regenera schemas; spec sigue por $ref externo en v0.2.0+.
-    # =================
     Acceso:
       type: object
       x-source: acceso-modelos/dist/json-schema/AccesoSchema.json
       properties:
-        _id: { type: string, pattern: '^[a-f0-9]{24}$' }
-        fechaCreacion: { type: string, format: date-time }
-        idCliente: { type: string, pattern: '^[a-f0-9]{24}$' }
-        idComplejo: { type: string, pattern: '^[a-f0-9]{24}$' }
-        nombre: { type: string }
-        habilitado: { type: boolean }
+        _id:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        fechaCreacion:
+          type: string
+          format: date-time
+        idCliente:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        idComplejo:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        nombre:
+          type: string
+        habilitado:
+          type: boolean
         tipo:
           type: string
-          enum: [Ingreso, Egreso, Ambos]
+          enum:
+          - Ingreso
+          - Egreso
+          - Ambos
         tipoPersona:
           type: string
-          enum: [Propietarios, Visitas, Ambos]
+          enum:
+          - Propietarios
+          - Visitas
+          - Ambos
         ubicacion:
           type: object
           properties:
             type:
               type: string
-              enum: [Point]
+              enum:
+              - Point
             coordinates:
               type: array
-              items: { type: number }
+              items:
+                type: number
               minItems: 2
               maxItems: 2
-      required: [idCliente, idComplejo, nombre, tipo, tipoPersona]
-
-# ============================================================
-# WebSocket events (extensión custom — OpenAPI no cubre WS nativamente)
-# ============================================================
+      required:
+      - idCliente
+      - idComplejo
+      - nombre
+      - tipo
+      - tipoPersona
 x-ws-events:
-  description: |
-    Eventos Socket.io del Hub edge. Conexión: `/socket.io/` con handshake auth (JWT + X-Permiso-Id query).
+  description: 'Eventos Socket.io del Hub edge. Conexión: `/socket.io/` con handshake auth (JWT + X-Permiso-Id query).
+
     Rooms auto-join: `complejo:<idComplejo>` al conectar. Join explícito: `ticket:join` para tickets cloud-direct.
+
+    '
   server-to-client:
     ingreso-egreso:
       x-scope: edge-required
       payload:
         type: object
         properties:
-          op: { type: string, enum: [created, updated] }
+          op:
+            type: string
+            enum:
+            - created
+            - updated
           dato:
             type: object
     evento-visita:
@@ -1041,7 +2467,11 @@ x-ws-events:
       payload:
         type: object
         properties:
-          op: { type: string, enum: [created, updated] }
+          op:
+            type: string
+            enum:
+            - created
+            - updated
           dato:
             type: object
     ticket:
@@ -1087,16 +2517,18 @@ x-ws-events:
         properties:
           channels:
             type: array
-            items: { type: string }
+            items:
+              type: string
     unsubscribe:
       x-scope: edge-required
-    'ticket:join':
+    ticket:join:
       x-scope: cloud-direct
       payload:
         type: object
         properties:
-          idTicket: { type: string }
-    'ticket:leave':
+          idTicket:
+            type: string
+    ticket:leave:
       x-scope: cloud-direct
       payload:
         type: object

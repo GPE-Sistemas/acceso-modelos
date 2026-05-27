@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.2.2
+  version: 0.2.3
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -633,9 +633,9 @@ paths:
     post:
       tags:
       - master-data
-      summary: Create usuario
+      summary: Create usuario (cloud-direct — usuarios son globales sin tenant)
       operationId: createUsuario
-      x-scope: edge-required
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1466,9 +1466,9 @@ paths:
     put:
       tags:
       - master-data
-      summary: Update usuario
+      summary: Update usuario (cloud-direct — usuarios son globales sin tenant)
       operationId: updateUsuario
-      x-scope: edge-required
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1486,9 +1486,9 @@ paths:
     delete:
       tags:
       - master-data
-      summary: Delete usuario
+      summary: Delete usuario (cloud-direct — usuarios son globales sin tenant)
       operationId: deleteUsuario
-      x-scope: edge-required
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':

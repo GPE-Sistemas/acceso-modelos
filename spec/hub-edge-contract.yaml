@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.2.0
+  version: 0.2.1
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -2198,6 +2198,98 @@ paths:
       operationId: deleteContactoUsuario
       x-scope: cloud-only
       x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-visita/{id}/aprobacion:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - eventos-visita
+      summary: Aprobar evento visita
+      operationId: AprobarEventoVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-visita/{id}/aprobacion-recurrente:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - eventos-visita
+      summary: Aprobar evento visita recurrente
+      operationId: AprobarRecurrenteEventoVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-visita/{id}/cerrar:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - eventos-visita
+      summary: Cerrar evento visita
+      operationId: CerrarEventoVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /ingresos-egresos/{id}/resolver:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    patch:
+      tags:
+      - ingresos-egresos
+      summary: Resolver ingreso/egreso pendiente
+      operationId: ResolverIngresoEgreso
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
       responses:
         '200':
           description: OK

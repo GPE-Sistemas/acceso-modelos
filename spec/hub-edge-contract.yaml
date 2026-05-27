@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.2.1
+  version: 0.2.2
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -729,7 +729,7 @@ paths:
       - master-data
       summary: Listar clientes (1 fila — cliente del complejo)
       operationId: listClientes
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -743,7 +743,7 @@ paths:
       - master-data
       summary: Create cliente
       operationId: createCliente
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -764,7 +764,7 @@ paths:
       - master-data
       summary: Listar complejos (1 fila edge = este complejo)
       operationId: listComplejos
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -778,7 +778,7 @@ paths:
       - master-data
       summary: Create complejo
       operationId: createComplejo
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -869,7 +869,7 @@ paths:
       - master-data
       summary: Pares del complejo (subset edge-side de IEdgeAppliance)
       operationId: listEdgeAppliances
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1015,7 +1015,7 @@ paths:
       - master-data
       summary: Turnos UF Común
       operationId: listTurnos
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1030,7 +1030,7 @@ paths:
       - master-data
       summary: Plantillas de turno
       operationId: listPlantillas
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1044,7 +1044,7 @@ paths:
       - master-data
       summary: Create plantillaturno
       operationId: createPlantillaTurno
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1065,7 +1065,7 @@ paths:
       - master-data
       summary: Bloqueos de turnos
       operationId: listBloqueosTurnos
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1079,7 +1079,7 @@ paths:
       - master-data
       summary: Create bloqueoturnos
       operationId: createBloqueoTurnos
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1100,7 +1100,7 @@ paths:
       - master-data
       summary: Catálogo tipos de actividad
       operationId: listTiposActividad
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1114,7 +1114,7 @@ paths:
       - master-data
       summary: Create tipoactividad
       operationId: createTipoActividad
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1135,7 +1135,7 @@ paths:
       - master-data
       summary: Grupos de UF
       operationId: listGruposUF
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1149,7 +1149,7 @@ paths:
       - master-data
       summary: Create grupouf
       operationId: createGrupoUF
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1770,7 +1770,7 @@ paths:
       - master-data
       summary: Get cliente by id
       operationId: getCliente
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1786,7 +1786,7 @@ paths:
       - master-data
       summary: Update cliente
       operationId: updateCliente
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1806,7 +1806,7 @@ paths:
       - master-data
       summary: Delete cliente
       operationId: deleteCliente
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1823,7 +1823,7 @@ paths:
       - master-data
       summary: Get complejo by id
       operationId: getComplejo
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1839,7 +1839,7 @@ paths:
       - master-data
       summary: Update complejo
       operationId: updateComplejo
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1859,7 +1859,7 @@ paths:
       - master-data
       summary: Delete complejo
       operationId: deleteComplejo
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1876,7 +1876,7 @@ paths:
       - master-data
       summary: Get edgeappliance by id
       operationId: getEdgeAppliance
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1892,7 +1892,7 @@ paths:
       - master-data
       summary: Update edgeappliance
       operationId: updateEdgeAppliance
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1915,7 +1915,7 @@ paths:
       - master-data
       summary: Get bloqueoturnos by id
       operationId: getBloqueoTurnos
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1931,7 +1931,7 @@ paths:
       - master-data
       summary: Update bloqueoturnos
       operationId: updateBloqueoTurnos
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -1951,7 +1951,7 @@ paths:
       - master-data
       summary: Delete bloqueoturnos
       operationId: deleteBloqueoTurnos
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1968,7 +1968,7 @@ paths:
       - master-data
       summary: Get plantillaturno by id
       operationId: getPlantillaTurno
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -1984,7 +1984,7 @@ paths:
       - master-data
       summary: Update plantillaturno
       operationId: updatePlantillaTurno
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -2004,7 +2004,7 @@ paths:
       - master-data
       summary: Delete plantillaturno
       operationId: deletePlantillaTurno
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -2021,7 +2021,7 @@ paths:
       - master-data
       summary: Get tipoactividad by id
       operationId: getTipoActividad
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -2037,7 +2037,7 @@ paths:
       - master-data
       summary: Update tipoactividad
       operationId: updateTipoActividad
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -2057,7 +2057,7 @@ paths:
       - master-data
       summary: Delete tipoactividad
       operationId: deleteTipoActividad
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -2074,7 +2074,7 @@ paths:
       - master-data
       summary: Get grupouf by id
       operationId: getGrupoUF
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':
@@ -2090,7 +2090,7 @@ paths:
       - master-data
       summary: Update grupouf
       operationId: updateGrupoUF
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       requestBody:
         required: true
@@ -2110,7 +2110,7 @@ paths:
       - master-data
       summary: Delete grupouf
       operationId: deleteGrupoUF
-      x-scope: edge-candidate
+      x-scope: cloud-direct
       x-source-bundle: true
       responses:
         '200':

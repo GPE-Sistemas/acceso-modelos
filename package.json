@@ -16,7 +16,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "prepare": "npm run build"
+    "gen:json-schema": "node scripts/gen-json-schema.mjs",
+    "prepare": "npm run build && npm run gen:json-schema"
   },
   "dependencies": {
     "zod": "^4.4.3"

@@ -328,3 +328,40 @@ Para cortar historial al cambiar de dueño una UF: setear `fechaFinVigencia` en 
 - **MongoDB ObjectIds**: `string`.
 - **`IPermiso` / `IRol`**: discriminated unions. No usar `Exactly<>` en sus schemas Mongoose en `acceso-datos`.
 - **Snapshots** (`visitantesSnapshot`, `vehiculoSnapshot`, `botonSnapshot`): inmutables. Render histórico los usa siempre; populate vivo es fallback solo para datos pre-snapshot.
+
+---
+
+## Pipeline JSON Schema (D42 — spec subset autoritativo)
+
+A partir de D42, cada bump de `acceso-modelos` regenera JSON Schemas a partir de los schemas Zod vía `z.toJSONSchema({ target: 'openapi-3.0' })`. El output alimenta `acceso-doc-general/spec/hub-edge-contract.yaml` (subset spec autoritativo) y se versiona junto al `dist/`.
+
+### Output
+
+- `dist/json-schema/<SchemaName>.json` — un archivo por schema Zod
+- `dist/json-schema/index.json` — bundle único con `$defs.<SchemaName>` para `$ref` desde el spec
+
+### Cómo correrlo
+
+```bash
+npm run gen:json-schema          # corre tras build via prepare hook
+npm run gen:json-schema -- --only=Acceso,Permiso --verbose
+```
+
+El script vive en `scripts/gen-json-schema.mjs` (Node ESM nativo, sin dependencies adicionales — corre directo con `node`). Itera todos los `*Schema` exportados desde `dist/index.js` (requiere build previo). `DocumentoSchema` y `ListadoSchema` (factories genéricas `IDocumento<T>` / `IListado<T>`) se skipean — son builders, no instancias; el spec los template-iza por cada entity.
+
+### Política de validación: estructural vs runtime
+
+JSON Schema captura **forma estructural**: campos, tipos, opcional/requerido, enums, nested objects, discriminated unions (emitidas como `oneOf`). Esta capa basta para que el edge satisfaga el contrato del Hub edge sin re-implementar reglas a mano.
+
+**Reglas custom** (`.refine()`, `.transform()`, validadores cross-field, async checks) **NO se exportan** a JSON Schema (Zod limitación, `transform` es irreversible). Estas viven cloud-side runtime únicamente:
+
+- Hoy: cero `.refine()` y cero `.transform()` en `src/` (verificado al cierre de D42).
+- Si se suman a futuro: la regla custom queda como deuda implícita; el edge puede aceptar payload que cloud rechaza luego al sync. **Mitigación**: convertir regla a validación estructural (regex, enum, min/max) cuando es viable; documentar en este archivo si no.
+
+### Discriminated unions
+
+Las 6 discriminated unions actuales (`PermisoSchema`, `CreatePermisoSchema`, `UpdatePermisoSchema` derivadas de `PermisoBaseFields` + `RolSchema` family) se emiten como `{"oneOf": [...]}` con cada variante embedded. Output válido OpenAPI 3.0. Si después se quiere el keyword `discriminator` OpenAPI completo (mapping variant→ref explícito), sumar `zod-to-openapi` lib en sprint separado — la lib requiere registration explícita pero produce discriminator-aware spec.
+
+### CI
+
+`prepare` corre `tsc && gen:json-schema`. Consumers (`acceso-api`, `acceso-web`, `acceso-datos`, `acceso-edge`) al `npm install` reciben JSON Schemas frescos en `node_modules/acceso-modelos/dist/json-schema/`. CI workflow `acceso-modelos/.github/workflows/build.yml` publica los schemas como parte del artifact (TODO Fase 1).

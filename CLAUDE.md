@@ -368,29 +368,30 @@ Las 6 discriminated unions actuales (`PermisoSchema`, `CreatePermisoSchema`, `Up
 
 ---
 
-## Mirror del spec Hub edge (`spec/hub-edge-contract.yaml`)
+## Spec subset autoritativo Hub edge (`spec/hub-edge-contract.yaml`)
 
-A partir de v2.11.0 el paquete distribuye una **copia versionada** del spec subset autoritativo del Hub edge (originalmente en `acceso-doc-general/spec/hub-edge-contract.yaml`). El package field `files` incluye `spec/` para que consumers como `acceso-api` lo consuman desde `node_modules/acceso-modelos/spec/hub-edge-contract.yaml` sin necesidad de checkout cross-repo (el repo doc-general es privado y GITHUB_TOKEN default no tiene scope `repo` sobre él).
+A partir de v2.11.0, `acceso-modelos` es la **fuente de verdad** del contrato HTTP+WS del Hub edge (D42). Movimiento desde `acceso-doc-general/spec/` consolidado acá por dos razones:
 
-### Política de sync
+1. **Coherencia con el modelo**: el spec referencia schemas Zod (via JSON Schema generado por `gen-json-schema.mjs`). Spec + schemas + tipos comparten lifecycle de bump. Lógico que vivan en el mismo paquete versionado.
+2. **Distribución vía npm dep**: consumers (`acceso-api`, `acceso-edge`) ya hacen `npm run modelos` para refrescar tipos. Mismo flow refresca spec. Sin checkout cross-repo (el repo doc-general es privado y GITHUB_TOKEN default no tiene scope `repo` sobre él).
 
-`acceso-doc-general/spec/hub-edge-contract.yaml` sigue siendo la **fuente de verdad**. Esta copia es un mirror sincronizado manualmente:
+### Política de bump
 
-```bash
-cp ../acceso-doc-general/spec/hub-edge-contract.yaml spec/hub-edge-contract.yaml
-# Bumpear version en package.json según semver del spec
-# Commit + PR
-```
+`spec/hub-edge-contract.yaml` se versiona junto con el paquete:
 
-**Workflow operativo**:
+- **Patch** (`2.11.x`): docstring, descripción, ejemplos. Sin cambio funcional.
+- **Minor** (`2.x.0`): paths nuevos, campos opcionales, query params nuevos.
+- **Major** (`x.0.0`): breaking. Path eliminado, shape de response cambiada, campo requerido nuevo.
 
-1. Editar spec en `acceso-doc-general`, abrir PR, mergear.
-2. Bumpear acceso-modelos version (minor para path/campo nuevo opcional; major para breaking) → PR a acceso-modelos.
-3. Tras merge, consumers corren `npm run modelos` y el spec actualizado entra automático.
-
-Mismo patrón que `acceso-api/openapi.json` ↔ `acceso-edge/scripts/openapi/openapi.json` — copia pinneada del canonical en el lado del consumer.
+`info.version` dentro del yaml refleja la versión semver del spec (puede divergir del package version si solo cambia el spec sin tocar Zod schemas — raro, normalmente bumpear ambos en sync).
 
 ### Consumidores conocidos
 
-- `acceso-api`: workflow `hub-edge-contract-check.yml` lee `node_modules/acceso-modelos/spec/hub-edge-contract.yaml` para validar que el cloud cubre el subset.
-- `acceso-edge` (futuro F3.S1): harness `verify-spec` puede leer desde `node_modules/acceso-modelos/spec/` si la dep está instalada, o desde un path arg `--spec=`.
+- **`acceso-api`**: workflow `.github/workflows/hub-edge-contract-check.yml` lee `node_modules/acceso-modelos/spec/hub-edge-contract.yaml` para validar que el cloud cubre el subset declarado como `edge-required` / `edge-candidate`.
+- **`acceso-edge`**:
+  - `Makefile` target `hub-edge-spec` lee desde `node_modules/acceso-modelos/spec/hub-edge-contract.yaml` y genera `internal/core/contract/spec.gen.go` via `oapi-codegen`.
+  - Harness `scripts/paridad/cmd verify-spec` (F3.S1) usa el mismo path por default; override con `--spec=` flag.
+
+### Histórico
+
+El spec arrancó en `acceso-doc-general/spec/hub-edge-contract.yaml` (PR #5 doc-general). Se mueve acá en v2.11.0 (PR #16 acceso-modelos). El espacio en doc-general queda libre para documentación arquitectónica de alto nivel (`DECISIONES.md`, `docs/analisis/`, docs numerados); el contrato técnico vive donde se distribuye.

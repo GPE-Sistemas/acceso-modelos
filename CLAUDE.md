@@ -365,3 +365,32 @@ Las 6 discriminated unions actuales (`PermisoSchema`, `CreatePermisoSchema`, `Up
 ### CI
 
 `prepare` corre `tsc && gen:json-schema`. Consumers (`acceso-api`, `acceso-web`, `acceso-datos`, `acceso-edge`) al `npm install` reciben JSON Schemas frescos en `node_modules/acceso-modelos/dist/json-schema/`. CI workflow `acceso-modelos/.github/workflows/build.yml` publica los schemas como parte del artifact (TODO Fase 1).
+
+---
+
+## Mirror del spec Hub edge (`spec/hub-edge-contract.yaml`)
+
+A partir de v2.11.0 el paquete distribuye una **copia versionada** del spec subset autoritativo del Hub edge (originalmente en `acceso-doc-general/spec/hub-edge-contract.yaml`). El package field `files` incluye `spec/` para que consumers como `acceso-api` lo consuman desde `node_modules/acceso-modelos/spec/hub-edge-contract.yaml` sin necesidad de checkout cross-repo (el repo doc-general es privado y GITHUB_TOKEN default no tiene scope `repo` sobre él).
+
+### Política de sync
+
+`acceso-doc-general/spec/hub-edge-contract.yaml` sigue siendo la **fuente de verdad**. Esta copia es un mirror sincronizado manualmente:
+
+```bash
+cp ../acceso-doc-general/spec/hub-edge-contract.yaml spec/hub-edge-contract.yaml
+# Bumpear version en package.json según semver del spec
+# Commit + PR
+```
+
+**Workflow operativo**:
+
+1. Editar spec en `acceso-doc-general`, abrir PR, mergear.
+2. Bumpear acceso-modelos version (minor para path/campo nuevo opcional; major para breaking) → PR a acceso-modelos.
+3. Tras merge, consumers corren `npm run modelos` y el spec actualizado entra automático.
+
+Mismo patrón que `acceso-api/openapi.json` ↔ `acceso-edge/scripts/openapi/openapi.json` — copia pinneada del canonical en el lado del consumer.
+
+### Consumidores conocidos
+
+- `acceso-api`: workflow `hub-edge-contract-check.yml` lee `node_modules/acceso-modelos/spec/hub-edge-contract.yaml` para validar que el cloud cubre el subset.
+- `acceso-edge` (futuro F3.S1): harness `verify-spec` puede leer desde `node_modules/acceso-modelos/spec/` si la dep está instalada, o desde un path arg `--spec=`.

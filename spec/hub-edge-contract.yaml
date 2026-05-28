@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.2.3
+  version: 0.2.4
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -52,7 +52,21 @@ tags:
 - name: dashboard
   description: Dashboards locales del complejo
 - name: storage
-  description: Storage local del edge (cache + resolve)
+  description: 'Storage local del edge (cache read-through + outbox uploads).
+    Carpetas clasificadas por scope (ver `acceso-modelos.CARPETAS_IMAGEN`):
+
+    - `cloud-only` (`publicaciones`, `tickets`, `emergencias`, `solicitudes`):
+      live data. Cliente edge llama cloud directo via `cloudApiUrl`. Edge no
+      cachea ni outbox.
+
+    - `cloud-cacheable` (`usuarios`, `unidades-funcionales`, `complejos`):
+      origen cloud (admin), idempotente. Upload cloud directo. Resolve via
+      edge con cache LRU read-through.
+
+    - `edge-uploadable` (`visitantes`, `vehiculos`, `ingresos-egresos`):
+      puede crearse offline en edge. En target=edge, `signed-upload-url`
+      devuelve URL local `/storage/upload-direct/{id}`; el publisher drena
+      al cloud cuando hay link. Resolve via edge (cache propio + outbox).'
 - name: cloud-direct
   description: Paths cloud-direct (D41). Edge no implementa. Bundle llama directo al cloud via HttpInterceptor.
 security:
@@ -990,15 +1004,40 @@ paths:
       tags:
       - storage
       summary: Resolve objectName → URL signed o cache local
+      description: 'Devuelve URL para servir el binario. Comportamiento por scope
+        de carpeta (`acceso-modelos.CARPETAS_IMAGEN`):
+
+        - `cloud-only`: 302 redirect a cloud `/storage/resolve` o URL signed
+          GCS directa (sin cache).
+
+        - `cloud-cacheable` / `edge-uploadable`: si cache hit → 302 a
+          `/storage/cache/<objectName>`. Cache miss + online → pide a cloud,
+          persiste y redirect. Cache miss + offline → 404 con
+          `{reason:"offline-cache-miss"}`.'
       operationId: storageResolve
       x-scope: edge-required
       x-source-bundle: true
       parameters:
-      - name: objectName
+      - name: object
         in: query
-        required: true
+        required: false
+        description: ObjectName. Alias preferido sobre `objectName` (paridad cloud).
         schema:
           type: string
+      - name: objectName
+        in: query
+        required: false
+        description: ObjectName (compat legacy). Aceptado como fallback de `object`.
+        schema:
+          type: string
+      - name: visibilidad
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - public
+          - private
       responses:
         '200':
           description: OK
@@ -1009,6 +1048,156 @@ paths:
                 properties:
                   url:
                     type: string
+                  expiresAt:
+                    type: string
+        '302':
+          description: Redirect a `/storage/cache/<objectName>` (cache hit) o
+            URL externa (cloud-only).
+        '404':
+          description: Cache miss + offline.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                    enum:
+                    - offline-cache-miss
+  /storage/signed-upload-url:
+    post:
+      tags:
+      - storage
+      summary: Emitir URL de upload (signed GCS o local edge)
+      description: 'Emite credencial de upload. Comportamiento por scope de
+        carpeta:
+
+        - `cloud-only` / `cloud-cacheable`: cliente debería invocar cloud
+          directo (`cloudApiUrl`). El edge puede devolver 400 con `reason:
+          "carpeta-no-edge-uploadable"` para forzar reroute cliente.
+
+        - `edge-uploadable`: emite URL **local** del edge
+          (`https://<host>/storage/upload-direct/<uuid>`), pre-arma
+          `objectName` predecible, persiste row outbox status
+          `awaiting_upload` con TTL. El cliente hace PUT a esa URL; el
+          publisher edge drena al cloud cuando hay link.
+
+        Asimetría intencional: cloud emite URLs GCS firmadas v4; edge emite
+        URLs locales no firmadas (TTL+UUID validado server-side). Mismo
+        contrato cliente.'
+      operationId: storageSignedUploadUrl
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - visibilidad
+              - contentType
+              - carpeta
+              properties:
+                visibilidad:
+                  type: string
+                  enum:
+                  - public
+                  - private
+                contentType:
+                  type: string
+                originalName:
+                  type: string
+                carpeta:
+                  type: string
+                  description: 'Primer segmento del objectName. Carpetas válidas
+                    en `acceso-modelos.CARPETAS_IMAGEN`. En edge solo se
+                    acepta scope `edge-uploadable`.'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - url
+                - objectName
+                - expiresAt
+                properties:
+                  url:
+                    type: string
+                    description: URL destino del PUT (local edge o GCS firmada
+                      según scope).
+                  objectName:
+                    type: string
+                  expiresAt:
+                    type: string
+                  headers:
+                    type: object
+                    additionalProperties:
+                      type: string
+        '400':
+          description: Carpeta inválida o scope no soportado por edge.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+  /storage/upload-direct/{id}:
+    put:
+      tags:
+      - storage
+      summary: Upload binario edge (target del signed-upload-url local)
+      description: 'PUT del binario que matchea el ticket emitido por
+        `/storage/signed-upload-url`. Solo para scope `edge-uploadable`. El
+        edge valida `id` (UUID) + TTL + `Content-Type` contra la row
+        `upload_outbox` con status `awaiting_upload`, persiste el archivo en
+        disk y promueve la row a `queued` para que la drene el publisher.
+
+        Cap configurable (`EDGE_UPLOAD_MAX_BYTES`, default 25 MiB).'
+      operationId: storageUploadDirect
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - objectName
+                - status
+                properties:
+                  objectName:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                    - queued
+        '400':
+          description: Content-Type mismatch o ticket inválido.
+        '404':
+          description: Ticket no encontrado o expirado.
+        '413':
+          description: Cuerpo excede `EDGE_UPLOAD_MAX_BYTES`.
   /turnos:
     get:
       tags:

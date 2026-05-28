@@ -4,8 +4,8 @@ import { EdgeApplianceSchema } from "./edge-appliance";
 // Snapshot inmutable persistido al ejecutar purge (hard delete) de un
 // EdgeAppliance. Permite forense / auditoría post-borrado. La purge ejecuta
 // además cascade: nullify FKs en Dispositivos (idEdgeAppliancePrimario /
-// idEdgeApplianceSecundario), delete de SyncStatus, nullify de
-// CamarasDescubiertas.idEdgeAppliancePrimarioPropuesto, revoke Headscale node,
+// idEdgeApplianceSecundario), delete de SyncStatus, pull del edge de
+// DispositivosDescubiertos.reachableFrom, revoke Headscale node,
 // invalidate JWT provisioning, delete DNS FQDN, drain NATS subscriptions.
 
 export const EdgeAppliancePurgeDispositivoAfectadoSchema = z.object({
@@ -43,7 +43,7 @@ export const EdgeAppliancePurgeSchema = z.object({
   ),
   // Counts del cascade.
   syncStatusBorrados: z.number().int().nonnegative(),
-  camarasDescubiertasAfectadas: z.number().int().nonnegative(),
+  dispositivosDescubiertosAfectados: z.number().int().nonnegative(),
 
   // Limpieza periférica (best-effort). Si falló alguna, queda registrada.
   headscaleNodeId: z.string().optional(),

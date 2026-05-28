@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.2.4
+  version: 0.2.5
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -1161,6 +1161,7 @@ paths:
       operationId: storageUploadDirect
       x-scope: edge-required
       x-source-bundle: true
+      x-edge-only: true
       parameters:
       - name: id
         in: path

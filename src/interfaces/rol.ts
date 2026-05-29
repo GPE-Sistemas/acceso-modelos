@@ -69,6 +69,10 @@ export const AccionesRolSchema = z.enum([
   "Hardware - Crear dispositivos acceso",
   "Hardware - Editar dispositivos acceso",
   "Hardware - Eliminar dispositivos acceso",
+  // Discovery LAN del edge (H-DEV-4). Doc 28-discovery-lan-edge.md.
+  "Hardware - Ver dispositivos descubiertos",
+  "Hardware - Adoptar dispositivo descubierto",
+  "Hardware - Ignorar descubrimiento",
 
   // MODULO VISITAS
   "Visitas - Ver eventos",

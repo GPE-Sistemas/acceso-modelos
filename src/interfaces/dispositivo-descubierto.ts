@@ -36,6 +36,7 @@ export const DispositivoDescubiertoProtocoloSchema = z.enum([
   "http-banner",
   "hik-sadp",
   "dahua-dhip",
+  "nbns",
 ]);
 
 export const DispositivoDescubiertoEntidadAdoptadaTipoSchema = z.enum([
@@ -81,6 +82,10 @@ export const DispositivoDescubiertoSchema = z.object({
 
   fabricante: z.string().optional(),
   modelo: z.string().optional(),
+  // Hostname best-effort detectado vía NetBIOS NBSTAT / mDNS / reverse DNS.
+  // Útil para identificar visualmente phones / laptops / IoT que no exponen
+  // banner HTTP. No autoritativo — el integrador adopta con datos propios.
+  hostname: z.string().optional(),
 
   tipoDispositivo: DispositivoDescubiertoTipoSchema,
 

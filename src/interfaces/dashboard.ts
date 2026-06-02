@@ -409,7 +409,24 @@ export type IDashboardUFPublicaciones = z.infer<
 export type IDashboardUFTurnos = z.infer<typeof DashboardUFTurnosSchema>;
 export type IDashboardUFTickets = z.infer<typeof DashboardUFTicketsSchema>;
 export type IDashboardUFContactos = z.infer<typeof DashboardUFContactosSchema>;
-export type IDashboardUF = z.infer<typeof DashboardUFSchema>;
+// `DashboardUFSchema` está anotado como `z.ZodObject<z.ZodRawShape>` (ver arriba)
+// para evitar TS7056 — eso colapsa `z.infer<>` a `Record<string, unknown>`.
+// Re-declaramos el tipo manualmente componiéndolo de los sub-tipos, que sí
+// conservan inferencia precisa. Mismo patrón que `IDashboardComplejo`. La forma
+// debe seguir el shape del schema.
+export interface IDashboardUF {
+  idPermiso: string;
+  idUnidadFuncional: string;
+  idComplejo: string;
+  generadoEn: string;
+  visitas: IDashboardUFVisitas;
+  movimientos: IDashboardUFMovimientos;
+  vehiculos: IDashboardUFVehiculos;
+  publicaciones: IDashboardUFPublicaciones;
+  turnos: IDashboardUFTurnos;
+  tickets: IDashboardUFTickets;
+  contactos: IDashboardUFContactos;
+}
 export type IDashboardClienteComplejoRow = z.infer<
   typeof DashboardClienteComplejoRowSchema
 >;

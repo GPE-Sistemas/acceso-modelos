@@ -189,6 +189,23 @@ export const AccionesRolSchema = z.enum([
   "Turnos - Marcar completado", // guardia confirma que el turno se cumplió
   "Turnos - Marcar luz", // guardia activa flag luzActivada
 
+  // MODULO EXPENSAS (administración del complejo — cloud-only)
+  // Configuración de cálculo (conceptos + mora)
+  "Expensas - Ver configuración",
+  "Expensas - Editar configuración",
+  // Liquidaciones (cabecera por complejo+período)
+  "Expensas - Ver liquidaciones",
+  "Expensas - Generar liquidaciones", // genera/recalcula en Borrador
+  "Expensas - Emitir liquidaciones", // Borrador → Emitida/Cerrada
+  "Expensas - Eliminar liquidaciones", // hard delete solo Borrador
+  // Recibos + estado de cuentas
+  "Expensas - Ver recibos",
+  "Expensas - Ver estado de cuentas",
+  // Pagos (sin pasarela — solo registro)
+  "Expensas - Registrar pagos",
+  "Expensas - Ver pagos",
+  "Expensas - Eliminar pagos",
+
   // MODULO EDGE APPLIANCES (control de accesos on-premise)
   // Típicamente Cliente nivel 1 (integrador). El complejo no las ve.
   "EdgeAppliance - Ver appliances",

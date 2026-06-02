@@ -18,6 +18,21 @@ export const UnidadFuncionalSchema = z.object({
     ubicacion: GeoJSONMultiPolygonSchema.optional(),
     config: ConfigUnidadFuncionalSchema.optional(),
     imagenes: z.array(z.string()).optional(),
+    // ─── Atributos catastrales / expensas ───────────────────────────────────
+    /** Superficie en m². Usado por métodos de cálculo de expensas por superficie. */
+    superficie: z.number().nonnegative().optional(),
+    /**
+     * Coeficiente / porcentaje de copropiedad de la UF sobre el total del complejo.
+     * Base del prorrateo de expensas comunes. La escala (suma 100, suma 1, etc.)
+     * es convención del complejo — el cálculo usa la suma de las UF como denominador.
+     */
+    coeficiente: z.number().nonnegative().optional(),
+    /**
+     * Si la UF entra en la liquidación de expensas. Default por `tipo` cuando
+     * ausente (Privada=true, Común=false). Permite incluir una UF Común puntual
+     * (ej. local comercial) o excluir una Privada.
+     */
+    facturableExpensas: z.boolean().optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),

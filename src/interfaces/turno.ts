@@ -162,6 +162,14 @@ export const TurnoSchema = z.object({
   /** True si la cancelación cayó dentro de `horasLimiteCancelacionGratis` → cuenta como no-show. */
   cancelacionTardia: z.boolean().optional(),
   /**
+   * True si el `costoTotal` del turno ya fue incluido como cargo en una expensa.
+   * Lo setea acceso-api al generar la liquidación; evita doble facturación al
+   * regenerar y que el turno entre en dos períodos.
+   */
+  facturado: z.boolean().optional(),
+  /** Back-link a la `IExpensaUnidadFuncional` que facturó este turno. */
+  idExpensaUF: z.string().optional(),
+  /**
    * TTL Mongo. Solo presente cuando `estado='Pendiente confirmación'`. Al confirmar
    * el documento, el service de acceso-api lo limpia para que el doc persista.
    */

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.2.5
+  version: 0.3.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -69,6 +69,8 @@ tags:
       al cloud cuando hay link. Resolve via edge (cache propio + outbox).'
 - name: cloud-direct
   description: Paths cloud-direct (D41). Edge no implementa. Bundle llama directo al cloud via HttpInterceptor.
+- name: expensas
+  description: Administración de expensas (config de cálculo, liquidaciones, recibos, pagos, estado de cuentas). Cloud-only — feature admin ColivingHub, el edge no la implementa.
 security:
 - bearerAuth: []
   permisoIdHeader: []
@@ -2487,6 +2489,293 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Documento_Entidad'
+  /config-expensa/by-complejo/{idComplejo}:
+    parameters:
+    - name: idComplejo
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[a-f0-9]{24}$
+      description: MongoDB ObjectId del complejo
+    get:
+      tags:
+      - expensas
+      summary: Config de cálculo de expensas del complejo (lazy create)
+      operationId: getConfigExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    put:
+      tags:
+      - expensas
+      summary: Actualizar config de cálculo (upsert por complejo)
+      operationId: putConfigExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /liquidaciones-expensa:
+    get:
+      tags:
+      - expensas
+      summary: Listar liquidaciones (cabecera por complejo+período)
+      operationId: listLiquidacionesExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - expensas
+      summary: Generar liquidación de un período (estado Borrador)
+      operationId: generarLiquidacionExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - periodo
+              properties:
+                periodo:
+                  type: string
+                  description: Período mensual "YYYY-MM"
+      responses:
+        '201':
+          description: Creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /liquidaciones-expensa/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - expensas
+      summary: Obtener liquidación por id
+      operationId: getLiquidacionExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+      - expensas
+      summary: Eliminar liquidación (hard delete solo Borrador)
+      operationId: deleteLiquidacionExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /liquidaciones-expensa/{id}/recalcular:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - expensas
+      summary: Recalcular liquidación en Borrador
+      operationId: recalcularLiquidacionExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /liquidaciones-expensa/{id}/emitir:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - expensas
+      summary: Emitir liquidación (Borrador → Emitida, congela snapshot)
+      operationId: emitirLiquidacionExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /liquidaciones-expensa/{id}/cerrar:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - expensas
+      summary: Cerrar período de la liquidación
+      operationId: cerrarLiquidacionExpensa
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /expensas-uf:
+    get:
+      tags:
+      - expensas
+      summary: Listar expensas por UF (cuenta/recibo por UF+período)
+      operationId: listExpensasUF
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /expensas-uf/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - expensas
+      summary: Recibo de una UF (desglose embebido en items)
+      operationId: getExpensaUF
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /pagos:
+    get:
+      tags:
+      - expensas
+      summary: Listar pagos (genérico; filtrar por tipo/idExpensaUF)
+      operationId: listPagos
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - expensas
+      summary: Registrar pago (sin pasarela; recalcula estado del cargo pagado)
+      operationId: registrarPago
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /pagos/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    delete:
+      tags:
+      - expensas
+      summary: Eliminar pago (recalcula estado del cargo pagado)
+      operationId: deletePago
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /estado-cuentas:
+    get:
+      tags:
+      - expensas
+      summary: Estado de cuentas — UF con cargo, pagos y deuda acumulada
+      operationId: getEstadoCuentas
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
 components:
   securitySchemes:
     bearerAuth:

@@ -41,4 +41,8 @@ export * from './tipo-actividad';
 export * from './plantilla-turno';
 export * from './turno';
 export * from './bloqueo-turnos';
+export * from './config-expensa';
+export * from './liquidacion-expensa';
+export * from './expensa-unidad-funcional';
+export * from './pago';
 export * from './refresh-token';

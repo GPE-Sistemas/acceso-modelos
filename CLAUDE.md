@@ -264,7 +264,7 @@ Separación intencional para que un permiso guardia atienda emergencias sin toca
 
 **Encuestas** — Gestión (Complejo): `Ver/Crear/Editar/Eliminar/Cerrar encuestas`. Resultados: `Ver resultados`, `Exportar resultados` (CSV). Respuesta (UF): `Responder encuestas` — **no migrada al rol UF default**; admin asigna manual al rollout. Grupos UF: `Administración - Ver/Crear/Editar/Eliminar grupos UF`.
 
-**Expensas** (administración del complejo, cloud-only) — Configuración: `Ver/Editar configuración`. Liquidaciones: `Ver/Generar/Emitir/Eliminar liquidaciones` (generar = crea/recalcula Borrador; eliminar = hard delete solo Borrador). Recibos y deuda: `Ver recibos`, `Ver estado de cuentas`. Pagos (sin pasarela): `Registrar/Ver/Eliminar pagos`.
+**Expensas** (administración del complejo, cloud-only) — Configuración: `Ver/Editar configuración`. Liquidaciones: `Ver/Generar/Emitir/Eliminar liquidaciones` (generar = crea/recalcula Borrador; eliminar = hard delete solo Borrador). Recibos y deuda: `Ver recibos`, `Ver estado de cuentas`. Pagos (sin pasarela): `Registrar/Ver/Eliminar pagos`. Residente (UF, mobile): `Ver mis expensas` (gatea `GET /expensas-uf/mias` + la entrada en la app).
 
 Para agregar acciones:
 1. Agregar al `z.enum([...])` en `AccionesRolSchema`

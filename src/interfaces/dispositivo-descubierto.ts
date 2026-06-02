@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DispositivoSchema } from "./dispositivo";
 
 // IDispositivoDescubierto — proceso de onboarding LAN-discovery genérico.
 // Colapsa la antigua ICamaraDescubierta para abarcar terminales de acceso,
@@ -140,4 +141,72 @@ export type ICreateDispositivoDescubierto = z.infer<
 >;
 export type IUpdateDispositivoDescubierto = z.infer<
   typeof UpdateDispositivoDescubiertoSchema
+>;
+
+// ── Adopción del dispositivo descubierto (H-DEV-5) ────────────────────────
+// Contrato del flow RPC sync con 4 checks bloqueantes. Fuente de verdad única
+// compartida por acceso-api (Zod + createZodDto) y acceso-web (tipos). El edge
+// mantiene un struct Go espejo (`hikvision.AdoptarResult`) — no consume estos
+// schemas directo (su pipeline JSONSchema→Go es solo para el hub-edge
+// contract), pero la shape DEBE coincidir campo a campo.
+// Doc: acceso-doc-general/29-hik-terminal-adopcion.md.
+
+// Body del POST /dispositivos-descubiertos/:id/adoptar.
+export const AdoptarDispositivoSchema = z.object({
+  credUser: z.string().min(1),
+  credPass: z.string().min(1),
+  // idEdgeAppliancePrimario es opcional cuando el descubierto tiene N=1 en
+  // reachableFrom (auto-elegido). Requerido si N>1.
+  idEdgeAppliancePrimario: z.string().optional(),
+  // Reconfigurar `/ISAPI/Event/notification/httpHosts/1` apuntando al edge.
+  // Default true (lo aplica acceso-api).
+  reconfigPush: z.boolean().optional(),
+  // Sync hora del device contra el edge si drift > 1min. Default true.
+  syncTime: z.boolean().optional(),
+});
+
+// Resultado rich de los 4 checks que corre el edge. acceso-api valida
+// reachable && credOk && reconfigPushOk && syncTimeOk antes de crear el
+// IDispositivo; los campos *Err + lockStatus/unlockTime/timeDriftSec alimentan
+// el detalle por-check del wizard.
+export const AdoptarResultSchema = z.object({
+  // Check 1: reachability (UserCheck, sin auth).
+  reachable: z.boolean(),
+  reachableErr: z.string().optional(),
+  // Detalle de lockout extraído del UserCheck.
+  lockStatus: z.string().optional(), // "lock" | "unlock"
+  unlockTime: z.number().optional(), // segundos restantes de lockout
+  // Check 2: credenciales (GetDeviceInfo) + datos auto-extraídos.
+  credOk: z.boolean(),
+  credErr: z.string().optional(),
+  model: z.string().optional(),
+  serialNumber: z.string().optional(),
+  shortSerial: z.string().optional(),
+  macAddress: z.string().optional(),
+  firmwareVersion: z.string().optional(),
+  // Check 3: reconfig push slot 1.
+  reconfigPushOk: z.boolean(),
+  reconfigPushErr: z.string().optional(),
+  // Check 4: sync hora.
+  syncTimeOk: z.boolean(),
+  syncTimeErr: z.string().optional(),
+  timeDriftSec: z.number().optional(),
+});
+
+// Respuesta de la adopción exitosa: ambos docs (dispositivo nuevo creado +
+// descubierto marcado Adoptado) + el detalle de los 4 checks que pasaron.
+// Cuando algún check falla, acceso-api NO devuelve esto — tira 422 con el
+// `adoptarResult` en el detalle del error.
+export const AdoptarDispositivoResponseSchema = z.object({
+  dato: z.object({
+    dispositivo: DispositivoSchema,
+    descubierto: DispositivoDescubiertoSchema,
+    adoptarResult: AdoptarResultSchema,
+  }),
+});
+
+export type IAdoptarDispositivo = z.infer<typeof AdoptarDispositivoSchema>;
+export type IAdoptarResult = z.infer<typeof AdoptarResultSchema>;
+export type IAdoptarDispositivoResponse = z.infer<
+  typeof AdoptarDispositivoResponseSchema
 >;

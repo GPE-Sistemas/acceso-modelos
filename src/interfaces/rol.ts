@@ -201,6 +201,8 @@ export const AccionesRolSchema = z.enum([
   // Recibos + estado de cuentas
   "Expensas - Ver recibos",
   "Expensas - Ver estado de cuentas",
+  // Mobile UF: ver las expensas propias de su unidad
+  "Expensas - Ver mis expensas",
   // Pagos (sin pasarela — solo registro)
   "Expensas - Registrar pagos",
   "Expensas - Ver pagos",

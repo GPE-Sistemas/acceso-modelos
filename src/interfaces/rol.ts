@@ -73,6 +73,15 @@ export const AccionesRolSchema = z.enum([
   "Hardware - Ver dispositivos descubiertos",
   "Hardware - Adoptar dispositivo descubierto",
   "Hardware - Ignorar descubrimiento",
+  // Adopción funcional terminal HIK (H-DEV-5). Doc 29-hik-terminal-adopcion.md.
+  // Notas:
+  //  - Bulk push initial + cron incremental 5min son automaticos del agent
+  //    edge — no son decisión de operador, no hay acción de rol.
+  //  - Resolución cara→dispositivos deriva del cruce permiso × IAcceso ×
+  //    IDispositivoAcceso (sin overrides explicitos por permiso). Doc 29.
+  "Hardware - Apertura remota dispositivo",
+  "Hardware - Test cred dispositivo",
+  "Hardware - Ver eventos crudos del dispositivo",
 
   // MODULO VISITAS
   "Visitas - Ver eventos",

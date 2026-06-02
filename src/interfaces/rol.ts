@@ -123,10 +123,6 @@ export const AccionesRolSchema = z.enum([
   "Movimientos - Crear vinculos evento ingreso",
   "Movimientos - Eliminar vinculos evento ingreso",
 
-  // MODULO EVENTOS
-  "Eventos - Ver eventos",
-  "Eventos - Crear eventos",
-
   // MODULO PUBLICACIONES
   "Publicaciones - Ver publicaciones",
   "Publicaciones - Crear publicaciones",

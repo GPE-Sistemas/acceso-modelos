@@ -82,7 +82,7 @@ Dado que cada tipo de dispositivo identifica a las personas con su propio sistem
 - **Vehículo**: el vehículo utilizado, si aplica (`idVehiculo`).
 - **Aprobación**: si fue aprobado automáticamente por el sistema o manualmente por un guardia (`aprobadoPor`).
 
-Esta entidad se mantiene separada de `IEvento` por diseño: los ingresos/egresos tienen estructura fija, volumen muy alto y requieren índices optimizados. Los eventos son de estructura variable y menor frecuencia.
+Los ingresos/egresos tienen estructura fija, volumen muy alto y requieren índices optimizados, por eso viven en su propia entidad.
 
 ---
 
@@ -124,12 +124,6 @@ Campos clave:
 | `Común` | Espacio compartido del complejo (cancha de tenis, SUM, piscina, etc.) |
 
 Cada unidad puede tener su polígono geográfico (`ubicacion: IGeoJSONPolygon`) para representarla en un mapa del complejo. Esta base será reutilizada en el futuro sistema de reservas de turnos para espacios comunes.
-
----
-
-### 8. Eventos
-
-`IEvento` representa ocurrencias del sistema que no son ingresos/egresos ni visitas: botón de pánico, alertas de dispositivos, notificaciones, acciones de guardias, etc. Su estructura de datos específica (tipo de evento, descripción, estado) está pendiente de definición.
 
 ---
 
@@ -242,16 +236,6 @@ erDiagram
     string fechaCreacion
   }
 
-  IEvento {
-    string _id PK
-    string idCliente FK
-    string idComplejo FK
-    string idUnidadFuncional FK
-    string idPermiso FK
-    string expireAt
-    string fechaCreacion
-  }
-
   IEventoVisita {
     string _id PK
     string tipo "'Particular' | 'Servicio' | 'Retiro' | 'Entrega'"
@@ -331,9 +315,6 @@ erDiagram
   IComplejo         ||--o{  IDispositivo             : "tiene"
   IDispositivo      ||--o{  ICredencialDispositivo   : "tiene"
   IPermiso          }o--o{  ICredencialDispositivo   : "idPermiso"
-  ICliente          ||--o{  IEvento                  : "tiene"
-  IComplejo         ||--o{  IEvento                  : "tiene"
-  IPermiso          }o--o{  IEvento                  : "genera"
   ICliente          ||--o{  IEventoVisita             : "tiene"
   IComplejo         ||--o{  IEventoVisita             : "tiene"
   IPermiso          }o--o{  IEventoVisita             : "autoriza"

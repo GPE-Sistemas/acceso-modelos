@@ -3,7 +3,6 @@ export * from './complejo';
 export * from './credencial-dispositivo';
 export * from './dispositivo';
 export * from './dispositivo-acceso';
-export * from './evento';
 export * from './evento-visita';
 export * from './cliente';
 export * from './ingreso-egreso';

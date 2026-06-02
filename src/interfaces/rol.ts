@@ -82,6 +82,9 @@ export const AccionesRolSchema = z.enum([
   "Hardware - Apertura remota dispositivo",
   "Hardware - Test cred dispositivo",
   "Hardware - Ver eventos crudos del dispositivo",
+  // Estado/conexión + métricas en vivo del dispositivo (H-DEV-8).
+  // Doc 29-hik-terminal-adopcion.md § Monitoreo runtime.
+  "Hardware - Ver estado/métricas dispositivo",
 
   // MODULO VISITAS
   "Visitas - Ver eventos",

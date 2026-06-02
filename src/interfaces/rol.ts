@@ -73,6 +73,11 @@ export const AccionesRolSchema = z.enum([
   "Hardware - Ver dispositivos descubiertos",
   "Hardware - Adoptar dispositivo descubierto",
   "Hardware - Ignorar descubrimiento",
+  // Adopción funcional terminal HIK (H-DEV-5). Doc 29-hik-terminal-adopcion.md.
+  "Hardware - Apertura remota dispositivo",
+  "Hardware - Test cred dispositivo",
+  "Hardware - Sincronizar users/caras al dispositivo",
+  "Hardware - Ver eventos crudos del dispositivo",
 
   // MODULO VISITAS
   "Visitas - Ver eventos",

@@ -10,18 +10,28 @@ export const TipoDispositivoSchema = z.enum([
   "Otro",
 ]);
 
-// Estado runtime reportado por el agent edge (H-DEV-5).
+// Estado runtime reportado por el agent edge (H-DEV-5 / H-DEV-8).
+// Owner único del estado: el agent edge Go (acceso-edge), que ya mide
+// reachability via ISAPI UserCheck (60s) + lockout (401) + drift. acceso-dispositivos
+// (Node) solo aporta `ultimaVistaHeartbeat` desde el HTTP Push del terminal.
 // - `Pendiente Adopción`: el IDispositivo existe en cloud pero el edge todavía
 //   no completó el handshake (test cred + reconfig push).
 // - `Online`: reachable (ISAPI userCheck OK).
+// - `Degradado`: reachable pero con fallos parciales (N fallos < umbral Offline,
+//   drift de hora detectado, o errores intermitentes). Entre Online y Offline.
 // - `Offline`: 5 fails consecutivos de reachability.
 // - `Locked`: device reporta `lockStatus=lock` (lockout por intentos cred).
+// - `Desconocido`: el edge dejó de reportar este dispositivo (staleness cloud-side,
+//   análogo al lag>90s de IEdgeAppliance). No es lo mismo que Offline: el cloud
+//   no sabe el estado real porque su única fuente (el edge) no reporta.
 // Doc: acceso-doc-general/29-hik-terminal-adopcion.md § Monitoreo runtime.
 export const EstadoDispositivoSchema = z.enum([
   "Pendiente Adopción",
   "Online",
+  "Degradado",
   "Offline",
   "Locked",
+  "Desconocido",
 ]);
 
 export const ConfigDispositivoSchema = z.object({
@@ -53,8 +63,36 @@ export const DispositivoSchema = z.object({
     // Vacío en complejos N=1 (Standalone): el único edge es dueño implícito.
     idEdgeAppliancePrimario: z.string().optional(),
     idEdgeApplianceSecundario: z.string().optional(),
-    // Estado runtime reportado por el agent edge (H-DEV-5).
+    // Estado runtime reportado por el agent edge (H-DEV-5 / H-DEV-8).
     estado: EstadoDispositivoSchema.optional(),
+    // --- Telemetría de liveness por dispositivo (H-DEV-8) ---
+    // El edge (owner del estado) reporta estos campos al cloud por un canal/endpoint
+    // hermano del heartbeat del appliance. El cloud materializa; la web los lee y
+    // recalcula el lag client-side (Date.now() vs estadoActualizado) para que el
+    // badge "envejezca" sin esperar el próximo evento. NO hay polling cloud→terminal.
+    //
+    // Timestamp ISO del último refresh de `estado`. Habilita detección de staleness
+    // en la UI ("Online ¿desde cuándo?") y el corte a `Desconocido` cloud-side.
+    estadoActualizado: z.string().optional(),
+    // Timestamp ISO del último heartbeat visto. Doble fuente: el HTTP Push del
+    // terminal (eventType=heartBeat, ~30s, lo aporta acceso-dispositivos) y/o el
+    // UserCheck OK del edge (~60s).
+    ultimaVistaHeartbeat: z.string().optional(),
+    // Segundos desde `ultimaVistaHeartbeat`/último check OK (espejo de IEdgeAppliance).
+    lagHeartbeatSegundos: z.number().optional(),
+    // Contador de fallos de reachability consecutivos. El edge corta a Offline a los
+    // 5; exponerlo habilita el estado intermedio Degradado y el troubleshooting.
+    consecutivosFallos: z.number().int().nonnegative().optional(),
+    // Último mensaje de error del check ISAPI fallido (para el detalle de la UI).
+    ultimoHeartbeatError: z.string().optional(),
+    // Detalle de lockout cuando estado=Locked (derivado del UserCheck/401 del edge).
+    // Coherente con AdoptarResult.lockStatus/unlockTime (dispositivo-descubierto.ts).
+    lockout: z
+      .object({
+        unlockTimeRemainingSec: z.number().int().nonnegative().optional(),
+        lockedSince: z.string().optional(),
+      })
+      .optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),

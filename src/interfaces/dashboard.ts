@@ -241,7 +241,11 @@ export const DashboardUFTurnosSchema = z.object({
   paraAprobarPorMi: z.number(),
 });
 
-export const DashboardUFSchema = z.object({
+// Type annotation explícita (mismo motivo que DashboardComplejoSchema): los
+// sub-schemas referencian populates profundos (turnos/visitas → Permiso → Rol →
+// AccionesRolSchema) cuya inferencia agregada supera el límite de serialización
+// de TS (TS7056). Anotar como ZodObject con shape laxo corta la cadena.
+export const DashboardUFSchema: z.ZodObject<z.ZodRawShape> = z.object({
   idPermiso: z.string(),
   idUnidadFuncional: z.string(),
   idComplejo: z.string(),

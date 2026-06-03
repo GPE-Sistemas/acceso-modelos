@@ -29,6 +29,19 @@ export const BotonTicketSnapshotSchema = z.object({
   texto: z.string().optional(),
   icono: z.string().optional(),
   color: z.string().optional(),
+  /** Costo congelado del botón al disparar (fuente de verdad para liquidar). */
+  costo: z.number().nonnegative().optional(),
+});
+
+/**
+ * Respuesta a un campo del formulario dinámico del botón. Persiste `label`
+ * como snapshot para que el historial sobreviva a edits/borrado del botón.
+ */
+export const RespuestaCampoFormularioTicketSchema = z.object({
+  idCampo: z.string().optional(),
+  label: z.string(),
+  /** string para Texto/Número/Opción única; string[] para Opción múltiple. */
+  valor: z.union([z.string(), z.array(z.string())]),
 });
 
 export const TicketSchema = z.object({
@@ -65,6 +78,23 @@ export const TicketSchema = z.object({
   metadataUbicacion: MetadataUbicacionTicketSchema.optional(),
   /** ObjectNames GCS, opcional, se agregan post-creación */
   imagenes: z.array(z.string()).optional(),
+  /**
+   * Respuestas del formulario dinámico del botón (si tenía `camposFormulario`).
+   * Las manda el cliente al crear; acceso-api valida contra el botón.
+   */
+  datosFormulario: z.array(RespuestaCampoFormularioTicketSchema).optional(),
+  /**
+   * Costo congelado de la solicitud al crearse (mirror de `turno.costoTotal`).
+   * `acceso-api` lo copia desde `boton.costo`; el cliente nunca lo manda.
+   */
+  costo: z.number().nonnegative().optional(),
+  /**
+   * True si el `costo` ya entró como cargo en una expensa. Lo setea acceso-api al
+   * generar la liquidación (solo solicitudes Resuelta); evita doble facturación.
+   */
+  facturado: z.boolean().optional(),
+  /** Back-link a la `IExpensaUnidadFuncional` que facturó esta solicitud. */
+  idExpensaUF: z.string().optional(),
   estado: EstadoTicketSchema.optional(),
   /** Guardia/admin que tomó el caso */
   idPermisoAtencion: z.string().optional(),
@@ -97,6 +127,11 @@ export const CreateTicketSchema = TicketSchema.omit({
   fechaTomado: true,
   fechaResolucion: true,
   observacionesCierre: true,
+  // Seteados por acceso-api, no por el cliente.
+  botonSnapshot: true,
+  costo: true,
+  facturado: true,
+  idExpensaUF: true,
   ...TicketPopulateOmit,
 });
 
@@ -111,6 +146,9 @@ export type IMetadataUbicacionTicket = z.infer<
   typeof MetadataUbicacionTicketSchema
 >;
 export type IBotonTicketSnapshot = z.infer<typeof BotonTicketSnapshotSchema>;
+export type IRespuestaCampoFormularioTicket = z.infer<
+  typeof RespuestaCampoFormularioTicketSchema
+>;
 export type ITicket = z.infer<typeof TicketSchema>;
 export type ICreateTicket = z.infer<typeof CreateTicketSchema>;
 export type IUpdateTicket = z.infer<typeof UpdateTicketSchema>;

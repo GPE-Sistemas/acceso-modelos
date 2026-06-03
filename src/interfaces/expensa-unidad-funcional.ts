@@ -20,6 +20,8 @@ export const TipoItemExpensaSchema = z.enum([
   "Concepto",
   /** Cargo por un turno tomado en el período (referencia `idTurno`). */
   "Cargo turno",
+  /** Cargo por una solicitud cobrable resuelta en el período (referencia `idTicket`). */
+  "Cargo solicitud",
   /** Deuda no saldada arrastrada de un período anterior. */
   "Saldo anterior",
   /** Interés por mora sobre saldo impago. */
@@ -52,6 +54,8 @@ export const ItemExpensaSchema = z.object({
   idConcepto: z.string().optional(),
   /** Turno que originó el cargo (tipo='Cargo turno'). */
   idTurno: z.string().optional(),
+  /** Solicitud (ticket) que originó el cargo (tipo='Cargo solicitud'). */
+  idTicket: z.string().optional(),
   /** Multa que originó el cargo (tipo='Multa'). */
   idMulta: z.string().optional(),
   /** Período de origen "YYYY-MM" (tipo='Saldo anterior' / 'Interés'). */

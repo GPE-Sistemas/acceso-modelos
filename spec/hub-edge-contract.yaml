@@ -3111,6 +3111,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Documento_Entidad'
+  /infracciones/mias:
+    get:
+      tags:
+      - infracciones
+      summary: Apercibimientos de la UF del usuario (mobile)
+      operationId: misInfracciones
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
   /infracciones/{id}/escalar:
     parameters:
     - $ref: '#/components/parameters/IdPath'

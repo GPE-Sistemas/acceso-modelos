@@ -13,6 +13,38 @@ export const CategoriaTicketSchema = z.enum([
   "Reclamo",
 ]);
 
+/**
+ * Tipo de campo del formulario configurable que el usuario UF completa al pulsar
+ * un botón de solicitud (mobile). Mirror reducido de TipoPreguntaEncuesta.
+ */
+export const TipoCampoFormularioSchema = z.enum([
+  "Texto",
+  "Número",
+  "Opción única",
+  "Opción múltiple",
+]);
+
+/** Tope de campos por botón y de opciones por campo. */
+export const MAX_CAMPOS_FORMULARIO_BOTON = 20;
+export const MAX_OPCIONES_CAMPO_FORMULARIO = 20;
+
+/**
+ * Definición de un campo del formulario dinámico de un botón (subdoc embedded).
+ * El `_id` estable sobrevive a reorden y es referenciado por la respuesta en el ticket.
+ */
+export const CampoFormularioBotonSchema = z.object({
+  _id: z.string().optional(),
+  orden: z.number(),
+  tipo: TipoCampoFormularioSchema,
+  label: z.string(),
+  requerido: z.boolean().optional(),
+  /** Solo Opción única / múltiple. */
+  opciones: z
+    .array(z.string())
+    .max(MAX_OPCIONES_CAMPO_FORMULARIO)
+    .optional(),
+});
+
 export const ConfigBotonTicketSchema = z.object({
   /** Permite adjuntar imágenes al ticket. Default false. */
   permiteImagenes: z.boolean().optional(),
@@ -45,6 +77,24 @@ export const BotonTicketSchema = z.object({
   icono: z.string().optional(),
   /** hex (#rrggbb) */
   color: z.string().optional(),
+  /**
+   * Costo de la solicitud. `cobrable` se deriva de `costo > 0`. El valor cobrado
+   * se congela en el ticket al crearlo (snapshot); este campo es solo el precio
+   * vigente del catálogo (mismo patrón que plantilla→turno.costoTotal).
+   */
+  costo: z.number().nonnegative().optional(),
+  /** Descripción breve mostrada en la pantalla de detalle mobile. */
+  descripcion: z.string().optional(),
+  /** Información extendida del servicio mostrada en el detalle mobile. */
+  infoServicio: z.string().optional(),
+  /**
+   * Formulario dinámico que el usuario completa al pulsar (mobile). Las
+   * respuestas se persisten en `ITicket.datosFormulario` con snapshot del label.
+   */
+  camposFormulario: z
+    .array(CampoFormularioBotonSchema)
+    .max(MAX_CAMPOS_FORMULARIO_BOTON)
+    .optional(),
   config: ConfigBotonTicketSchema.optional(),
   // Populate
   cliente: ClienteSchema.optional(),
@@ -66,6 +116,8 @@ export const UpdateBotonTicketSchema = BotonTicketSchema.omit({
 }).partial();
 
 export type ICategoriaTicket = z.infer<typeof CategoriaTicketSchema>;
+export type ETipoCampoFormulario = z.infer<typeof TipoCampoFormularioSchema>;
+export type ICampoFormularioBoton = z.infer<typeof CampoFormularioBotonSchema>;
 export type IConfigBotonTicket = z.infer<typeof ConfigBotonTicketSchema>;
 export type IBotonTicket = z.infer<typeof BotonTicketSchema>;
 export type ICreateBotonTicket = z.infer<typeof CreateBotonTicketSchema>;

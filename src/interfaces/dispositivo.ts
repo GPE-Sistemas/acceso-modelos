@@ -34,6 +34,21 @@ export const EstadoDispositivoSchema = z.enum([
   "Desconocido",
 ]);
 
+/**
+ * Capacidades del dispositivo: qué modalidades de credencial soporta (spec §3.3).
+ * Gatea el enrolamiento — el edge solo intenta materializar lo compatible (evita
+ * pegarle al device con una modalidad `notSupport` y arriesgar lockout).
+ * Derivable de marca/modelo (catálogo) o relevable vía el endpoint ISAPI
+ * `capabilities` de cada recurso.
+ * Para el HIK DS-K1T344MBWX-E1: `{ face:true, card:true, pin:true, fingerprint:false }`.
+ */
+export const CapacidadesDispositivoSchema = z.object({
+  face: z.boolean().optional(),
+  card: z.boolean().optional(),
+  pin: z.boolean().optional(),
+  fingerprint: z.boolean().optional(),
+});
+
 export const ConfigDispositivoSchema = z.object({
     username: z.string().optional(),
     password: z.string().optional(),
@@ -59,6 +74,9 @@ export const DispositivoSchema = z.object({
     marca: z.string().optional(),
     modelo: z.string().optional(),
     config: ConfigDispositivoSchema.optional(),
+    // Modalidades de credencial que soporta el device (spec §3.3). Gatea el
+    // enrolamiento por compatibilidad.
+    capacidades: CapacidadesDispositivoSchema.optional(),
     // Sharding edge — qué appliance recibe el HTTP Push del terminal.
     // Vacío en complejos N=1 (Standalone): el único edge es dueño implícito.
     idEdgeAppliancePrimario: z.string().optional(),
@@ -111,6 +129,9 @@ export const UpdateDispositivoSchema = DispositivoSchema.omit({
 export type ITipoDispositivo = z.infer<typeof TipoDispositivoSchema>;
 export type IEstadoDispositivo = z.infer<typeof EstadoDispositivoSchema>;
 export type IConfigDispositivo = z.infer<typeof ConfigDispositivoSchema>;
+export type ICapacidadesDispositivo = z.infer<
+  typeof CapacidadesDispositivoSchema
+>;
 export type IDispositivo = z.infer<typeof DispositivoSchema>;
 export type ICreateDispositivo = z.infer<typeof CreateDispositivoSchema>;
 export type IUpdateDispositivo = z.infer<typeof UpdateDispositivoSchema>;

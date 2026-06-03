@@ -69,6 +69,11 @@ export const AccionesRolSchema = z.enum([
   "Hardware - Crear dispositivos acceso",
   "Hardware - Editar dispositivos acceso",
   "Hardware - Eliminar dispositivos acceso",
+  // Credenciales lógicas del propietario (capa ICredencial, spec 32 §3.5).
+  // Cubre crear/ver/editar/revocar: el propietario (nivel UF) opera solo lo suyo;
+  // el admin (Complejo) on-behalf. El enrolamiento al hardware es automático
+  // (edge); su revisión/reintento usa las acciones `Hardware - *credenciales`.
+  "Credencial - Cargar credencial propia",
   // Discovery LAN del edge (H-DEV-4). Doc 28-discovery-lan-edge.md.
   "Hardware - Ver dispositivos descubiertos",
   "Hardware - Adoptar dispositivo descubierto",

@@ -1,6 +1,6 @@
 {
   "name": "acceso-modelos",
-  "version": "2.23.0",
+  "version": "2.24.0",
   "description": "Modelos para el sistema de control de accesos. Schemas Zod + tipos TypeScript inferidos.",
   "author": "GPE Sistemas",
   "license": "Private",

@@ -233,6 +233,28 @@ export const AccionesRolSchema = z.enum([
   "Infracciones - Escalar a multa", // crea una multa Borrador desde la infracción
   "Infracciones - Eliminar infracciones", // hard delete solo Borrador
 
+  // MODULO EGRESOS (proveedores + gastos — administración del complejo, cloud-only)
+  // Configuración (categorías de gasto + presupuesto por categoría)
+  "Egresos - Ver configuración",
+  "Egresos - Editar configuración",
+  // Proveedores (catálogo por complejo, soft-archive)
+  "Egresos - Ver proveedores",
+  "Egresos - Crear proveedores",
+  "Egresos - Editar proveedores",
+  "Egresos - Eliminar proveedores",
+  // Gastos
+  "Egresos - Ver gastos",
+  "Egresos - Crear gastos",
+  "Egresos - Editar gastos",
+  "Egresos - Eliminar gastos",
+  // Pagos a proveedores (sin pasarela — solo registro)
+  "Egresos - Registrar pagos",
+  "Egresos - Ver pagos",
+  "Egresos - Eliminar pagos",
+  // Reportes
+  "Egresos - Ver balance", // cruce ingresos vs egresos por período
+  "Egresos - Ver cuenta corriente", // saldo por proveedor
+
   // MODULO EDGE APPLIANCES (control de accesos on-premise)
   // Típicamente Cliente nivel 1 (integrador). El complejo no las ve.
   "EdgeAppliance - Ver appliances",

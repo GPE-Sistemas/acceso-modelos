@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.4.0
+  version: 0.5.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -73,6 +73,8 @@ tags:
   description: Administración de expensas (config de cálculo, liquidaciones, recibos, pagos, estado de cuentas). Cloud-only — feature admin ColivingHub, el edge no la implementa.
 - name: infracciones
   description: Administración de multas e infracciones (alta, emisión, anulación, pagos aparte, escalado, config de mora). Cloud-only — feature admin ColivingHub, el edge no la implementa.
+- name: egresos
+  description: Administración de egresos (proveedores, gastos, pagos a proveedores, balance ingresos vs egresos por período). Cloud-only — feature admin ColivingHub, el edge no la implementa.
 security:
 - bearerAuth: []
   permisoIdHeader: []
@@ -3183,6 +3185,334 @@ paths:
           application/json:
             schema:
               type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /config-egreso/by-complejo/{idComplejo}:
+    parameters:
+    - name: idComplejo
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[a-f0-9]{24}$
+      description: MongoDB ObjectId del complejo
+    get:
+      tags:
+      - egresos
+      summary: Config de egresos del complejo (lazy create) — categorías + presupuesto
+      operationId: getConfigEgreso
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    put:
+      tags:
+      - egresos
+      summary: Guardar config de egresos (upsert por complejo)
+      operationId: upsertConfigEgreso
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /proveedores:
+    get:
+      tags:
+      - egresos
+      summary: Listar proveedores del complejo
+      operationId: listProveedores
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - egresos
+      summary: Crear proveedor
+      operationId: createProveedor
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /proveedores/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - egresos
+      summary: Obtener proveedor por id
+      operationId: getProveedor
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - egresos
+      summary: Editar proveedor
+      operationId: updateProveedor
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - egresos
+      summary: Eliminar proveedor (soft-archive activo=false)
+      operationId: deleteProveedor
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /gastos:
+    get:
+      tags:
+      - egresos
+      summary: Listar gastos del complejo (filtros por período/categoría/proveedor/estado)
+      operationId: listGastos
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - egresos
+      summary: Crear gasto
+      operationId: createGasto
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /gastos/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - egresos
+      summary: Obtener gasto por id (con desglose de pagos)
+      operationId: getGasto
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - egresos
+      summary: Editar gasto
+      operationId: updateGasto
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - egresos
+      summary: Eliminar gasto
+      operationId: deleteGasto
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /gastos/{id}/pagos:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    post:
+      tags:
+      - egresos
+      summary: Registrar pago a proveedor sobre el gasto (parcial, recalcula estado)
+      operationId: registrarPagoEgreso
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /pagos-egreso:
+    get:
+      tags:
+      - egresos
+      summary: Listar pagos a proveedores
+      operationId: listPagosEgreso
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /pagos-egreso/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    delete:
+      tags:
+      - egresos
+      summary: Eliminar pago a proveedor (recalcula estado del gasto)
+      operationId: deletePagoEgreso
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /egresos/cuenta-corriente:
+    get:
+      tags:
+      - egresos
+      summary: Cuenta corriente por proveedor (saldo, pagado, pendiente — agregación read-time)
+      operationId: cuentaCorrienteProveedores
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /egresos/balance:
+    get:
+      tags:
+      - egresos
+      summary: Balance del período — ingresos vs egresos (caja + devengado + presupuesto)
+      operationId: balancePeriodo
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - name: periodo
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Período "YYYY-MM"
       responses:
         '200':
           description: OK

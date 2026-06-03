@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.3.0
+  version: 0.4.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -71,6 +71,8 @@ tags:
   description: Paths cloud-direct (D41). Edge no implementa. Bundle llama directo al cloud via HttpInterceptor.
 - name: expensas
   description: Administración de expensas (config de cálculo, liquidaciones, recibos, pagos, estado de cuentas). Cloud-only — feature admin ColivingHub, el edge no la implementa.
+- name: infracciones
+  description: Administración de multas e infracciones (alta, emisión, anulación, pagos aparte, escalado, config de mora). Cloud-only — feature admin ColivingHub, el edge no la implementa.
 security:
 - bearerAuth: []
   permisoIdHeader: []
@@ -2776,6 +2778,403 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Listado_Entidad'
+  /multas:
+    get:
+      tags:
+      - infracciones
+      summary: Listar multas (enriquece recargo/total adeudado read-time)
+      operationId: listMultas
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - infracciones
+      summary: Crear multa (Borrador)
+      operationId: crearMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /multas/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - infracciones
+      summary: Detalle de multa
+      operationId: getMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    put:
+      tags:
+      - infracciones
+      summary: Editar multa (solo Borrador)
+      operationId: updateMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - infracciones
+      summary: Eliminar multa (solo Borrador)
+      operationId: deleteMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /multas/{id}/emitir:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - infracciones
+      summary: Emitir multa (Borrador → Emitida, asigna número correlativo)
+      operationId: emitirMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /multas/{id}/anular:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - infracciones
+      summary: Anular multa
+      operationId: anularMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /multas/{id}/pagos:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - infracciones
+      summary: Pagos registrados de una multa
+      operationId: listPagosMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - infracciones
+      summary: Registrar pago de multa (cobro aparte; recalcula estado y mora)
+      operationId: registrarPagoMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /multas/pagos/{idPago}:
+    parameters:
+    - name: idPago
+      in: path
+      required: true
+      schema:
+        type: string
+    delete:
+      tags:
+      - infracciones
+      summary: Eliminar pago de multa (recalcula estado y mora)
+      operationId: deletePagoMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /multas/mias:
+    get:
+      tags:
+      - infracciones
+      summary: Multas de la UF del usuario (mobile)
+      operationId: misMultas
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /infracciones:
+    get:
+      tags:
+      - infracciones
+      summary: Listar infracciones / apercibimientos
+      operationId: listInfracciones
+      x-scope: cloud-only
+      x-source-bundle: false
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+    post:
+      tags:
+      - infracciones
+      summary: Crear infracción (Borrador)
+      operationId: crearInfraccion
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /infracciones/{id}:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    get:
+      tags:
+      - infracciones
+      summary: Detalle de infracción
+      operationId: getInfraccion
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    put:
+      tags:
+      - infracciones
+      summary: Editar infracción (solo Borrador)
+      operationId: updateInfraccion
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    delete:
+      tags:
+      - infracciones
+      summary: Eliminar infracción (solo Borrador)
+      operationId: deleteInfraccion
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /infracciones/{id}/emitir:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - infracciones
+      summary: Emitir infracción (Borrador → Emitida)
+      operationId: emitirInfraccion
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /infracciones/{id}/anular:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - infracciones
+      summary: Anular infracción
+      operationId: anularInfraccion
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /infracciones/{id}/escalar:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    post:
+      tags:
+      - infracciones
+      summary: Escalar infracción a multa (crea multa Borrador, deja infracción Escalada)
+      operationId: escalarInfraccion
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /config-multa/by-complejo/{idComplejo}:
+    parameters:
+    - name: idComplejo
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - infracciones
+      summary: Config de multas del complejo (lazy create) — política de mora
+      operationId: getConfigMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+    put:
+      tags:
+      - infracciones
+      summary: Guardar config de multas (upsert por complejo)
+      operationId: upsertConfigMulta
+      x-scope: cloud-only
+      x-source-bundle: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
 components:
   securitySchemes:
     bearerAuth:

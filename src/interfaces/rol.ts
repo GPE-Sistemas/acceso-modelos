@@ -207,6 +207,27 @@ export const AccionesRolSchema = z.enum([
   "Expensas - Ver pagos",
   "Expensas - Eliminar pagos",
 
+  // MODULO INFRACCIONES (multas + apercibimientos — administración del complejo, cloud-only)
+  // Multas
+  "Infracciones - Ver multas",
+  "Infracciones - Crear multas", // crea en Borrador
+  "Infracciones - Emitir multas", // Borrador → Emitida (asigna nro correlativo)
+  "Infracciones - Anular multas",
+  "Infracciones - Eliminar multas", // hard delete solo Borrador
+  // Pagos de multas (cobro aparte — sin pasarela)
+  "Infracciones - Registrar pagos",
+  // Mobile UF: ver las multas propias de su unidad (futuro)
+  "Infracciones - Ver mis multas",
+  // Configuración (política de mora de multas)
+  "Infracciones - Ver configuración",
+  "Infracciones - Editar configuración",
+  // Apercibimientos / infracciones (sin monto)
+  "Infracciones - Ver infracciones",
+  "Infracciones - Crear infracciones",
+  "Infracciones - Anular infracciones",
+  "Infracciones - Escalar a multa", // crea una multa Borrador desde la infracción
+  "Infracciones - Eliminar infracciones", // hard delete solo Borrador
+
   // MODULO EDGE APPLIANCES (control de accesos on-premise)
   // Típicamente Cliente nivel 1 (integrador). El complejo no las ve.
   "EdgeAppliance - Ver appliances",

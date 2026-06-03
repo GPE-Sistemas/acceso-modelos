@@ -24,6 +24,8 @@ export const TipoItemExpensaSchema = z.enum([
   "Saldo anterior",
   /** Interés por mora sobre saldo impago. */
   "Interés",
+  /** Multa liquidada junto con la expensa (referencia `idMulta`). */
+  "Multa",
   /** Ajuste manual (crédito/débito). */
   "Ajuste",
 ]);
@@ -50,6 +52,8 @@ export const ItemExpensaSchema = z.object({
   idConcepto: z.string().optional(),
   /** Turno que originó el cargo (tipo='Cargo turno'). */
   idTurno: z.string().optional(),
+  /** Multa que originó el cargo (tipo='Multa'). */
+  idMulta: z.string().optional(),
   /** Período de origen "YYYY-MM" (tipo='Saldo anterior' / 'Interés'). */
   periodoOrigen: z.string().optional(),
   /** Tasa mensual aplicada en este tramo de interés (tipo='Interés'). */

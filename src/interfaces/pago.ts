@@ -3,6 +3,7 @@ import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { ExpensaUnidadFuncionalSchema } from "./expensa-unidad-funcional";
+import { MultaSchema } from "./multa";
 
 /**
  * Registro de un pago. **Sin pasarela de cobro** — solo lleva el registro.
@@ -18,8 +19,8 @@ import { ExpensaUnidadFuncionalSchema } from "./expensa-unidad-funcional";
  * (hoy la `IExpensaUnidadFuncional`).
  */
 
-/** Tipo de cargo que paga. Hoy solo 'Expensa'; se extiende al sumar multas. */
-export const TipoPagoSchema = z.enum(["Expensa"]);
+/** Tipo de cargo que paga. */
+export const TipoPagoSchema = z.enum(["Expensa", "Multa"]);
 export type ETipoPago = z.infer<typeof TipoPagoSchema>;
 
 export const MedioPagoSchema = z.enum([
@@ -41,7 +42,8 @@ export const PagoSchema = z.object({
   tipo: TipoPagoSchema.optional(),
   /** Cargo referenciado cuando `tipo='Expensa'`. */
   idExpensaUF: z.string().optional(),
-  // Futuro: idMulta cuando tipo='Multa'.
+  /** Cargo referenciado cuando `tipo='Multa'` (multa cobrada aparte). */
+  idMulta: z.string().optional(),
   /** Período "YYYY-MM" al que aplica el pago (denormalizado). */
   periodo: z.string().optional(),
   monto: z.number().positive().optional(),
@@ -58,6 +60,7 @@ export const PagoSchema = z.object({
   complejo: ComplejoSchema.optional(),
   unidadFuncional: UnidadFuncionalSchema.optional(),
   expensaUnidadFuncional: ExpensaUnidadFuncionalSchema.optional(),
+  multa: MultaSchema.optional(),
 });
 
 export const CreatePagoSchema = PagoSchema.omit({
@@ -67,6 +70,7 @@ export const CreatePagoSchema = PagoSchema.omit({
   complejo: true,
   unidadFuncional: true,
   expensaUnidadFuncional: true,
+  multa: true,
 });
 
 export const UpdatePagoSchema = CreatePagoSchema.partial();

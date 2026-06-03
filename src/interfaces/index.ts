@@ -44,4 +44,8 @@ export * from './config-expensa';
 export * from './liquidacion-expensa';
 export * from './expensa-unidad-funcional';
 export * from './pago';
+export * from './infraccion-multa-base';
+export * from './multa';
+export * from './infraccion';
+export * from './config-multa';
 export * from './refresh-token';

@@ -19,9 +19,17 @@ export const CategoriaTicketSchema = z.enum([
  */
 export const TipoCampoFormularioSchema = z.enum([
   "Texto",
+  "Párrafo",
   "Número",
+  "Email",
+  "Teléfono",
   "Opción única",
   "Opción múltiple",
+  "Sí/No",
+  "Fecha",
+  "Fecha y hora",
+  "Hora",
+  "Rango de fechas",
 ]);
 
 /** Tope de campos por botón y de opciones por campo. */

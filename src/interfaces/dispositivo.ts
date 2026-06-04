@@ -111,6 +111,21 @@ export const DispositivoSchema = z.object({
         lockedSince: z.string().optional(),
       })
       .optional(),
+    // --- Diagnóstico de enrolamiento por device (spec 32 §10.3, espejo H-DEV-8) ---
+    // El edge (owner) reporta los contadores reales del terminal vía outbox
+    // (upsert merge — no pisa config). La web muestra capacidad usada (N/3000).
+    enrolamiento: z
+      .object({
+        // ISAPI AccessControl/UserInfo/Count → userNumber.
+        userNumber: z.number().int().nonnegative().optional(),
+        // ISAPI Intelligent/FDLib/Count → faceNumber.
+        faceNumber: z.number().int().nonnegative().optional(),
+        // Capacidad facial del modelo (datasheet; DS-K1T344 = 3000).
+        capacidadFaces: z.number().int().positive().optional(),
+        // Timestamp ISO del último refresh de los contadores.
+        actualizadoEn: z.string().optional(),
+      })
+      .optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),

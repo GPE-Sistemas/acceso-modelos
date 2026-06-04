@@ -33,11 +33,13 @@ export const NotificacionSchema = z.object({
   // Tenant (scope)
   idCliente: z.string().optional(),
   idComplejo: z.string().optional(),
-  // Contenido
-  titulo: z.string(),
-  cuerpo: z.string(),
+  // Contenido (requeridos en la práctica — la validación de obligatoriedad la
+  // hace acceso-api en el create; el schema base queda opcional por convención
+  // de interop con las clases Mongoose de acceso-datos).
+  titulo: z.string().optional(),
+  cuerpo: z.string().optional(),
   // Targeting
-  alcance: AlcanceNotificacionSchema,
+  alcance: AlcanceNotificacionSchema.optional(),
   idGrupoUnidadFuncional: z.string().optional(), // alcance = 'Grupo'
   idUnidadFuncional: z.string().optional(), // alcance = 'UnidadFuncional'
   idPermisoDestino: z.string().optional(), // alcance = 'Permiso'

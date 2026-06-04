@@ -14,8 +14,8 @@ export const NotificacionUsuarioSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
   fechaActualizacion: z.string().optional(),
-  idNotificacion: z.string(),
-  idPermiso: z.string(),
+  idNotificacion: z.string().optional(),
+  idPermiso: z.string().optional(),
   idUsuario: z.string().optional(),
   // Tenant (scope)
   idCliente: z.string().optional(),

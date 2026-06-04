@@ -68,6 +68,9 @@ export const AccionesRolSchema = z.enum([
   "Hardware - Crear credenciales",
   "Hardware - Editar credenciales",
   "Hardware - Eliminar credenciales",
+  // Verificación on-demand del enrolamiento contra el device + re-enrolar
+  // (spec 32 §10.2, doc 29 §9).
+  "Hardware - Sincronizar users/caras al dispositivo",
   "Hardware - Ver dispositivos acceso",
   "Hardware - Crear dispositivos acceso",
   "Hardware - Editar dispositivos acceso",

@@ -38,6 +38,8 @@ export const CategoriaNotificacionSchema = z.enum([
   "encuesta_recordatorio",
   /** Mobile UF: encuesta donde respondí ya cerró (resultados disponibles si aplica) */
   "encuesta_cerrada",
+  /** Mobile UF: notificación push manual enviada desde el complejo (administración) */
+  "notificacion_complejo",
 ]);
 
 export const CATEGORIAS_NOTIFICACION =
@@ -66,6 +68,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   encuesta_abierta: z.boolean(),
   encuesta_recordatorio: z.boolean(),
   encuesta_cerrada: z.boolean(),
+  notificacion_complejo: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -129,4 +132,5 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   encuesta_abierta: true,
   encuesta_recordatorio: true,
   encuesta_cerrada: true,
+  notificacion_complejo: true,
 };

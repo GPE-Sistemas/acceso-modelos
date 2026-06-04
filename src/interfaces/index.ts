@@ -21,6 +21,8 @@ export * from './vinculo-evento-ingreso';
 export * from './publicacion';
 export * from './device-token';
 export * from './notificacion-preferencias';
+export * from './notificacion';
+export * from './notificacion-usuario';
 export * from './boton-ticket';
 export * from './config-botones-ticket-complejo';
 export * from './ticket';

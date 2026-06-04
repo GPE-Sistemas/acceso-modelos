@@ -45,6 +45,9 @@ export const AccionesRolSchema = z.enum([
   "Administración - Crear grupos UF",
   "Administración - Editar grupos UF",
   "Administración - Eliminar grupos UF",
+  // Notificaciones del complejo (push manual a residentes UF: complejo / grupo UF / UF / permiso)
+  "Administración - Ver notificaciones",
+  "Administración - Enviar notificaciones",
   // Usuarios
   "Administración - Ver usuarios",
   "Administración - Crear usuarios",

@@ -13,6 +13,14 @@ export const VisitanteSchema = z.object({
     idPermisoCreador: z.string().optional(),
     activo: z.boolean().optional(),
     datosPersonales: DatosPersonalesSchema.optional(),
+    /**
+     * El propio invitado validó/completó sus datos vía el link público de la
+     * invitación de visita (flujo opcional, no bloqueante). Lo setea el endpoint
+     * público `PUT /invitaciones-visita/:token` en acceso-api, no el alta normal.
+     */
+    validadoPorInvitado: z.boolean().optional(),
+    /** Timestamp ISO de la última vez que el invitado confirmó sus datos. */
+    fechaUltimaValidacionInvitado: z.string().optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
@@ -24,6 +32,8 @@ export const CreateVisitanteSchema = VisitanteSchema.omit({
   fechaCreacion: true,
   idPermisoCreador: true,
   activo: true,
+  validadoPorInvitado: true,
+  fechaUltimaValidacionInvitado: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,
@@ -34,6 +44,8 @@ export const UpdateVisitanteSchema = VisitanteSchema.omit({
   fechaCreacion: true,
   idPermisoCreador: true,
   activo: true,
+  validadoPorInvitado: true,
+  fechaUltimaValidacionInvitado: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,

@@ -5,6 +5,7 @@ export * from './credencial-dispositivo';
 export * from './dispositivo';
 export * from './dispositivo-acceso';
 export * from './evento-visita';
+export * from './invitacion-visita';
 export * from './cliente';
 export * from './ingreso-egreso';
 export * from './permiso';

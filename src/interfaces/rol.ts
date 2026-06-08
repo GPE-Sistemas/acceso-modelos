@@ -109,6 +109,12 @@ export const AccionesRolSchema = z.enum([
   "Visitas - Crear visitantes",
   "Visitas - Editar visitantes",
   "Visitas - Eliminar visitantes",
+  // Visitantes globales del complejo (pool seleccionable por todas las UF).
+  // Gestión exclusiva nivel Complejo. Cualquier UF con "Ver visitantes" los ve
+  // por scope; estas acciones gatean alta/edición/baja del pool global.
+  "Visitas - Crear visitantes globales",
+  "Visitas - Editar visitantes globales",
+  "Visitas - Eliminar visitantes globales",
 
   // MODULO VEHÍCULOS
   "Vehículos - Ver vehículos",

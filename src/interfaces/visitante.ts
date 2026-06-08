@@ -4,12 +4,28 @@ import { ComplejoSchema } from "./complejo";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { DatosPersonalesSchema } from "./usuario";
 
+/**
+ * Ámbito del visitante (modelo híbrido de scope):
+ * - `UnidadFuncional`: privado de una UF (default histórico). Requiere
+ *   `idUnidadFuncional`. Visible solo para esa UF.
+ * - `Complejo`: visitante global del complejo (empleados que recorren varias
+ *   UF: jardinero, doméstica, etc.). Sin `idUnidadFuncional`; seleccionable
+ *   por todas las UF del complejo. Lo crea/gestiona nivel Complejo y exige DNI
+ *   (clave de deduplicación/trazabilidad cross-UF). La regla "idUnidadFuncional
+ *   requerido si ámbito UF / ausente si Complejo" la valida acceso-api (no se
+ *   exporta a JSON Schema — política D42).
+ */
+export const VisitanteAmbitoSchema = z.enum(["UnidadFuncional", "Complejo"]);
+export type IVisitanteAmbito = z.infer<typeof VisitanteAmbitoSchema>;
+
 export const VisitanteSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
     idUnidadFuncional: z.string().optional(),
+    /** Default 'UnidadFuncional'. Ver VisitanteAmbitoSchema. */
+    ambito: VisitanteAmbitoSchema.optional(),
     idPermisoCreador: z.string().optional(),
     activo: z.boolean().optional(),
     datosPersonales: DatosPersonalesSchema.optional(),

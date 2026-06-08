@@ -40,6 +40,10 @@ export const CategoriaNotificacionSchema = z.enum([
   "encuesta_cerrada",
   /** Mobile UF: notificación push manual enviada desde el complejo (administración) */
   "notificacion_complejo",
+  /** Mobile UF: el complejo emitió (o anuló) una multa para mi UF */
+  "multa_emitida",
+  /** Mobile UF: el complejo emitió (o anuló) un apercibimiento para mi UF */
+  "infraccion_emitida",
 ]);
 
 export const CATEGORIAS_NOTIFICACION =
@@ -69,6 +73,8 @@ export const CategoriasNotificacionMapSchema = z.object({
   encuesta_recordatorio: z.boolean(),
   encuesta_cerrada: z.boolean(),
   notificacion_complejo: z.boolean(),
+  multa_emitida: z.boolean(),
+  infraccion_emitida: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -133,4 +139,6 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   encuesta_recordatorio: true,
   encuesta_cerrada: true,
   notificacion_complejo: true,
+  multa_emitida: true,
+  infraccion_emitida: true,
 };

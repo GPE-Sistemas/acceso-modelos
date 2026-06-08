@@ -63,6 +63,10 @@ export const DatosCredencialSchema = z.object({
   /** Tarjeta → número y tipo de tarjeta RFID (futuro, spec §2). */
   cardNo: z.string().optional(),
   cardType: z.string().optional(),
+  /** Patente → dominio del vehículo, cuando tipo === 'Patente' (módulo IA-video, M5).
+   *  El embedding facial NO vive acá: su metadato va en ICredencialVector y el
+   *  vector crudo en el índice caliente del edge (decisión B). */
+  patente: z.string().optional(),
 });
 
 export const CredencialSchema = z.object({

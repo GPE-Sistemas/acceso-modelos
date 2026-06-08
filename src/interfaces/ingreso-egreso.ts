@@ -7,9 +7,21 @@ import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { DatosVehiculoSchema, VehiculoSchema } from "./vehiculo";
 import { DatosPersonalesSchema } from "./usuario";
 import { VisitanteSchema } from "./visitante";
+import { TipoDeteccionSchema } from "./deteccion";
 
 export const TipoIngresoEgresoSchema = z.enum(["Ingreso", "Egreso"]);
 export const AprobadoPorIngresoEgresoSchema = z.enum(["Sistema", "Guardia"]);
+/**
+ * Qué generó el evento (M2, decisión D). Independiente de `aprobadoPor` (quién lo
+ * aprobó). `Terminal` = terminal de credencial (HIK). `Detección Video` = inferencia
+ * de video (cámara/NVR/XVR + edge). `Manual` = alta del guardia. Ausente = legacy
+ * (asumir `Terminal`).
+ */
+export const OrigenIngresoEgresoSchema = z.enum([
+  "Terminal",
+  "Detección Video",
+  "Manual",
+]);
 export const CategoriaIngresoEgresoSchema = z.enum([
   "Propietario",
   "Visita",
@@ -60,6 +72,15 @@ export const IngresoEgresoSchema = z.object({
   categoria: CategoriaIngresoEgresoSchema.optional(),
   idAcceso: z.string().optional(),
   idVehiculo: z.string().optional(),
+  // --- Origen detección de video (M2, módulo IA-video) ---
+  /** Qué generó el evento. Ausente = legacy (Terminal). */
+  origen: OrigenIngresoEgresoSchema.optional(),
+  /** Score agregado de la(s) detección(es) que generó el evento (0..1). */
+  confianza: z.number().optional(),
+  /** Qué tipo(s) de detección dispararon/enriquecieron el evento. */
+  tipoDeteccion: z.array(TipoDeteccionSchema).optional(),
+  /** Detecciones crudas (IDeteccion) que se correlacionaron en este evento. */
+  idsDetecciones: z.array(z.string()).optional(),
   /**
    * Snapshot inmutable de los visitantes al momento del ingreso/egreso.
    * Fuente de verdad para historial. idsVisitantes[] se mantiene para trazabilidad
@@ -102,6 +123,7 @@ export const UpdateIngresoEgresoSchema = CreateIngresoEgresoSchema.partial();
 
 export type ITipoIngresoEgreso = z.infer<typeof TipoIngresoEgresoSchema>;
 export type IAprobadoPorIngresoEgreso = z.infer<typeof AprobadoPorIngresoEgresoSchema>;
+export type IOrigenIngresoEgreso = z.infer<typeof OrigenIngresoEgresoSchema>;
 export type ICategoriaIngresoEgreso = z.infer<typeof CategoriaIngresoEgresoSchema>;
 export type IVisitanteSnapshot = z.infer<typeof VisitanteSnapshotSchema>;
 export type IVehiculoSnapshot = z.infer<typeof VehiculoSnapshotSchema>;

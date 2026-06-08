@@ -26,6 +26,12 @@ export const VisitanteSchema = z.object({
     idUnidadFuncional: z.string().optional(),
     /** Default 'UnidadFuncional'. Ver VisitanteAmbitoSchema. */
     ambito: VisitanteAmbitoSchema.optional(),
+    /**
+     * Detalle / comentario libre del visitante. Pensado para globales del
+     * complejo (ej. el servicio que presta: "Jardinero", "Plomero"), para que
+     * al seleccionarlo o listarlo se vea de qué se trata. Opcional para privados.
+     */
+    descripcion: z.string().optional(),
     idPermisoCreador: z.string().optional(),
     activo: z.boolean().optional(),
     datosPersonales: DatosPersonalesSchema.optional(),

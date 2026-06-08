@@ -2,6 +2,8 @@ export * from './acceso';
 export * from './complejo';
 export * from './credencial';
 export * from './credencial-dispositivo';
+export * from './credencial-vector';
+export * from './deteccion';
 export * from './dispositivo';
 export * from './dispositivo-acceso';
 export * from './evento-visita';

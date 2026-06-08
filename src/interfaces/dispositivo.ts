@@ -7,8 +7,51 @@ export const TipoDispositivoSchema = z.enum([
   "Lector de huella digital",
   "Lector de tarjeta",
   "Teclado numérico",
+  // Fuentes de video / inferencia (módulo IA-video, M1). La cámara entrega
+  // stream; el NVR/XVR agrupa N canales de cámara. La inferencia puede correr
+  // en el propio device (smart events) o en el edge (RPi5+Hailo) — ver
+  // `fuenteInferencia`.
+  "Cámara IP",
+  "NVR",
+  "XVR",
   "Otro",
 ]);
+
+/**
+ * Protocolo por el que el sistema habla con el device de video (M1). ONVIF es el
+ * baseline agnóstico al fabricante; RTSP directo cuando se conoce la URI; los
+ * SDK propietarios (Dahua HTTP API, Hikvision ISAPI) como fallback cuando ONVIF
+ * no expone lo necesario. Doc: acceso-ia-video/docs/investigacion/01-onvif-nvr-xvr.md.
+ */
+export const ProtocoloDispositivoSchema = z.enum([
+  "ONVIF",
+  "RTSP",
+  "SDK-Dahua",
+  "ISAPI-Hikvision",
+]);
+
+/**
+ * Quién infiere sobre el stream (M1, def #3 del doc 01). `Dispositivo` = el
+ * NVR/XVR emite smart events propios (IVS/AcuSense). `Edge` = el NVR/XVR solo
+ * entrega stream y la inferencia la corre el edge (RPi5+Hailo). Baseline del
+ * proyecto: `Edge` (soportar NVR de solo-stream).
+ */
+export const FuenteInferenciaSchema = z.enum(["Dispositivo", "Edge"]);
+
+/**
+ * Canal de un NVR/XVR (M1). Un grabador agrupa N canales; cada canal es una
+ * cámara con su propio stream y, opcionalmente, su perfil. El `canal` matchea
+ * `IDispositivoAcceso.canalDispositivo` para ligar un canal a un acceso.
+ */
+export const CanalDispositivoSchema = z.object({
+  canal: z.string(),
+  nombre: z.string().optional(),
+  // Override de la URI RTSP de este canal (si no, se deriva de config.rtspUriPlantilla).
+  rtspUri: z.string().optional(),
+  // Perfil de stream (codec/res/fps) de este canal — FK a IPerfilCamara.
+  idPerfilCamara: z.string().optional(),
+  habilitado: z.boolean().optional(),
+});
 
 // Estado runtime reportado por el agent edge (H-DEV-5 / H-DEV-8).
 // Owner único del estado: el agent edge Go (acceso-edge), que ya mide
@@ -42,11 +85,36 @@ export const EstadoDispositivoSchema = z.enum([
  * `capabilities` de cada recurso.
  * Para el HIK DS-K1T344MBWX-E1: `{ face:true, card:true, pin:true, fingerprint:false }`.
  */
+/**
+ * Capacidades de detección/inferencia de video (M1). Qué puede inferir el device
+ * sobre el stream — sea por smart event propio o vía edge+Hailo. Escalón del doc 01:
+ * persona → vehiculo → patente → rostro → identificacionRostro.
+ *
+ * `identificacionRostro` es el GATE de negocio (decisión E): solo un device que
+ * identifica (matchea contra credencial) puede configurarse con aprobado/apertura
+ * automática en `IDispositivoAcceso`. Un device que solo detecta genera evento
+ * pendiente de guardia. La validación vive cloud-side en acceso-api (regla custom,
+ * no exportable a JSON Schema).
+ */
+export const CapacidadesDeteccionSchema = z.object({
+  persona: z.boolean().optional(),
+  vehiculo: z.boolean().optional(),
+  patente: z.boolean().optional(),
+  // Detecta presencia de rostro (no implica identificar).
+  rostro: z.boolean().optional(),
+  // Identifica el rostro contra credenciales enroladas (1:N). GATE decisión E.
+  identificacionRostro: z.boolean().optional(),
+});
+
 export const CapacidadesDispositivoSchema = z.object({
+  // Modalidades de credencial (gatean enrolamiento, terminal de acceso).
   face: z.boolean().optional(),
   card: z.boolean().optional(),
   pin: z.boolean().optional(),
   fingerprint: z.boolean().optional(),
+  // Capacidades de detección de video (módulo IA-video). Presente en
+  // cámara/NVR/XVR; ausente en terminales de credencial.
+  deteccion: CapacidadesDeteccionSchema.optional(),
 });
 
 export const ConfigDispositivoSchema = z.object({
@@ -60,6 +128,17 @@ export const ConfigDispositivoSchema = z.object({
     // (forzar via `useHttp=true`).
     port: z.number().int().positive().optional(),
     useHttp: z.boolean().optional(),
+    // --- Video / inferencia (M1) — presente en cámara/NVR/XVR ---
+    // Protocolo de integración del stream/eventos.
+    protocolo: ProtocoloDispositivoSchema.optional(),
+    // Plantilla de URI RTSP para derivar el stream por canal
+    // (ej. 'rtsp://{ip}:554/cam/realmonitor?channel={canal}&subtype=1').
+    // Un canal puede overridear con su propia `rtspUri`.
+    rtspUriPlantilla: z.string().optional(),
+    // Perfil de stream por default (codec/res/fps) — FK a IPerfilCamara.
+    idPerfilCamara: z.string().optional(),
+    // Canales del grabador (NVR/XVR). Vacío/ausente en cámara IP de un solo canal.
+    canales: z.array(CanalDispositivoSchema).optional(),
   });
 
 export const DispositivoSchema = z.object({
@@ -75,8 +154,13 @@ export const DispositivoSchema = z.object({
     modelo: z.string().optional(),
     config: ConfigDispositivoSchema.optional(),
     // Modalidades de credencial que soporta el device (spec §3.3). Gatea el
-    // enrolamiento por compatibilidad.
+    // enrolamiento por compatibilidad. Para cámara/NVR/XVR incluye además el
+    // bloque `deteccion` (capacidades de inferencia de video, M1).
     capacidades: CapacidadesDispositivoSchema.optional(),
+    // Quién infiere sobre el stream (M1, def #3). `Dispositivo` = smart events
+    // propios del NVR/XVR; `Edge` = inferencia en el edge (RPi5+Hailo). Solo
+    // aplica a cámara/NVR/XVR.
+    fuenteInferencia: FuenteInferenciaSchema.optional(),
     // Sharding edge — qué appliance recibe el HTTP Push del terminal.
     // Vacío en complejos N=1 (Standalone): el único edge es dueño implícito.
     idEdgeAppliancePrimario: z.string().optional(),
@@ -142,8 +226,14 @@ export const UpdateDispositivoSchema = DispositivoSchema.omit({
 }).partial();
 
 export type ITipoDispositivo = z.infer<typeof TipoDispositivoSchema>;
+export type IProtocoloDispositivo = z.infer<typeof ProtocoloDispositivoSchema>;
+export type IFuenteInferencia = z.infer<typeof FuenteInferenciaSchema>;
+export type ICanalDispositivo = z.infer<typeof CanalDispositivoSchema>;
 export type IEstadoDispositivo = z.infer<typeof EstadoDispositivoSchema>;
 export type IConfigDispositivo = z.infer<typeof ConfigDispositivoSchema>;
+export type ICapacidadesDeteccion = z.infer<
+  typeof CapacidadesDeteccionSchema
+>;
 export type ICapacidadesDispositivo = z.infer<
   typeof CapacidadesDispositivoSchema
 >;

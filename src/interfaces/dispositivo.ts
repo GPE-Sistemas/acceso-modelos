@@ -39,18 +39,44 @@ export const ProtocoloDispositivoSchema = z.enum([
 export const FuenteInferenciaSchema = z.enum(["Dispositivo", "Edge"]);
 
 /**
- * Canal de un NVR/XVR (M1). Un grabador agrupa N canales; cada canal es una
- * cámara con su propio stream y, opcionalmente, su perfil. El `canal` matchea
- * `IDispositivoAcceso.canalDispositivo` para ligar un canal a un acceso.
+ * Tipo de stream dentro de una cámara/canal. Main = alta calidad (identificación);
+ * Sub = baja calidad (detección barata). Estrategia de dos etapas (ver doc 03).
+ */
+export const TipoStreamSchema = z.enum(["Main", "Sub", "Otro"]);
+
+/**
+ * Un stream de una cámara (= un perfil ONVIF). Una misma cámara expone varios
+ * (main/sub) — distinta calidad del MISMO video, no cámaras distintas.
+ */
+export const StreamCanalSchema = z.object({
+  tipo: TipoStreamSchema.optional(),
+  // Token del perfil ONVIF (GetProfiles). Identifica el stream en el device.
+  token: z.string(),
+  rtspUri: z.string().optional(),
+  codec: z.string().optional(), // H264 / H265 / ...
+  width: z.number().int().optional(),
+  height: z.number().int().optional(),
+  // Mensaje si GetStreamUri de ESTE stream falló (el resto del canal igual sirve).
+  uriError: z.string().optional(),
+});
+
+/**
+ * Canal/cámara de un NVR/XVR (M1, reestructurado). Un grabador agrupa N cámaras
+ * físicas; cada cámara expone uno o más `streams` (main/sub = misma cámara,
+ * distinta calidad). El `canal` (id de la cámara física, derivado del
+ * VideoSourceConfiguration.SourceToken de ONVIF) matchea
+ * `IDispositivoAcceso.canalDispositivo` e `IDeteccion.canalDispositivo` — se
+ * referencia la CÁMARA, no un stream puntual.
  */
 export const CanalDispositivoSchema = z.object({
   canal: z.string(),
   nombre: z.string().optional(),
-  // Override de la URI RTSP de este canal (si no, se deriva de config.rtspUriPlantilla).
-  rtspUri: z.string().optional(),
-  // Perfil de stream (codec/res/fps) de este canal — FK a IPerfilCamara.
-  idPerfilCamara: z.string().optional(),
   habilitado: z.boolean().optional(),
+  // Streams de esta cámara (main/sub). El edge elige sub para detección y main
+  // para identificación (doc 03).
+  streams: z.array(StreamCanalSchema).optional(),
+  // Perfil de stream curado (codec/res/fps) — FK a IPerfilCamara (opcional).
+  idPerfilCamara: z.string().optional(),
 });
 
 // Estado runtime reportado por el agent edge (H-DEV-5 / H-DEV-8).
@@ -147,6 +173,9 @@ export const DispositivoSchema = z.object({
     habilitado: z.boolean().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
+    // Nombre legible para identificar el device en la UI (ej. "NVR Portería",
+    // "Cámara Entrada"). Lo setea el integrador; default al modelo si falta.
+    nombre: z.string().optional(),
     // Datos específicos del dispositivo
     tipo: TipoDispositivoSchema.optional(),
     serialNumber: z.string().optional(),
@@ -228,6 +257,8 @@ export const UpdateDispositivoSchema = DispositivoSchema.omit({
 export type ITipoDispositivo = z.infer<typeof TipoDispositivoSchema>;
 export type IProtocoloDispositivo = z.infer<typeof ProtocoloDispositivoSchema>;
 export type IFuenteInferencia = z.infer<typeof FuenteInferenciaSchema>;
+export type ITipoStream = z.infer<typeof TipoStreamSchema>;
+export type IStreamCanal = z.infer<typeof StreamCanalSchema>;
 export type ICanalDispositivo = z.infer<typeof CanalDispositivoSchema>;
 export type IEstadoDispositivo = z.infer<typeof EstadoDispositivoSchema>;
 export type IConfigDispositivo = z.infer<typeof ConfigDispositivoSchema>;

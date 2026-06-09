@@ -164,8 +164,9 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `dispositivo.ts` | `DispositivoSchema` / `IDispositivo`, `TipoDispositivoSchema` (+ `Cámara IP`/`NVR`/`XVR`, M1), `ConfigDispositivoSchema` (+ `protocolo`/`rtspUriPlantilla`/`idPerfilCamara`/`canales`), `CapacidadesDispositivoSchema` (+ `deteccion`), `CapacidadesDeteccionSchema`, `ProtocoloDispositivoSchema`, `FuenteInferenciaSchema`, `CanalDispositivoSchema`. `capacidades.deteccion.identificacionRostro` gatea aprobado automático (decisión E). |
 | `dispositivo-acceso.ts` | `DispositivoAccesoSchema` / `IDispositivoAcceso`, `ComportamientoCredencialValidaSchema`, `ComportamientoCredencialInvalidaSchema`, + (M4) `RolEnEventoSchema`, `ComportamientoDeteccionSchema`, `DisparoDeteccionSchema` (cadenas de detección). |
 | `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita`, `RecurrenciaEventoVisitaSchema`, estados, aprobación. Campo `idTurno?` cuando el evento fue auto-generado desde un turno |
-| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`, `VisitanteSnapshotSchema`, `VehiculoSnapshotSchema` (snapshot inmutable). `CategoriaIngresoEgresoSchema` enum: `Propietario` \| `Visita` \| `Administración` \| `Guardia` \| `Prestador de Servicio`. Coherencia con `idPermiso.categoriaPermiso` validada en `acceso-api`. Entidad de alto volumen. M2 (IA-video): `OrigenIngresoEgresoSchema` (`Terminal`/`Detección Video`/`Manual`, independiente de `aprobadoPor`) + `confianza`/`tipoDeteccion[]`/`idsDetecciones[]` para eventos de inferencia de video |
-| `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional. `CategoriaPermisoSchema` (`Propietario` \| `Administración` \| `Guardia` \| `Prestador de Servicio`). `PermisoComplejoSchema.idsUnidadesFuncionales?` para Prestador. |
+| `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`, `VisitanteSnapshotSchema`, `VehiculoSnapshotSchema` (snapshot inmutable). `CategoriaIngresoEgresoSchema` enum: `Propietario` \| `Visita` \| `Administración` \| `Guardia` \| `Prestador de Servicio` \| `Mantenimiento`. Coherencia con `idPermiso.categoriaPermiso` validada en `acceso-api`. Entidad de alto volumen. M2 (IA-video): `OrigenIngresoEgresoSchema` (`Terminal`/`Detección Video`/`Manual`, independiente de `aprobadoPor`) + `confianza`/`tipoDeteccion[]`/`idsDetecciones[]` para eventos de inferencia de video |
+| `permiso.ts` | `PermisoSchema` / `IPermiso` — discriminated union por `nivel`. Variantes Cliente/Complejo/Unidad Funcional. `CategoriaPermisoSchema` (`Propietario` \| `Administración` \| `Guardia` \| `Prestador de Servicio` \| `Mantenimiento`). `PermisoComplejoSchema.idsUnidadesFuncionales?` para Prestador. |
+| `empleado.ts` | `EmpleadoSchema` / `IEmpleado` — nómina explícita del complejo. Vínculo **1:1** a un permiso de nivel Complejo (`idPermiso`, índice único en acceso-datos); la categoría vive en el permiso (populate). Campos RRHH `legajo?`/`puesto?`/`fechaIngreso?`/`fechaEgreso?`. Soft-archive (`activo`). Cloud-only, gestión web nivel Complejo. Acciones rol `Administración - Ver/Crear/Editar/Eliminar empleados` |
 | `rol.ts` | `RolSchema` / `IRol` — discriminated union por `alcance`. `AccionesRolSchema` enumera todas las acciones del catálogo |
 | `unidad-funcional.ts` | `UnidadFuncionalSchema` / `IUnidadFuncional`. Campo `imagenes?: string[]` con objectNames GCS (hasta 10 por UF, bucket público, carpeta `unidades-funcionales`). Atributos de expensas: `superficie?` (m²), `coeficiente?` (% de copropiedad, base del prorrateo), `facturableExpensas?` (default por `tipo`: Privada=true, Común=false) |
 | `usuario.ts` | `UsuarioSchema` / `IUsuario`, `DatosPersonalesSchema` |
@@ -177,7 +178,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `publicacion.ts` | `PublicacionSchema` / `IPublicacion`, `BloqueSchema`, enums (`TipoBloqueSchema`, `CategoriaPublicacionSchema`, `EstadoPublicacionSchema`) |
 | `device-token.ts` | `DeviceTokenSchema` / `IDeviceToken`, `DevicePlatformSchema` |
 | `notificacion-preferencias.ts` | `NotificacionPreferenciasSchema` / `INotificacionPreferencias`, `CategoriaNotificacionSchema`, `CategoriasNotificacionMapSchema`, `CATEGORIAS_NOTIFICACION`, `NOTIF_PREFERENCIAS_DEFAULT`. Categorías de turnos: `turno_reservado`, `turno_pendiente_aprobacion`, `turno_aprobado`, `turno_rechazado`, `turno_cancelado`. Categorías de tickets para atendedores nivel Complejo: `ticket_emergencia_recibido` (guardia), `ticket_solicitud_recibido` (administración, cubre Solicitud + Reclamo). Categorías de encuestas para UF: `encuesta_abierta`, `encuesta_recordatorio`, `encuesta_cerrada`. Categorías de infracciones para UF: `multa_emitida`, `infraccion_emitida` (un toggle por entidad; cada uno cubre emisión Y anulación — el `data.type` del push distingue `multa_emitida`/`multa_anulada`/`infraccion_emitida`/`infraccion_anulada`). **`CategoriasMap` en `acceso-datos` debe declarar TODAS las keys del enum** (Mongoose strict dropea las no declaradas → el toggle de apagado no persistiría) |
-| `boton-ticket.ts` | `BotonTicketSchema` / `IBotonTicket`, `ConfigBotonTicketSchema`. Campo discriminante `categoria: CategoriaTicket` (`Emergencia` \| `Solicitud` \| `Reclamo`). Config incluye `permiteImagenes` y `requiereDentroDelComplejo` (geofence per-botón — reemplaza `complejo.config.emergencias.permitirFueraDelComplejo`). `categoria` inmutable post-creación |
+| `boton-ticket.ts` | `BotonTicketSchema` / `IBotonTicket`, `ConfigBotonTicketSchema`. Campo discriminante `categoria: CategoriaTicket` (`Emergencia` \| `Solicitud` \| `Reclamo`) define el **lugar** de atención. **`atendidoPor: ICategoriaPermiso[]`** define **quién** atiende (configurable; default por categoría en acceso-api: Emergencia→[Guardia], Solicitud/Reclamo→[Administración]). Config incluye `permiteImagenes` y `requiereDentroDelComplejo` (geofence per-botón). `categoria` inmutable post-creación |
 | `config-botones-ticket-complejo.ts` | `ConfigBotonesTicketComplejoSchema` / `IConfigBotonesTicketComplejo` — uno por complejo; `idsBotones[]` define orden mobile (cubre las 3 categorías en una sola grilla) |
 | `ticket.ts` | `TicketSchema` / `ITicket`, `CategoriaTicketSchema` (`Emergencia` \| `Solicitud` \| `Reclamo`), `EstadoTicketSchema` (`Pendiente` \| `EnAtencion` \| `Resuelta` \| `Descartada`), `UbicacionTicketSchema`, `BotonTicketSnapshotSchema` (snapshot inmutable del botón con `categoria` denormalizada). `ITicket.categoria` denormalizada desde el botón al crear |
 | `interaccion-ticket.ts` | `InteraccionTicketSchema` / `IInteraccionTicket`, `TipoInteraccionTicketSchema`, `AccionExternaTicketSchema`. Tipo `Comentario` con texto libre — usado para registrar acción en solicitudes/reclamos (admin) |
@@ -242,11 +243,15 @@ Administración - Crear permisos propietarios
 Administración - Crear permisos administración
 Administración - Crear permisos guardia
 Administración - Crear permisos prestadores
+Administración - Crear permisos mantenimiento
 Administración - Editar permisos propietarios
 Administración - Editar permisos administración
 Administración - Editar permisos guardia
 Administración - Editar permisos prestadores
+Administración - Editar permisos mantenimiento
 ```
+
+**Empleados (nómina)**: `Administración - Ver/Crear/Editar/Eliminar empleados` (subgrupo "Empleados (nómina)" en acceso-web/roles/acciones-grupos.ts).
 
 `POST /permisos` y `PUT /permisos/:id` usan `@RequiereCualquierAccion(...4)`; `PermisosService` valida que la acción específica matchee la `categoriaPermiso` del body (4xx si no). Permite que un admin de complejo de alta a guardias/prestadores sin poder crear otros administradores. Permisos no se eliminan (solo se deshabilitan vía Editar) — no existe `Administración - Eliminar permisos`.
 
@@ -257,6 +262,7 @@ Movimientos - Ver propietarios
 Movimientos - Ver administración    (NEW)
 Movimientos - Ver guardia           (NEW)
 Movimientos - Ver prestadores       (NEW)
+Movimientos - Ver mantenimiento     (NEW)
 ```
 
 Los endpoints `GET /panel-guardia/<categoria>` requieren la acción correspondiente.
@@ -297,7 +303,7 @@ Para que el historial sobreviva a edits o hard delete del catálogo UF, las enti
 | Entidad | Campo snapshot | Cuándo se setea |
 |---|---|---|
 | `IIngresoEgreso` | `visitantesSnapshot[]` (`{ idVisitante, datosPersonales }`), `vehiculoSnapshot` (`{ idVehiculo, datosVehiculo }`) | `POST /ingresos-egresos` y `PUT /ingresos-egresos/:id/resolver` (si cambian visitantes/vehículo) |
-| `ITicket` | `botonSnapshot` (`{ idBoton, texto, icono, color, categoria }`) | `POST /tickets`. Snapshot incluye `categoria` para que el render histórico no dependa del catálogo vivo |
+| `ITicket` | `botonSnapshot` (`{ idBoton, texto, icono, color, categoria, atendidoPor }`) | `POST /tickets`. Snapshot incluye `categoria` (lugar) y `atendidoPor` (quién atiende) para que el render/filtro histórico no dependa del catálogo vivo |
 
 Quien renderiza historial **siempre** debe usar el snapshot. `idsVisitantes` / `idVehiculo` / `idBoton` siguen como referencias de trazabilidad, pero el catálogo subyacente puede haberse eliminado o editado. `IEventoVisita` NO tiene snapshot — los eventos Pendientes/Activos referencian catálogo vivo (editable). Una vez generados los ingresos asociados, el snapshot vive en `IIngresoEgreso`.
 
@@ -310,7 +316,7 @@ Quien renderiza historial **siempre** debe usar el snapshot. `idsVisitantes` / `
 Enum independiente del `nivel` y de los roles asignados:
 
 ```ts
-"Propietario" | "Administración" | "Guardia" | "Prestador de Servicio"
+"Propietario" | "Administración" | "Guardia" | "Prestador de Servicio" | "Mantenimiento"
 ```
 
 **Defaults aplicados por `acceso-api` al crear (`PermisosService.create`):**
@@ -319,7 +325,7 @@ Enum independiente del `nivel` y de los roles asignados:
 |---|---|---|
 | `Unidad Funcional` | `Propietario` | Auto-asignado, único válido |
 | `Cliente` | `Administración` | Auto-asignado, único válido |
-| `Complejo` | — (requerido) | Elegir entre `Administración \| Guardia \| Prestador de Servicio` |
+| `Complejo` | — (requerido) | Elegir entre `Administración \| Guardia \| Prestador de Servicio \| Mantenimiento` |
 
 **`IPermisoComplejo.idsUnidadesFuncionales?`**: solo se popula cuando `categoriaPermiso === 'Prestador de Servicio'`. Cada id debe apuntar a una `IUnidadFuncional` del mismo `idComplejo` con `tipo='Común'` (validación en `acceso-api`). Ausente o vacío = prestador general del complejo (sin restricción de UF).
 

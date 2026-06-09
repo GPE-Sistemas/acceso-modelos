@@ -28,6 +28,7 @@ export const CategoriaIngresoEgresoSchema = z.enum([
   "Administración",
   "Guardia",
   "Prestador de Servicio",
+  "Mantenimiento",
 ]);
 
 /**

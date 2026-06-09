@@ -25,10 +25,12 @@ export const AccionesRolSchema = z.enum([
   "Administración - Crear permisos administración",
   "Administración - Crear permisos guardia",
   "Administración - Crear permisos prestadores",
+  "Administración - Crear permisos mantenimiento",
   "Administración - Editar permisos propietarios",
   "Administración - Editar permisos administración",
   "Administración - Editar permisos guardia",
   "Administración - Editar permisos prestadores",
+  "Administración - Editar permisos mantenimiento",
   // Roles
   "Administración - Ver roles",
   "Administración - Crear roles",
@@ -54,6 +56,11 @@ export const AccionesRolSchema = z.enum([
   "Administración - Editar usuarios",
   "Administración - Eliminar usuarios",
   "Administración - Deshabilitar / habilitar usuarios",
+  // Empleados (nómina de personal del complejo — vincula 1:1 a un permiso de complejo)
+  "Administración - Ver empleados",
+  "Administración - Crear empleados",
+  "Administración - Editar empleados",
+  "Administración - Eliminar empleados",
 
   // MODULO HARDWARE
   "Hardware - Ver accesos",
@@ -134,6 +141,7 @@ export const AccionesRolSchema = z.enum([
   "Movimientos - Ver administración",
   "Movimientos - Ver guardia",
   "Movimientos - Ver prestadores",
+  "Movimientos - Ver mantenimiento",
   "Movimientos - Ver visitas activas",
   "Movimientos - Buscar visitantes",
   "Movimientos - Buscar vehiculos",

@@ -18,13 +18,14 @@ export const NivelPermisoSchema = z.enum([
  * Defaults aplicados por acceso-api al crear:
  * - nivel 'Unidad Funcional' → 'Propietario'
  * - nivel 'Cliente'          → 'Administración'
- * - nivel 'Complejo'         → requerido (Administración | Guardia | Prestador de Servicio)
+ * - nivel 'Complejo'         → requerido (Administración | Guardia | Prestador de Servicio | Mantenimiento)
  */
 export const CategoriaPermisoSchema = z.enum([
   "Propietario",
   "Administración",
   "Guardia",
   "Prestador de Servicio",
+  "Mantenimiento",
 ]);
 
 export type IConfigPermiso = z.infer<typeof ConfigPermisoSchema>;

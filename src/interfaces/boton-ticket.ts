@@ -1,11 +1,15 @@
 import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
+import { CategoriaPermisoSchema } from "./permiso";
 
 /**
- * Categoría del ticket. Define routing al panel de atención + defaults de config.
+ * Categoría del ticket. Define el LUGAR de atención + defaults de config.
  * - Emergencia → panel guardia (acción "Tickets - Atender emergencias")
  * - Solicitud | Reclamo → panel administración (acción "Tickets - Atender solicitudes")
+ *
+ * QUIÉN atiende es configurable por botón vía `atendidoPor` (categorías de permiso);
+ * el lugar (acción de rol) no cambia. Ver `BotonTicketSchema.atendidoPor`.
  */
 export const CategoriaTicketSchema = z.enum([
   "Emergencia",
@@ -72,8 +76,17 @@ export const BotonTicketSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
   habilitado: z.boolean().optional(),
-  /** Categoría del botón. Inmutable post-creación. */
+  /** Categoría del botón. Inmutable post-creación. Define el LUGAR de atención. */
   categoria: CategoriaTicketSchema.optional(),
+  /**
+   * Categorías de permiso (nivel Complejo) que atienden este botón — QUIÉN atiende.
+   * El lugar de atención lo sigue dando `categoria` (panel emergencias / menú
+   * solicitudes); `atendidoPor` filtra qué permisos lo ven/atienden dentro de ese
+   * lugar (su `categoriaPermiso` debe estar incluida). Si se omite al crear,
+   * acceso-api aplica default por categoría (Emergencia→[Guardia],
+   * Solicitud|Reclamo→[Administración]).
+   */
+  atendidoPor: z.array(CategoriaPermisoSchema).optional(),
   /** true => visible para todos los complejos. Solo Proveedor crea globales. */
   global: z.boolean().optional(),
   /** Requerido si global=false */

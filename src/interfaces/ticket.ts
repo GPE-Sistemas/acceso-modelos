@@ -3,7 +3,7 @@ import { GeoJSONPointSchema } from "../auxiliares/geojson";
 import { BotonTicketSchema, CategoriaTicketSchema } from "./boton-ticket";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
-import { PermisoSchema } from "./permiso";
+import { CategoriaPermisoSchema, PermisoSchema } from "./permiso";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 
 export const EstadoTicketSchema = z.enum([
@@ -31,6 +31,11 @@ export const BotonTicketSnapshotSchema = z.object({
   color: z.string().optional(),
   /** Costo congelado del botón al disparar (fuente de verdad para liquidar). */
   costo: z.number().nonnegative().optional(),
+  /**
+   * Categorías de permiso que atienden el ticket (snapshot inmutable del botón).
+   * Fuente de verdad para el filtro de atención del historial.
+   */
+  atendidoPor: z.array(CategoriaPermisoSchema).optional(),
 });
 
 /**

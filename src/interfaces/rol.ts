@@ -133,6 +133,14 @@ export const AccionesRolSchema = z.enum([
   "Vehículos - Editar vínculos",
   "Vehículos - Eliminar vínculos",
 
+  // MODULO MASCOTAS (registro por UF — alta del residente, censo del admin)
+  // "Crear" se asigna al rol UF en el rollout (igual que "Turnos - Crear turno").
+  // La gestión de vacunas va dentro de "Editar" (subdoc de la mascota).
+  "Mascotas - Ver mascotas",
+  "Mascotas - Crear mascotas",
+  "Mascotas - Editar mascotas",
+  "Mascotas - Eliminar mascotas",
+
   // MODULO MOVIMIENTOS
   "Movimientos - Ver panel de guardia",
   "Movimientos - Ver ingresos egresos",

@@ -4,6 +4,7 @@ import { ComplejoSchema } from "./complejo";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { PermisoSchema } from "./permiso";
 import { DispositivoSchema } from "./dispositivo";
+import { MascotaSchema } from "./mascota";
 
 /**
  * Campos base compartidos por `IMulta` e `IInfraccion`. Se spreadea dentro de
@@ -35,6 +36,12 @@ export const InfraccionMultaBaseFields = {
   idComplejo: z.string().optional(),
   /** UF multada / infraccionada. */
   idUnidadFuncional: z.string().optional(),
+  /**
+   * Mascota involucrada (opcional). Pre-horneado para Fase 2 (infracción/multa
+   * asociada a una mascota registrada: perro suelto, heces, agresión, etc.).
+   * Se setea desde el alta; sin endpoints de ingestión automática por ahora.
+   */
+  idMascota: z.string().optional(),
   /** Correlativo por complejo, formato "YYYY-NNNN". Asignado por acceso-api al emitir. */
   numero: z.string().optional(),
   /** Default 'Permiso' en acceso-api si ausente. */
@@ -61,6 +68,7 @@ export const InfraccionMultaBaseFields = {
   permisoCreador: PermisoSchema.optional(),
   permisoAnulo: PermisoSchema.optional(),
   dispositivo: DispositivoSchema.optional(),
+  mascota: MascotaSchema.optional(),
 };
 
 /** Campos omitidos en todos los Create/Update (populate + gestionados por server). */
@@ -80,4 +88,5 @@ export const InfraccionMultaBaseOmit = {
   permisoCreador: true,
   permisoAnulo: true,
   dispositivo: true,
+  mascota: true,
 } as const;

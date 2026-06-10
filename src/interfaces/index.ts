@@ -20,6 +20,7 @@ export * from './respuesta-encuesta';
 export * from './usuario';
 export * from './visitante';
 export * from './vehiculo';
+export * from './mascota';
 export * from './vinculo-vehiculo';
 export * from './vinculo-evento-ingreso';
 export * from './publicacion';

@@ -108,6 +108,21 @@ export const EdgeHardwareSpecNicSchema = z.object({
   tipo: EdgeHardwareSpecNicTipoSchema,
 });
 
+// Generación PCIe del enlace activo del acelerador (no la capacidad máxima de la
+// placa). RPi5 + AI HAT+ negocia Gen2 por default y duplica throughput forzando
+// Gen3 (dtparam=pciex1_gen=3) — el cálculo de capacidad lo usa como factor.
+export const EdgeHardwareSpecPcieGenSchema = z.enum([
+  "Gen1",
+  "Gen2",
+  "Gen3",
+  "Gen4",
+]);
+
+// Codecs que el host decodifica por hardware. Define cuántos streams RTSP
+// soporta sin saturar CPU: el RPi5 decodifica H265/HEVC por HW pero NO H264
+// (cae a software, caro). En x86 con QuickSync/VAAPI suele cubrir ambos.
+export const EdgeHardwareSpecCodecSchema = z.enum(["H264", "H265", "AV1"]);
+
 export const EdgeHardwareSpecSchema = z.object({
   cpu: EdgeHardwareSpecCpuSchema,
   ramGB: z.number().nonnegative(),
@@ -118,6 +133,12 @@ export const EdgeHardwareSpecSchema = z.object({
   accelerator: EdgeHardwareSpecAcceleratorSchema.optional(),
   gpu: EdgeHardwareSpecGpuSchema.optional(),
   nics: z.array(EdgeHardwareSpecNicSchema).optional(),
+  // Generación PCIe del enlace del acelerador. Opcional: solo se reporta cuando
+  // hay accelerator PCIe y el agent puede leer `current_link_speed`.
+  pcieGen: EdgeHardwareSpecPcieGenSchema.optional(),
+  // Codecs con decode por hardware en el host. Opcional: best-effort, depende
+  // de la plataforma (V4L2 en ARM, VAAPI/QuickSync en x86).
+  decodeHwCodecs: z.array(EdgeHardwareSpecCodecSchema).optional(),
   tdpW: z.number().nonnegative().optional(),
   detectadoEn: z.string(),
 });
@@ -131,7 +152,14 @@ export const EdgeCapacidadCamarasSchema = z.object({
 
 export const EdgeCapacidadInferenciaIaSchema = z.object({
   fpsTotal: z.number().nonnegative(),
+  // Modelos que caben cargados simultáneamente en el acelerador (memoria del
+  // chip). NO implica ejecución paralela — ver `modeloActivoUnico`.
   modelosSimultaneosMax: z.number().int().nonnegative(),
+  // true para aceleradores que ejecutan UN modelo activo por vez y multiplexan
+  // por time-slicing/scheduler (Hailo-8/8L, Coral). false para los que corren
+  // varios modelos en paralelo real. Cambia cómo se reparte `fpsTotal` entre
+  // pipelines: con time-slicing es throughput agregado, no FPS por modelo.
+  modeloActivoUnico: z.boolean(),
 });
 
 export const EdgeCapacidadStorageVideoSchema = z.object({
@@ -328,6 +356,12 @@ export type IEdgeHardwareSpecAccelerator = z.infer<
 >;
 export type IEdgeHardwareSpecGpu = z.infer<typeof EdgeHardwareSpecGpuSchema>;
 export type IEdgeHardwareSpecNic = z.infer<typeof EdgeHardwareSpecNicSchema>;
+export type IEdgeHardwareSpecPcieGen = z.infer<
+  typeof EdgeHardwareSpecPcieGenSchema
+>;
+export type IEdgeHardwareSpecCodec = z.infer<
+  typeof EdgeHardwareSpecCodecSchema
+>;
 export type IEdgeHardwareSpec = z.infer<typeof EdgeHardwareSpecSchema>;
 export type IEdgeCapacidad = z.infer<typeof EdgeCapacidadSchema>;
 export type IEdgeApplianceUtilizacion = z.infer<

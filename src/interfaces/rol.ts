@@ -195,6 +195,10 @@ export const AccionesRolSchema = z.enum([
   "Tickets - Ver solicitudes",
   "Tickets - Atender solicitudes",
   "Tickets - Eliminar solicitudes",
+  // Supervisión: ve TODOS los tickets del complejo sin importar `atendidoPor`
+  // (el lugar sigue gateado por Ver emergencias / Ver solicitudes). No habilita
+  // atender lo ajeno — atender exige categoríaPermiso ∈ atendidoPor del botón.
+  "Tickets - Supervisar tickets",
 
   // MODULO TURNOS
   // Catálogo + plantillas (admin del complejo)

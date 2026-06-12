@@ -279,6 +279,7 @@ Los endpoints `GET /panel-guardia/<categoria>` requieren la acción correspondie
 **Tickets** — `Ver/Crear/Editar/Eliminar botones`, `Ver/Editar configuración`, `Enviar ticket` (mobile UF). Operación separada por categoría:
 - Emergencias: `Ver emergencias` + `Atender emergencias` (guardia) + `Eliminar emergencias`.
 - Solicitudes/Reclamos: `Ver solicitudes` + `Atender solicitudes` (administración) — cubre ambas categorías.
+- Supervisión: `Supervisar tickets` — bypassea el filtro de visibilidad por `atendidoPor` (ve TODOS los tickets del complejo en los lugares que sus acciones "Ver" habiliten). NO habilita atender lo ajeno: atender exige `categoriaPermiso ∈ botonSnapshot.atendidoPor`. Típica para Administración.
 
 Separación intencional para que un permiso guardia atienda emergencias sin tocar reclamos y un permiso admin atienda solicitudes/reclamos sin acceso a emergencias.
 

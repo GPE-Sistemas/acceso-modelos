@@ -18,7 +18,7 @@
  *   en target=edge va al outbox local del edge (PUT
  *   `/storage/upload-direct/<uuid>`); el publisher drena al cloud cuando hay
  *   conectividad. Resolve via edge (cache propio + outbox pending).
- *   Visitantes, vehículos, ingresos-egresos.
+ *   Visitantes, vehículos, ingresos-egresos, detecciones (snapshots de video).
  */
 export type ImagenScope = "cloud-only" | "cloud-cacheable" | "edge-uploadable";
 
@@ -42,6 +42,10 @@ export const CARPETAS_IMAGEN: Readonly<Record<string, ImagenScope>> = {
   visitantes: "edge-uploadable",
   vehiculos: "edge-uploadable",
   "ingresos-egresos": "edge-uploadable",
+  // Snapshots de detección de video (módulo IA-video M3): los genera el edge
+  // offline desde Frigate y se resuelven del cache local del edge (igual que
+  // ingresos-egresos), no del cloud. Sino el panel de guardia los pide a cloud.
+  detecciones: "edge-uploadable",
 };
 
 /**

@@ -28,6 +28,10 @@ export const TipoItemExpensaSchema = z.enum([
   "Interés",
   /** Multa liquidada junto con la expensa (referencia `idMulta`). */
   "Multa",
+  /** Derecho de construcción mensual de una obra en ejecución (referencia `idObra`, Fase 2 Obras). */
+  "Derecho de construcción",
+  /** Costo de reinspección de una obra (referencia `idObra`, Fase 2 Obras). */
+  "Reinspección de obra",
   /** Ajuste manual (crédito/débito). */
   "Ajuste",
 ]);
@@ -58,6 +62,8 @@ export const ItemExpensaSchema = z.object({
   idTicket: z.string().optional(),
   /** Multa que originó el cargo (tipo='Multa'). */
   idMulta: z.string().optional(),
+  /** Obra que originó el cargo (tipo='Derecho de construcción' / 'Reinspección de obra'). */
+  idObra: z.string().optional(),
   /** Período de origen "YYYY-MM" (tipo='Saldo anterior' / 'Interés'). */
   periodoOrigen: z.string().optional(),
   /** Tasa mensual aplicada en este tramo de interés (tipo='Interés'). */

@@ -284,6 +284,24 @@ export const AccionesRolSchema = z.enum([
   "Egresos - Ver balance", // cruce ingresos vs egresos por período
   "Egresos - Ver cuenta corriente", // saldo por proveedor
 
+  // MODULO OBRAS (seguimiento y aprobación de obras en UFs — cloud-only, doc 35 / D47)
+  // Gestión (Complejo). Revisar ≠ Aprobar a propósito (revisor y aprobador
+  // pueden ser roles distintos; un mismo rol puede llevar ambas).
+  "Obras - Ver obras",
+  "Obras - Revisar obras", // tomar en revisión, validar/observar docs, pedir documentación, comentar
+  "Obras - Aprobar obras", // aprobar / rechazar
+  "Obras - Suspender obras", // suspender / reanudar (cancela/regenera el evento de acceso)
+  "Obras - Registrar inspecciones", // etapas + inspecciones (Fase 2)
+  "Obras - Finalizar obras", // final de obra
+  "Obras - Anular obras", // anula en cualquier estado no terminal (post-aprobación solo admin)
+  "Obras - Eliminar obras", // hard delete solo Borrador
+  "Obras - Ver configuración",
+  "Obras - Editar configuración",
+  // Residente (UF, mobile). "Crear" cubre editar Borrador, cargar documentación,
+  // presentar y anular la solicitud propia pre-aprobación.
+  "Obras - Ver mis obras",
+  "Obras - Crear obras",
+
   // MODULO EDGE APPLIANCES (control de accesos on-premise)
   // Típicamente Cliente nivel 1 (integrador). El complejo no las ve.
   "EdgeAppliance - Ver appliances",

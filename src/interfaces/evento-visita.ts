@@ -95,6 +95,12 @@ export const EventoVisitaSchema = z.object({
    * un turno con invitados). `null`/ausente = evento creado manualmente.
    */
   idTurno: z.string().optional(),
+  /**
+   * Link a la obra que originó este evento (acceso del personal de obra,
+   * auto-generado al aprobar la obra — módulo Obras, doc 35). Suspender /
+   * anular / finalizar la obra cancela el evento.
+   */
+  idObra: z.string().optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),

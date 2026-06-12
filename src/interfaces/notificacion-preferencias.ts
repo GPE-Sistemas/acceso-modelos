@@ -44,6 +44,12 @@ export const CategoriaNotificacionSchema = z.enum([
   "multa_emitida",
   /** Mobile UF: el complejo emitió (o anuló) un apercibimiento para mi UF */
   "infraccion_emitida",
+  /** Atendedores Complejo (Obras - Revisar obras): solicitud de obra presentada o documentación cargada */
+  "obra_solicitud",
+  /** Mobile UF: mi obra cambió de estado (aprobada/rechazada/suspendida/reanudada/finalizada/anulada) */
+  "obra_estado",
+  /** Mobile UF: seguimiento de mi obra (pedido de documentación, documento observado, inspecciones) */
+  "obra_seguimiento",
 ]);
 
 export const CATEGORIAS_NOTIFICACION =
@@ -75,6 +81,9 @@ export const CategoriasNotificacionMapSchema = z.object({
   notificacion_complejo: z.boolean(),
   multa_emitida: z.boolean(),
   infraccion_emitida: z.boolean(),
+  obra_solicitud: z.boolean(),
+  obra_estado: z.boolean(),
+  obra_seguimiento: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -141,4 +150,7 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   notificacion_complejo: true,
   multa_emitida: true,
   infraccion_emitida: true,
+  obra_solicitud: true,
+  obra_estado: true,
+  obra_seguimiento: true,
 };

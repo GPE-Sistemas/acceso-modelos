@@ -42,6 +42,12 @@ export const InfraccionMultaBaseFields = {
    * Se setea desde el alta; sin endpoints de ingestión automática por ahora.
    */
   idMascota: z.string().optional(),
+  /**
+   * Obra asociada (opcional, módulo Obras — doc 35). Cubre el botón "Generar
+   * infracción/multa" desde el detalle de obra y el apercibimiento automático
+   * por plazo de obra vencido (scheduler, Fase 2 de Obras).
+   */
+  idObra: z.string().optional(),
   /** Correlativo por complejo, formato "YYYY-NNNN". Asignado por acceso-api al emitir. */
   numero: z.string().optional(),
   /** Default 'Permiso' en acceso-api si ausente. */
@@ -69,6 +75,8 @@ export const InfraccionMultaBaseFields = {
   permisoAnulo: PermisoSchema.optional(),
   dispositivo: DispositivoSchema.optional(),
   mascota: MascotaSchema.optional(),
+  /** z.any para no acoplar/inflar inferencia con ObraSchema. */
+  obra: z.any().optional(),
 };
 
 /** Campos omitidos en todos los Create/Update (populate + gestionados por server). */
@@ -89,4 +97,5 @@ export const InfraccionMultaBaseOmit = {
   permisoAnulo: true,
   dispositivo: true,
   mascota: true,
+  obra: true,
 } as const;

@@ -61,10 +61,12 @@ export const ZonaSchema = z.object({
   idComplejo: z.string().optional(),
   /** Zona dentro de una UF (ej. cancha de tenis). Opcional. */
   idUnidadFuncional: z.string().optional(),
-  nombre: z.string(),
+  // Requeridos a nivel Mongoose (acceso-datos) + validación acceso-api, opcionales
+  // en el tipo por la convención del repo (lean()/Exactly<> exigen todo opcional).
+  nombre: z.string().optional(),
   habilitado: z.boolean().optional(),
-  proposito: PropositoZonaSchema,
-  nivelCriticidad: NivelCriticidadZonaSchema,
+  proposito: PropositoZonaSchema.optional(),
+  nivelCriticidad: NivelCriticidadZonaSchema.optional(),
   /** Polígono geográfico (lat/lng). Mismo campo que IComplejo / IUnidadFuncional. */
   ubicacion: GeoJSONMultiPolygonSchema.optional(),
   /** Mapeo tipoDeteccion → acción del correlador. */

@@ -171,11 +171,40 @@ export const EdgeCapacidadWebrtcSchema = z.object({
   viewersSimultaneosMax: z.number().int().nonnegative(),
 });
 
+// Catálogo de inferencia del edge (D49, Capa 1): qué tipos puede PRODUCIR el
+// edge sobre un stream + con qué modelo/runtime. Es la fuente de verdad de "qué
+// sabe detectar el edge"; el resolver de capacidad efectiva (acceso-api) lo une
+// con lo intrínseco del device para habilitar/grisar config de detección.
+export const TipoInferenciaSchema = z.enum([
+  "persona",
+  "vehiculo",
+  "patente",
+  "rostro",
+  "identificacionFacial",
+  "identificacionPatente",
+]);
+
+export const RuntimeInferenciaSchema = z.enum(["Hailo", "CPU-ONNX", "GPU"]);
+
+export const InferenciaCatalogoItemSchema = z.object({
+  tipo: TipoInferenciaSchema,
+  // Identificador del modelo cargado (ej. "yolov8n-h8l", "lpr-onnx-cpu").
+  modelo: z.string(),
+  runtime: RuntimeInferenciaSchema,
+  // Costo de throughput del modelo (FPS que consume del presupuesto del
+  // acelerador). Reemplaza el coeficiente único `fpsTotal = tops×5`: permite
+  // cargas heterogéneas y cascada. Optional hasta calibrar con BOM real.
+  costoFps: z.number().nonnegative().optional(),
+});
+
 export const EdgeCapacidadSchema = z.object({
   camaras: EdgeCapacidadCamarasSchema,
   inferenciaIA: EdgeCapacidadInferenciaIaSchema,
   storageVideo: EdgeCapacidadStorageVideoSchema,
   webrtc: EdgeCapacidadWebrtcSchema,
+  // Qué tipos sabe inferir este edge + con qué modelo (D49, Capa 1). Derivado
+  // cloud-side del accelerator detectado + reglas versionadas.
+  inferenciaCatalogo: z.array(InferenciaCatalogoItemSchema).optional(),
 });
 
 export const EdgeApplianceUtilizacionSchema = z.object({
@@ -363,6 +392,11 @@ export type IEdgeHardwareSpecCodec = z.infer<
   typeof EdgeHardwareSpecCodecSchema
 >;
 export type IEdgeHardwareSpec = z.infer<typeof EdgeHardwareSpecSchema>;
+export type ITipoInferencia = z.infer<typeof TipoInferenciaSchema>;
+export type IRuntimeInferencia = z.infer<typeof RuntimeInferenciaSchema>;
+export type IInferenciaCatalogoItem = z.infer<
+  typeof InferenciaCatalogoItemSchema
+>;
 export type IEdgeCapacidad = z.infer<typeof EdgeCapacidadSchema>;
 export type IEdgeApplianceUtilizacion = z.infer<
   typeof EdgeApplianceUtilizacionSchema

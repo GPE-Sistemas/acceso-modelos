@@ -82,6 +82,12 @@ export const AccionesRolSchema = z.enum([
   "Hardware - Crear dispositivos acceso",
   "Hardware - Editar dispositivos acceso",
   "Hardware - Eliminar dispositivos acceso",
+  // Vínculo canal de video → zona (D49, Capa 3): config de device análoga a
+  // dispositivos acceso (qué canal mira qué zona + bloque detección).
+  "Hardware - Ver dispositivos zona",
+  "Hardware - Crear dispositivos zona",
+  "Hardware - Editar dispositivos zona",
+  "Hardware - Eliminar dispositivos zona",
   // Credenciales lógicas (capa ICredencial, spec 32 §3.5). Una sola acción cubre
   // crear/ver/editar/revocar: el propietario (nivel UF) opera solo lo suyo; el
   // admin (Complejo) on-behalf sobre cualquier propietario del complejo (por eso
@@ -342,6 +348,13 @@ export const AccionesRolSchema = z.enum([
   // Catálogos curados por GPE (master data Tipo B)
   "EdgeApplianceModelo - Ver catálogo certificado",
   "PerfilCamara - Ver catálogo",
+  // Zonas geográficas + semántica de detección (D49, Capa 3). Entidad del
+  // complejo (perímetro/acceso/amenity/registro), no hardware. El Panel de
+  // Seguridad + IEventoSeguridad de F3 colgarán de su propio módulo.
+  "Zonas - Ver zonas",
+  "Zonas - Crear zonas",
+  "Zonas - Editar zonas",
+  "Zonas - Eliminar zonas",
 ]);
 
 export const AlcanceRolSchema = z.enum(["Global", "Cliente", "Complejo"]);

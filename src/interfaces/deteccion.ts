@@ -49,6 +49,13 @@ export const DeteccionSchema = z.object({
   idComplejo: z.string().optional(),
   // Origen físico
   idAcceso: z.string().optional(),
+  /**
+   * Zona geográfica que originó la detección (D49, Capa 3). Mutuamente excluyente
+   * con `idAcceso`: una detección rutea a `IIngresoEgreso` (idAcceso) o a la
+   * semántica de zona (idZona), no a ambos. La exclusividad es regla custom
+   * cloud-side (no exportable a JSON Schema).
+   */
+  idZona: z.string().optional(),
   idDispositivo: z.string().optional(),
   /** Canal del NVR/XVR que originó la detección (matchea IDispositivoAcceso.canalDispositivo). */
   canalDispositivo: z.string().optional(),

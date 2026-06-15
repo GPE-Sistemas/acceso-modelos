@@ -8,6 +8,7 @@ export * from './dispositivo';
 export * from './dispositivo-acceso';
 export * from './zona';
 export * from './dispositivo-zona';
+export * from './evento-seguridad';
 export * from './evento-visita';
 export * from './invitacion-visita';
 export * from './cliente';

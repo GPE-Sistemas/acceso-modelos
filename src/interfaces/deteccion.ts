@@ -32,9 +32,10 @@ export const TipoDeteccionSchema = z.enum([
 
 /** Estado de la detección respecto del evento de acceso unificado. */
 export const EstadoCorrelacionDeteccionSchema = z.enum([
-  "Pendiente", // todavía no fusionada a un IIngresoEgreso
-  "Fusionada", // ya aportó a un IIngresoEgreso (ver idIngresoEgreso)
+  "Pendiente", // todavía no fusionada a un IIngresoEgreso / IEventoSeguridad
+  "Fusionada", // ya aportó a un IIngresoEgreso (ver idIngresoEgreso) o IEventoSeguridad (ver idEventoSeguridad)
   "Descartada", // ruido / fuera de ventana / duplicada
+  "Registrada", // terminal sin entidad: zona SoloEstadistica (D49 F3) — persiste para estadística, no genera evento
 ]);
 
 export const DeteccionSchema = z.object({
@@ -77,6 +78,12 @@ export const DeteccionSchema = z.object({
   // Correlación
   /** IIngresoEgreso al que se fusionó esta detección (ausente = todavía suelta). */
   idIngresoEgreso: z.string().optional(),
+  /**
+   * IEventoSeguridad al que se fusionó esta detección (D49, Capa 3 / F3). Ruteo
+   * por zona `Alerta` (Perimetro+Critica). Mutuamente excluyente con
+   * `idIngresoEgreso` (una detección rutea a acceso o a zona, no a ambos).
+   */
+  idEventoSeguridad: z.string().optional(),
   estadoCorrelacion: EstadoCorrelacionDeteccionSchema.optional(),
   // Populate
   cliente: ClienteSchema.optional(),

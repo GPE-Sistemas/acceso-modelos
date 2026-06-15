@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.5.0
+  version: 0.6.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -47,6 +47,8 @@ tags:
   description: Eventos de visita + autorización
 - name: ingresos-egresos
   description: Movimientos físicos (Tipo A, alto volumen, append-only)
+- name: eventos-seguridad
+  description: Eventos de seguridad (D49 F3 — intrusión/perímetro, edge-first, bandeja de guardia)
 - name: panel-guardia
   description: Vista guardia por categoría (4 proyecciones)
 - name: dashboard
@@ -573,6 +575,134 @@ paths:
               type: object
       responses:
         '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-seguridad:
+    get:
+      tags:
+      - eventos-seguridad
+      summary: Listar eventos de seguridad (panel de guardia, bandeja unificada)
+      operationId: listEventosSeguridad
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /eventos-seguridad/count:
+    get:
+      tags:
+      - eventos-seguridad
+      summary: Contar eventos de seguridad
+      operationId: countEventosSeguridad
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalCount:
+                    type: number
+  /eventos-seguridad/{id}:
+    get:
+      tags:
+      - eventos-seguridad
+      summary: Obtener evento de seguridad por id
+      operationId: getEventoSeguridad
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/IdPath'
+      - $ref: '#/components/parameters/Populate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-seguridad/{id}/atender:
+    put:
+      tags:
+      - eventos-seguridad
+      summary: Tomar el evento (Pendiente → EnAtencion)
+      operationId: atenderEventoSeguridad
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-seguridad/{id}/resolver:
+    put:
+      tags:
+      - eventos-seguridad
+      summary: Cerrar el evento como Resuelta
+      operationId: resolverEventoSeguridad
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                observacionesCierre:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-seguridad/{id}/descartar:
+    put:
+      tags:
+      - eventos-seguridad
+      summary: Cerrar el evento como Descartada
+      operationId: descartarEventoSeguridad
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                observacionesCierre:
+                  type: string
+      responses:
+        '200':
           description: OK
           content:
             application/json:

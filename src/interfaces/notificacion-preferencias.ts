@@ -50,6 +50,8 @@ export const CategoriaNotificacionSchema = z.enum([
   "obra_estado",
   /** Mobile UF: seguimiento de mi obra (pedido de documentación, documento observado, inspecciones) */
   "obra_seguimiento",
+  /** Mobile Complejo (Seguridad - Ver eventos): nuevo evento de seguridad (intrusión/perímetro) detectado */
+  "seguridad_evento",
 ]);
 
 export const CATEGORIAS_NOTIFICACION =
@@ -84,6 +86,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   obra_solicitud: z.boolean(),
   obra_estado: z.boolean(),
   obra_seguimiento: z.boolean(),
+  seguridad_evento: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -153,4 +156,5 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   obra_solicitud: true,
   obra_estado: true,
   obra_seguimiento: true,
+  seguridad_evento: true,
 };

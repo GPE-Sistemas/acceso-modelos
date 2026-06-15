@@ -355,6 +355,14 @@ export const AccionesRolSchema = z.enum([
   "Zonas - Crear zonas",
   "Zonas - Editar zonas",
   "Zonas - Eliminar zonas",
+  // Panel de seguridad — eventos de intrusión/perímetro materializados por el
+  // correlador (D49, Capa 3 / F3). Módulo propio (no Hardware ni Zonas):
+  // Ver = listar/leer; Atender = tomar (Nuevo→EnRevision); Resolver/Descartar =
+  // cerrar el evento.
+  "Seguridad - Ver eventos",
+  "Seguridad - Atender eventos",
+  "Seguridad - Resolver eventos",
+  "Seguridad - Descartar eventos",
 ]);
 
 export const AlcanceRolSchema = z.enum(["Global", "Cliente", "Complejo"]);

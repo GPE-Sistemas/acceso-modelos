@@ -52,6 +52,10 @@ export const CategoriaNotificacionSchema = z.enum([
   "obra_seguimiento",
   /** Mobile Complejo (Seguridad - Ver eventos): nuevo evento de seguridad (intrusión/perímetro) detectado */
   "seguridad_evento",
+  /** Mobile Complejo (Rondas - Ver rondas): una ronda venció sin iniciarse (supervisor) */
+  "ronda_no_realizada",
+  /** Mobile Complejo (Rondas - Ver rondas): el guardia reportó una novedad durante una ronda */
+  "ronda_novedad",
 ]);
 
 export const CATEGORIAS_NOTIFICACION =
@@ -87,6 +91,8 @@ export const CategoriasNotificacionMapSchema = z.object({
   obra_estado: z.boolean(),
   obra_seguimiento: z.boolean(),
   seguridad_evento: z.boolean(),
+  ronda_no_realizada: z.boolean(),
+  ronda_novedad: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -157,4 +163,6 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   obra_estado: true,
   obra_seguimiento: true,
   seguridad_evento: true,
+  ronda_no_realizada: true,
+  ronda_novedad: true,
 };

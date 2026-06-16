@@ -19,19 +19,14 @@ export const VinculoEventoIngresoSchema = z.object({
   tipo: TipoVinculoEventoIngresoSchema.optional(),
   /** Subset de IEventoVisita.idsVisitantes que entró/salió en este vínculo */
   idsVisitantesAplicados: z.array(z.string()).optional(),
-  // Populate
+  // Populate — los pesados (EventoVisita ⊃ ..., IngresoEgreso ⊃ snapshots) van
+  // como `z.any()` para no inflar la inferencia global (TS7056 al sumar entidades
+  // nuevas al barrel — patrón de turno.ts). Consumers castean ad-hoc si necesitan tipo.
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
-  eventoVisita: EventoVisitaSchema.optional(),
-  // Populate pesado declarado como `z.any()` para no inflar la inferencia TS:
-  // IngresoEgreso popula permiso/permisosAcompanantes/aprobadoPorPermiso, cada
-  // uno con roles[].acciones[] (enum AccionesRol grande). En la cadena
-  // IDispositivo... ⊂ IIngresoEgreso ⊂ IVinculoEventoIngreso eso desborda el
-  // límite de serialización (TS7056) y bloquearía agregar acciones nuevas al
-  // catálogo. Mismo patrón que los populates pesados de turno.ts. El tipo
-  // concreto es IIngresoEgreso para los consumidores que lo necesiten.
+  eventoVisita: z.any().optional(),
   ingresoEgreso: z.any().optional(),
-  visitantesAplicados: z.array(VisitanteSchema).optional(),
+  visitantesAplicados: z.any().optional(),
 });
 
 export const CreateVinculoEventoIngresoSchema =

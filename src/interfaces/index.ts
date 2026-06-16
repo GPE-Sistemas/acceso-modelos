@@ -6,6 +6,8 @@ export * from './credencial-vector';
 export * from './deteccion';
 export * from './dispositivo';
 export * from './dispositivo-acceso';
+export * from './evento-dispositivo';
+export * from './comando-edge';
 export * from './zona';
 export * from './dispositivo-zona';
 export * from './evento-seguridad';

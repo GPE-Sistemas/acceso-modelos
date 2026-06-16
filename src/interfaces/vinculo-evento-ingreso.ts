@@ -2,7 +2,6 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { EventoVisitaSchema } from "./evento-visita";
-import { IngresoEgresoSchema } from "./ingreso-egreso";
 import { VisitanteSchema } from "./visitante";
 
 export const TipoVinculoEventoIngresoSchema = z.enum(["Ingreso", "Egreso"]);
@@ -24,7 +23,14 @@ export const VinculoEventoIngresoSchema = z.object({
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
   eventoVisita: EventoVisitaSchema.optional(),
-  ingresoEgreso: IngresoEgresoSchema.optional(),
+  // Populate pesado declarado como `z.any()` para no inflar la inferencia TS:
+  // IngresoEgreso popula permiso/permisosAcompanantes/aprobadoPorPermiso, cada
+  // uno con roles[].acciones[] (enum AccionesRol grande). En la cadena
+  // IDispositivo... ⊂ IIngresoEgreso ⊂ IVinculoEventoIngreso eso desborda el
+  // límite de serialización (TS7056) y bloquearía agregar acciones nuevas al
+  // catálogo. Mismo patrón que los populates pesados de turno.ts. El tipo
+  // concreto es IIngresoEgreso para los consumidores que lo necesiten.
+  ingresoEgreso: z.any().optional(),
   visitantesAplicados: z.array(VisitanteSchema).optional(),
 });
 

@@ -110,6 +110,17 @@ export const AccionesRolSchema = z.enum([
   // Estado/conexión + métricas en vivo del dispositivo (H-DEV-8).
   // Doc 29-hik-terminal-adopcion.md § Monitoreo runtime.
   "Hardware - Ver estado/métricas dispositivo",
+  // Bitácora de salud / eventos técnicos por device (IEventoDispositivo):
+  // checks, fallas, self-heal de IP, lockout, enrolamiento.
+  // Doc 12-dispositivos-y-accesos.md § Auditoría / salud por dispositivo.
+  "Hardware - Ver bitácora del dispositivo",
+  // Edición manual de red + credenciales del device en el form (ipAddress, mac,
+  // username/password, protocolo, canales). Gate separado de "Editar
+  // dispositivos" por sensibilidad (password). Doc 28-discovery-lan-edge.md
+  // § Edición manual de red.
+  "Hardware - Editar red y credenciales del dispositivo",
+  // Revela el password de red del device en el form (render del campo sensible).
+  "Hardware - Ver credenciales de red del dispositivo",
 
   // MODULO VISITAS
   "Visitas - Ver eventos",
@@ -357,6 +368,10 @@ export const AccionesRolSchema = z.enum([
   // cross-edge): esta es la vista operativa del propio edge del complejo,
   // típicamente asignada al operador del complejo.
   "EdgeAppliance - Ver integridad",
+  // Auditoría de comandos cloud→edge (IComandoEdge): qué comando se mandó,
+  // quién, cuándo, a qué edge, con qué resultado. Doc
+  // 17-sincronizacion-edge-cloud.md § persistencia + auditoría de comandos.
+  "EdgeAppliance - Ver auditoría de comandos",
 
   // Catálogos curados por GPE (master data Tipo B)
   "EdgeApplianceModelo - Ver catálogo certificado",

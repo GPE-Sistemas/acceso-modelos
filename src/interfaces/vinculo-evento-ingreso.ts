@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
+import { EventoVisitaSchema } from "./evento-visita";
+import { VisitanteSchema } from "./visitante";
 
 export const TipoVinculoEventoIngresoSchema = z.enum(["Ingreso", "Egreso"]);
 export type ITipoVinculoEventoIngreso = z.infer<

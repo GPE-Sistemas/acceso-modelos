@@ -173,6 +173,14 @@ export const CapacidadesDispositivoSchema = z.object({
   video: CapacidadesVideoSchema.optional(),
 });
 
+// Entrada del historial de IPs LAN (auditoría DHCP drift). Schema nombrado
+// (no inline) para no inflar la inferencia de tipos de la cadena de populate
+// IDispositivo ⊂ IIngresoEgreso ⊂ IVinculoEventoIngreso (evita TS7056).
+export const IpLanHistoricoEntrySchema = z.object({
+  ip: z.string(),
+  visto: z.string(),
+});
+
 export const ConfigDispositivoSchema = z.object({
     username: z.string().optional(),
     password: z.string().optional(),
@@ -184,6 +192,10 @@ export const ConfigDispositivoSchema = z.object({
     // (forzar via `useHttp=true`).
     port: z.number().int().positive().optional(),
     useHttp: z.boolean().optional(),
+    // Historial de IPs LAN observadas (auditoría de DHCP drift). Lo mantiene el
+    // self-heal de `ipAddress`: top 5 últimas. Espejo de
+    // IDispositivoDescubierto.ipLanHistorico. Doc 28-discovery-lan-edge.md.
+    ipLanHistorico: z.array(IpLanHistoricoEntrySchema).optional(),
     // --- Video / inferencia (M1) — presente en cámara/NVR/XVR ---
     // Protocolo de integración del stream/eventos.
     protocolo: ProtocoloDispositivoSchema.optional(),
@@ -211,6 +223,14 @@ export const DispositivoSchema = z.object({
     serialNumber: z.string().optional(),
     marca: z.string().optional(),
     modelo: z.string().optional(),
+    // MAC del device — identidad estable cross-discovery (espejo de
+    // IDispositivoDescubierto.macAddress). Se persiste al adoptar (el edge la
+    // extrae en AdoptarResult.macAddress) y es la CLAVE del self-heal de
+    // `config.ipAddress` ante DHCP drift: el matching device-descubierto ↔
+    // registrado va por MAC (y serial), NUNCA por IP (que es lo que cambia).
+    // Cloud SoT — no debería cambiar salvo reemplazo físico de hardware.
+    // Doc 28-discovery-lan-edge.md.
+    mac: z.string().optional(),
     config: ConfigDispositivoSchema.optional(),
     // Capacidades del device (D49, Capa 1): credencial + intrínsecos
     // (fuenteVideo/aperturaComando/enrolamiento) + `video` con proveedor por

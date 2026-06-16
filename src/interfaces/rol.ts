@@ -232,6 +232,19 @@ export const AccionesRolSchema = z.enum([
   "Turnos - Marcar completado", // guardia confirma que el turno se cumplió
   "Turnos - Marcar luz", // guardia activa flag luzActivada
 
+  // MODULO RONDAS (rondas de vigilancia — guardia ejecuta en mobile, supervisor configura)
+  "Rondas - Ver puntos de control",
+  "Rondas - Crear puntos de control",
+  "Rondas - Editar puntos de control",
+  "Rondas - Eliminar puntos de control", // soft-archive
+  "Rondas - Ver plantillas",
+  "Rondas - Crear plantillas",
+  "Rondas - Editar plantillas",
+  "Rondas - Eliminar plantillas",
+  "Rondas - Ver rondas", // listado / reporte de cumplimiento (supervisor)
+  "Rondas - Realizar rondas", // guardia: iniciar, marcar puntos, reportar novedades, cerrar
+  "Rondas - Cancelar rondas", // supervisor anula una ronda programada / en curso
+
   // MODULO EXPENSAS (administración del complejo — cloud-only)
   // Configuración de cálculo (conceptos + mora)
   "Expensas - Ver configuración",

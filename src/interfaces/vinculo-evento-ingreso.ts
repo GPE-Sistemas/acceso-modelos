@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
-import { EventoVisitaSchema } from "./evento-visita";
-import { IngresoEgresoSchema } from "./ingreso-egreso";
-import { VisitanteSchema } from "./visitante";
 
 export const TipoVinculoEventoIngresoSchema = z.enum(["Ingreso", "Egreso"]);
 export type ITipoVinculoEventoIngreso = z.infer<
@@ -20,12 +17,14 @@ export const VinculoEventoIngresoSchema = z.object({
   tipo: TipoVinculoEventoIngresoSchema.optional(),
   /** Subset de IEventoVisita.idsVisitantes que entró/salió en este vínculo */
   idsVisitantesAplicados: z.array(z.string()).optional(),
-  // Populate
+  // Populate — los pesados (EventoVisita ⊃ ..., IngresoEgreso ⊃ snapshots) van
+  // como `z.any()` para no inflar la inferencia global (TS7056 al sumar entidades
+  // nuevas al barrel — patrón de turno.ts). Consumers castean ad-hoc si necesitan tipo.
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
-  eventoVisita: EventoVisitaSchema.optional(),
-  ingresoEgreso: IngresoEgresoSchema.optional(),
-  visitantesAplicados: z.array(VisitanteSchema).optional(),
+  eventoVisita: z.any().optional(),
+  ingresoEgreso: z.any().optional(),
+  visitantesAplicados: z.any().optional(),
 });
 
 export const CreateVinculoEventoIngresoSchema =

@@ -336,6 +336,18 @@ export const AccionesRolSchema = z.enum([
   "Obras - Ver mis obras",
   "Obras - Crear obras",
 
+  // MODULO PROTOCOLOS (guías operativas configurables por complejo: texto + PDF + checklist)
+  // Configuración (Complejo): catálogo de protocolos.
+  "Protocolos - Ver protocolos",
+  "Protocolos - Crear protocolos",
+  "Protocolos - Editar protocolos",
+  "Protocolos - Eliminar protocolos",
+  // Ejecución: el operador consulta el protocolo y, si es auditable, marca pasos
+  // (traza IEjecucionProtocolo). Gate propio multi-dominio (tickets + ingreso/egreso),
+  // independiente de "Atender emergencias/solicitudes" y "Registrar ingreso egreso".
+  "Protocolos - Ejecutar protocolos",
+  "Protocolos - Ver ejecuciones",
+
   // MODULO EDGE APPLIANCES (control de accesos on-premise)
   // Típicamente Cliente nivel 1 (integrador). El complejo no las ve.
   "EdgeAppliance - Ver appliances",

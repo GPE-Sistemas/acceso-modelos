@@ -74,4 +74,6 @@ export * from './config-egreso';
 export * from './gasto';
 export * from './pago-egreso';
 export * from './balance';
+export * from './protocolo';
+export * from './ejecucion-protocolo';
 export * from './refresh-token';

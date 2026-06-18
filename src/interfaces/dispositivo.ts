@@ -146,6 +146,9 @@ export const CapacidadesVideoSchema = z.object({
  * - HIK DS-K1T344MBWX-E1: `{ credencial:{face,card,pin}, enrolamiento:true,
  *   aperturaComando:true, video:{ identificacionFacial:{soportada,Dispositivo},
  *   rostro:{soportada,Dispositivo} } }`.
+ * - HIK DS-K1T502DBFWX-C (sin facial; tarjeta+huella+pin + video intercom):
+ *   `{ credencial:{card,fingerprint,pin}, enrolamiento:true, aperturaComando:true,
+ *   fuenteVideo:true }` (RTSP del terminal para portería; sin identificación).
  * - NVR/XVR "tonto": `{ fuenteVideo:true }` y `video` vacío (lo aporta el edge).
  */
 export const CapacidadesDispositivoSchema = z.object({
@@ -280,8 +283,16 @@ export const DispositivoSchema = z.object({
         userNumber: z.number().int().nonnegative().optional(),
         // ISAPI Intelligent/FDLib/Count → faceNumber.
         faceNumber: z.number().int().nonnegative().optional(),
+        // ISAPI AccessControl/CardInfo/Count → cardNumber (terminal con tarjeta).
+        cardNumber: z.number().int().nonnegative().optional(),
+        // ISAPI AccessControl/FingerPrint count → fingerNumber (terminal con huella).
+        fingerNumber: z.number().int().nonnegative().optional(),
         // Capacidad facial del modelo (datasheet; DS-K1T344 = 3000).
         capacidadFaces: z.number().int().positive().optional(),
+        // Capacidad de tarjetas del modelo (datasheet; DS-K1T502 = 100000).
+        capacidadCards: z.number().int().positive().optional(),
+        // Capacidad de huellas del modelo (datasheet; DS-K1T502 = 10000).
+        capacidadFingers: z.number().int().positive().optional(),
         // Timestamp ISO del último refresh de los contadores.
         actualizadoEn: z.string().optional(),
       })

@@ -38,11 +38,17 @@ import { ZonaSchema } from "./zona";
  * Qué hecho de seguridad ocurrió. `Merodeo` queda en el vocabulario pero NO se
  * materializa en F3 (requiere análisis temporal de permanencia/dwell, fuera del
  * grupo de ventana única del correlador).
+ *
+ * `Coaccion` NO proviene del correlador de video: lo origina un TERMINAL de
+ * credencial cuando se usa una huella de pánico (`hijackFP` del HIK) — abre la
+ * puerta y dispara alarma silenciosa. Lleva `idDispositivo` (el terminal) en vez
+ * de `idZona`/`idsDetecciones`.
  */
 export const TipoEventoSeguridadSchema = z.enum([
   "IntrusionPersona",
   "IntrusionVehiculo",
   "Merodeo",
+  "Coaccion",
 ]);
 
 /** Severidad del evento. F3 deriva `Critica` (zona) → `Critico`; el resto del enum queda para escalado/granularidad futura. */

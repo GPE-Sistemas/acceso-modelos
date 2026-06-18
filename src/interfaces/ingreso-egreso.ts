@@ -8,6 +8,7 @@ import { DatosVehiculoSchema, VehiculoSchema } from "./vehiculo";
 import { DatosPersonalesSchema } from "./usuario";
 import { VisitanteSchema } from "./visitante";
 import { TipoDeteccionSchema } from "./deteccion";
+import { VerifyModeSchema } from "./credencial";
 
 export const TipoIngresoEgresoSchema = z.enum(["Ingreso", "Egreso"]);
 export const AprobadoPorIngresoEgresoSchema = z.enum(["Sistema", "Guardia"]);
@@ -73,6 +74,10 @@ export const IngresoEgresoSchema = z.object({
   categoria: CategoriaIngresoEgresoSchema.optional(),
   idAcceso: z.string().optional(),
   idVehiculo: z.string().optional(),
+  /** Con qué modalidad/combinación autenticó la persona en el terminal — espejo de
+   *  `currentVerifyMode` del evento HIK (tarjeta, huella, PIN o combinaciones).
+   *  Solo aplica cuando `origen === 'Terminal'`. Ausente = no informado. */
+  modalidadAutenticacion: VerifyModeSchema.optional(),
   // --- Origen detección de video (M2, módulo IA-video) ---
   /** Qué generó el evento. Ausente = legacy (Terminal). */
   origen: OrigenIngresoEgresoSchema.optional(),

@@ -48,6 +48,33 @@ export const OrigenCapturaCredencialSchema = z.enum([
 ]);
 
 /**
+ * Modo de verificación de un terminal de acceso — combinaciones de factores que
+ * exige para conceder (multi-factor / OR / AND). Conjunto verificado contra el
+ * Hikvision DS-K1T502DBFWX-C (`AccessControl/AcsEvent/capabilities` →
+ * `InfoList.currentVerifyMode`, raw 2026-06-18). `pw` = PIN de teclado.
+ *
+ * Doble uso: como POLÍTICA configurada por puerta/lector (`IDispositivoAcceso.verifyMode`)
+ * y como modalidad REPORTADA en el evento (`IIngresoEgreso.modalidadAutenticacion`,
+ * espejo de `currentVerifyMode`).
+ *
+ * PENDIENTE: los modos con cara (terminal facial K1T344) no están relevados — al
+ * relevarlos, extender este enum antes de cablear eventos faciales a
+ * `modalidadAutenticacion`.
+ */
+export const VerifyModeSchema = z.enum([
+  "card",
+  "fp",
+  "cardAndPw",
+  "fpAndPw",
+  "fpOrCard",
+  "fpAndCard",
+  "fpAndCardAndPw",
+  "fpOrPw",
+  "cardOrPw",
+  "cardOrFpOrPw",
+]);
+
+/**
  * Datos de la credencial, discriminados semánticamente por `tipo`. Cada tipo usa
  * su propio campo; la validación de "qué campo es obligatorio para qué tipo"
  * vive cloud-side en acceso-api (regla custom, no exportable a JSON Schema).
@@ -63,6 +90,18 @@ export const DatosCredencialSchema = z.object({
   /** Tarjeta → número y tipo de tarjeta RFID (futuro, spec §2). */
   cardNo: z.string().optional(),
   cardType: z.string().optional(),
+  /** Huella → objectName del template biométrico CIFRADO en GCS. Bucket PRIVADO
+   *  (PII biométrica), carpeta dedicada. El template es la fuente central
+   *  (cloud = SoT): se captura una vez (sensor del terminal, `CaptureFingerPrint`)
+   *  y se replica a los terminales de la persona (`FingerPrintDown`). NO es la
+   *  foto facial (`fotoCredencial`). El device cifra el template
+   *  (`isSupportFingerDataEncryption`); el sistema lo almacena cifrado en reposo. */
+  templateHuella: z.string().optional(),
+  /** Huella → qué dedo (1–10 por persona en el terminal HIK, `fingerPrintID`). */
+  fingerprintID: z.number().int().min(1).max(10).optional(),
+  /** Huella → marca esta huella como de COACCIÓN (`hijackFP`): al usarla abre la
+   *  puerta y dispara una alarma silenciosa (→ IEventoSeguridad tipo `Coaccion`). */
+  fingerprintCoaccion: z.boolean().optional(),
   /** Patente → dominio del vehículo, cuando tipo === 'Patente' (módulo IA-video, M5).
    *  El embedding facial NO vive acá: su metadato va en ICredencialVector y el
    *  vector crudo en el índice caliente del edge (decisión B). */
@@ -108,6 +147,7 @@ export const CreateCredencialSchema = CredencialSchema.omit({
 export const UpdateCredencialSchema = CreateCredencialSchema.partial();
 
 export type ITipoCredencial = z.infer<typeof TipoCredencialSchema>;
+export type IVerifyMode = z.infer<typeof VerifyModeSchema>;
 export type IEstadoCredencial = z.infer<typeof EstadoCredencialSchema>;
 export type IOrigenCapturaCredencial = z.infer<
   typeof OrigenCapturaCredencialSchema

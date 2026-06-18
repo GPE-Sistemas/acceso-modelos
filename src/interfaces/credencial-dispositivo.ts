@@ -45,6 +45,9 @@ export const CredencialDispositivoSchema = z.object({
     numOfFace: z.number().int().nonnegative().optional(),
     /** Reflejo del device: cuántas tarjetas tiene el device-user. */
     numOfCard: z.number().int().nonnegative().optional(),
+    /** Reflejo del device: cuántas huellas tiene el device-user (UserInfo/Search
+     *  → numOfFP). Verifica el enrolamiento de huella igual que numOfFace/numOfCard. */
+    numOfFinger: z.number().int().nonnegative().optional(),
     /** Mensaje legible del último error de enrolamiento (subStatusCode mapeado). */
     ultimoErrorEnrolamiento: z.string().optional(),
     /** ISO — cuándo se completó el último enrolamiento exitoso. */

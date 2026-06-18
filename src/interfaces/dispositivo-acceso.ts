@@ -3,6 +3,7 @@ import { AccesoSchema } from "./acceso";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { DispositivoSchema } from "./dispositivo";
+import { VerifyModeSchema } from "./credencial";
 
 export const ComportamientoCredencialValidaSchema = z.enum([
   "Apertura Automática",
@@ -132,6 +133,12 @@ export const DispositivoAccesoSchema = z.object({
       ComportamientoCredencialInvalidaSchema.optional(),
     /** Indica si el dispositivo puede recibir un comando para abrir el acceso */
     aperturaConComando: z.boolean().optional(),
+    /** Modo de verificación configurado para este terminal en este acceso (qué
+     *  factores exige: tarjeta, huella, PIN o combinaciones). Configurable por
+     *  puerta/lector, no hardcode. Aplica a terminales de credencial HIK que lo
+     *  soportan (DS-K1T502DBFWX-C). La validación de que el device soporta el modo
+     *  vive cloud-side en acceso-api (contra `capacidades.credencial`). */
+    verifyMode: VerifyModeSchema.optional(),
     // --- Inferencia de video / orquestación (M4, módulo IA-video) ---
     /** Rol de este device en el evento de acceso unificado. */
     rolEnEvento: RolEnEventoSchema.optional(),

@@ -20,6 +20,12 @@ export const AccesoSchema = z.object({
     tipo: TipoAccesoSchema.optional(),
     tipoPersona: TipoPersonaAccesoSchema.optional(),
     ubicacion: GeoJSONPointSchema.optional(),
+    /** Dispositivo que provee el video de PORTERÍA de este acceso (FK a IDispositivo):
+     *  el terminal con cámara (ej. HIK DS-K1T502DBFWX-C) o una cámara/NVR asociada.
+     *  El panel del guardia lo usa para mostrar el snapshot/stream del acceso.
+     *  Sin populate acá (evita inflar la inferencia TS de la cadena
+     *  IAcceso ⊂ IIngresoEgreso); el consumidor resuelve el device por separado. */
+    idDispositivoPorteria: z.string().optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),

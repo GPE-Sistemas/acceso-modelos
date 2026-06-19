@@ -85,8 +85,13 @@ export const DatosCredencialSchema = z.object({
    *  carpeta dedicada. NO reutiliza el avatar `IUsuario.datosPersonales.foto`
    *  (spec §3.4). */
   fotoCredencial: z.string().optional(),
-  /** PIN → número de teclado (futuro, spec §2). */
+  /** PIN → código personal de teclado (el `password` del UserInfo HIK). */
   pin: z.string().optional(),
+  /** PIN → índice de integrante dentro de la UF (`00`–`99`), 2da parte del
+   *  `employeeNo` tipeable (`pad(UF.numero, digitosUF) + pad(numeroUsuarioUF,
+   *  digitosUsuario)` según `ConfigComplejo.pinScheme`). Ausente cuando el
+   *  esquema es 1 PIN por UF (`digitosUsuario=0`). */
+  numeroUsuarioUF: z.number().int().min(0).max(99).optional(),
   /** Tarjeta → número y tipo de tarjeta RFID (futuro, spec §2). */
   cardNo: z.string().optional(),
   cardType: z.string().optional(),

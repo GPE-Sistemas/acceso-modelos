@@ -191,6 +191,26 @@ export const AdoptarResultSchema = z.object({
   syncTimeOk: z.boolean(),
   syncTimeErr: z.string().optional(),
   timeDriftSec: z.number().optional(),
+  // Capacidades de credencial relevadas del device durante la adopción (HIK:
+  // `GET /ISAPI/AccessControl/capabilities` — fuente autoritativa presente en
+  // toda la familia, a diferencia de `UserInfo/capabilities` que devuelve
+  // `notSupport` en algunos firmwares, ej. K1T502 V1.7.3). acceso-api las
+  // copia a `IDispositivo.capacidades.credencial` al crear el device, lo que
+  // gatea `materializarShells` por modalidad. Mapeo HIK:
+  //   face        = isSupportFDLib (FDLib = padrón facial on-device)
+  //   card        = isSupportCardInfo
+  //   fingerprint = isSupportFingerPrintCfg
+  //   pin         = currentVerifyMode incluye una combinación con `Pw`
+  // Best-effort: si el relevamiento falla, queda ausente y el device se crea
+  // sin capacidades (degradación, no bloquea la adopción).
+  capacidades: z
+    .object({
+      face: z.boolean().optional(),
+      card: z.boolean().optional(),
+      pin: z.boolean().optional(),
+      fingerprint: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 // Respuesta de la adopción exitosa: ambos docs (dispositivo nuevo creado +

@@ -23,6 +23,10 @@ export const PinSchemeSchema = z.object({
   /** Dígitos del nº de integrante dentro de la UF (`00`–`99`). 0 = un único
    *  PIN por UF (sin discriminar integrante). */
   digitosUsuario: z.number().int().min(0).max(4).optional(),
+  /** Largo del PIN/password que define el vecino (default 4). El K1T502 acepta
+   *  4 dígitos (verificado contra el device 2026-06-19). acceso-api valida
+   *  `datos.pin` contra este largo al crear/editar la credencial PIN. */
+  digitosPin: z.number().int().min(4).max(8).optional(),
 });
 
 export const ConfigComplejoSchema = z.object({

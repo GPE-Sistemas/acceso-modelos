@@ -211,6 +211,15 @@ export const AdoptarResultSchema = z.object({
       fingerprint: z.boolean().optional(),
     })
     .optional(),
+  // IP final con la que el edge corrió los 4 checks. Igual a la del descubierto
+  // salvo en el onboarding cross-subred: si el device estaba en una subred ajena
+  // (IP factory), la adopción lo pasó a DHCP y `ipAddress` es la IP nueva de la
+  // LAN (resuelta por SADP/MAC). acceso-api crea el IDispositivo con esta IP
+  // (no la del descubierto). Ausente = usar la del descubierto.
+  ipAddress: z.string().optional(),
+  // true si la adopción tuvo que pasar el device a DHCP (estaba en subred ajena)
+  // antes de adoptar. Solo auditoría/UX.
+  reipeado: z.boolean().optional(),
 });
 
 // Respuesta de la adopción exitosa: ambos docs (dispositivo nuevo creado +

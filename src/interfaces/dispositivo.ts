@@ -2,15 +2,28 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 
-export const TipoDispositivoSchema = z.enum([
-  "Terminal de reconocimiento facial",
-  "Lector de huella digital",
-  "Lector de tarjeta",
-  "Teclado numérico",
-  // Fuentes de video / inferencia (módulo IA-video, M1). La cámara entrega
-  // stream; el NVR/XVR agrupa N canales de cámara. La inferencia puede correr
-  // en el propio device (smart events) o en el edge (RPi5+Hailo) — el proveedor
-  // se declara por capacidad en `capacidades.video.<tipo>.proveedor` (D49).
+/**
+ * Form-factor / familia física del dispositivo (eje físico, single-select). NO
+ * confundir con `capacidades` (lo que el device HACE, multivalor): las
+ * modalidades de credencial (facial / huella / tarjeta / PIN) ya NO viven acá —
+ * un terminal puede tener varias a la vez y se modelan en `capacidades.credencial`.
+ * Este enum solo categoriza el hardware para UI/agrupación/iconografía.
+ *
+ * - `Terminal de control de acceso`: cualquier terminal de credencial (HIK
+ *   K1T344 facial+tarjeta+PIN, K1T502 tarjeta+huella+PIN, lectores, teclados…).
+ *   Sus modalidades concretas viven en `capacidades.credencial`.
+ * - `Cámara IP` / `NVR` / `XVR`: fuentes de video / inferencia (módulo IA-video,
+ *   M1). La cámara entrega stream; el NVR/XVR agrupa N canales. La inferencia
+ *   corre en el device (smart events) o en el edge (RPi5+Hailo) — el proveedor
+ *   se declara por capacidad en `capacidades.video.<tipo>.proveedor` (D49).
+ * - `Otro`: fallback.
+ *
+ * La coherencia formFactor↔capacidades (Terminal ⇒ ≥1 credencial; Cámara/NVR/XVR
+ * ⇒ sin credencial) es una regla custom validada cloud-side en acceso-api — no se
+ * exporta a JSON Schema (igual que el gate de `identificacionFacial`).
+ */
+export const FormFactorDispositivoSchema = z.enum([
+  "Terminal de control de acceso",
   "Cámara IP",
   "NVR",
   "XVR",
@@ -222,7 +235,10 @@ export const DispositivoSchema = z.object({
     // "Cámara Entrada"). Lo setea el integrador; default al modelo si falta.
     nombre: z.string().optional(),
     // Datos específicos del dispositivo
-    tipo: TipoDispositivoSchema.optional(),
+    // Form-factor / familia física (eje físico). Las modalidades de credencial
+    // (facial/huella/tarjeta/PIN) NO van acá — viven en `capacidades.credencial`
+    // (multivalor). Coherencia formFactor↔capacidades validada en acceso-api.
+    formFactor: FormFactorDispositivoSchema.optional(),
     serialNumber: z.string().optional(),
     marca: z.string().optional(),
     modelo: z.string().optional(),
@@ -312,7 +328,7 @@ export const UpdateDispositivoSchema = DispositivoSchema.omit({
   fechaCreacion: true,
 }).partial();
 
-export type ITipoDispositivo = z.infer<typeof TipoDispositivoSchema>;
+export type IFormFactorDispositivo = z.infer<typeof FormFactorDispositivoSchema>;
 export type IProtocoloDispositivo = z.infer<typeof ProtocoloDispositivoSchema>;
 export type IProveedorCapacidad = z.infer<typeof ProveedorCapacidadSchema>;
 export type ITipoStream = z.infer<typeof TipoStreamSchema>;

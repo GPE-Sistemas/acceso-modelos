@@ -81,6 +81,15 @@ export const PermisoUnidadFuncionalSchema = z.object({
   idComplejo: z.string(),
   idUnidadFuncional: z.string(),
   /**
+   * Índice del integrante dentro de la UF (1–99). Lo asigna acceso-api al crear
+   * el permiso (hueco más bajo libre de la UF, reutilizable, estable una vez
+   * asignado — no se renumera al borrar otro). Compone el código PIN de teclado:
+   * `codigo = pad(UF.numero, 4) + pad(identificador, 2)` (6 díg), que es a la vez
+   * el employeeNo y el password enrolado en el terminal. System-managed: omitido
+   * de Create/Update.
+   */
+  identificador: z.number().int().min(1).max(99).optional(),
+  /**
    * Inicio de vigencia del permiso. Permite alta diferida o retroactiva.
    * Si no se setea al crear, acceso-api lo iguala a fechaCreacion.
    * Inmutable una vez creado.
@@ -133,6 +142,7 @@ export const CreatePermisoSchema = z.discriminatedUnion("nivel", [
       cliente: true,
       complejo: true,
       unidadFuncional: true,
+      identificador: true,
       fechaFinVigencia: true,
     })
     .extend({ password: z.string().optional() }),
@@ -169,6 +179,7 @@ export const UpdatePermisoSchema = z.discriminatedUnion("nivel", [
       cliente: true,
       complejo: true,
       unidadFuncional: true,
+      identificador: true,
       fechaInicioVigencia: true,
       fechaFinVigencia: true,
     })

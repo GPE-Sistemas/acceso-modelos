@@ -17,8 +17,10 @@ export const UnidadFuncionalSchema = z.object({
     /** Identificador NUMÉRICO de la UF, tipeable en teclado (HIK keypad). Base
      *  del `employeeNo` del PIN (ver `ConfigComplejo.pinScheme`). Independiente
      *  de `nombre` (display, puede ser "Casa 1" / "Padel"). Solo lo necesitan
-     *  las UF que usan PIN; lo asigna admin/migración. */
-    numero: z.number().int().nonnegative().optional(),
+     *  las UF que usan PIN; lo asigna admin/migración. Máx 4 dígitos (≤9999) y
+     *  ÚNICO dentro del complejo (validado en acceso-api) — garantiza que el
+     *  código PIN de 6 díg (UF+identificador) no colisione entre UF. */
+    numero: z.number().int().nonnegative().max(9999).optional(),
     tipo: TipoUnidadFuncionalSchema.optional(),
     ubicacion: GeoJSONMultiPolygonSchema.optional(),
     config: ConfigUnidadFuncionalSchema.optional(),

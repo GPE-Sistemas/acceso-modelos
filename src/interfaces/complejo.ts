@@ -9,11 +9,23 @@ import { GeoJSONMultiPolygonSchema } from "../auxiliares/geojson";
  * El vecino tipea ese identificador en el teclado. Configurable por barrio.
  *
  * Modo:
- *  - `IdentificadorYPin` (B, confirmado): tipea `id + # + PIN` personal. verifyMode con `Pw`.
+ *  - `IdentificadorComoPin` (C, CONFIRMADO en vivo 2026-07-08): el código ES el
+ *    PIN. `codigo = pad(UF.numero, digitosUF) + pad(permiso.identificador, digitosUsuario)`
+ *    (6 díg) se enrola a la vez como `employeeNo` Y como `password` del device-user.
+ *    El vecino tipea solo el código + `#` (el terminal HIK autentica por password-solo,
+ *    matchea el user por password → concede). Único por construcción (UF.numero único +
+ *    identificador único en la UF), sin secreto. `identificador` es auto-asignado por
+ *    acceso-api en el permiso; NO usa `ICredencial.datos.numeroUsuarioUF` ni `digitosPin`.
+ *    Es el modo estándar cuando la única credencial es PIN (sin tarjeta/huella).
+ *  - `IdentificadorYPin` (B): tipea `id + # + PIN` personal. verifyMode con `Pw`.
  *  - `IdentificadorSolo` (A, a verificar contra el device): tipea solo el `id`, sin PIN.
  *    Depende de que el terminal conceda por employeeNo-only (no confirmado aún).
  */
-export const PinModoSchema = z.enum(["IdentificadorSolo", "IdentificadorYPin"]);
+export const PinModoSchema = z.enum([
+  "IdentificadorSolo",
+  "IdentificadorYPin",
+  "IdentificadorComoPin",
+]);
 
 export const PinSchemeSchema = z.object({
   modo: PinModoSchema,

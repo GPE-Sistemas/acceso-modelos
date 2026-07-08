@@ -90,7 +90,10 @@ export const DatosCredencialSchema = z.object({
   /** PIN → índice de integrante dentro de la UF (`00`–`99`), 2da parte del
    *  `employeeNo` tipeable (`pad(UF.numero, digitosUF) + pad(numeroUsuarioUF,
    *  digitosUsuario)` según `ConfigComplejo.pinScheme`). Ausente cuando el
-   *  esquema es 1 PIN por UF (`digitosUsuario=0`). */
+   *  esquema es 1 PIN por UF (`digitosUsuario=0`).
+   *  @deprecated Modo `IdentificadorComoPin`: el índice de integrante vive en
+   *  `IPermisoUnidadFuncional.identificador` (auto-asignado), no acá. Se conserva
+   *  para credenciales PIN legacy del modo `IdentificadorYPin`. */
   numeroUsuarioUF: z.number().int().min(0).max(99).optional(),
   /** Tarjeta → número y tipo de tarjeta RFID (futuro, spec §2). */
   cardNo: z.string().optional(),

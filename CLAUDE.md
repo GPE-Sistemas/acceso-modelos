@@ -161,7 +161,7 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 | `credencial-dispositivo.ts` | `CredencialDispositivoSchema` / `ICredencialDispositivo` |
 | `credencial-vector.ts` | `CredencialVectorSchema` / `ICredencialVector`, `EstadoCredencialVectorSchema` (módulo IA-video M5). Metadato del embedding facial (modelo/dim/version/foto) para identificación 1:N. **No** guarda el vector crudo (vive en el índice caliente del edge — decisión B). |
 | `deteccion.ts` | `DeteccionSchema` / `IDeteccion`, `TipoDeteccionSchema` (persona/vehiculo/patente/rostro/acceso-terminal), `EstadoCorrelacionDeteccionSchema` (módulo IA-video M3). Señal cruda de inferencia de video; se persiste con `expireAt`/TTL y se correlaciona en un único `IIngresoEgreso`. |
-| `dispositivo.ts` | `DispositivoSchema` / `IDispositivo`, `TipoDispositivoSchema` (+ `Cámara IP`/`NVR`/`XVR`, M1), `ConfigDispositivoSchema` (+ `protocolo`/`rtspUriPlantilla`/`idPerfilCamara`/`canales`), `CapacidadesDispositivoSchema` (+ `deteccion`), `CapacidadesDeteccionSchema`, `ProtocoloDispositivoSchema`, `FuenteInferenciaSchema`, `CanalDispositivoSchema`. `capacidades.deteccion.identificacionRostro` gatea aprobado automático (decisión E). |
+| `dispositivo.ts` | `DispositivoSchema` / `IDispositivo`, `TipoDispositivoSchema` (+ `Cámara IP`/`NVR`/`XVR`, M1), `ConfigDispositivoSchema` (+ `protocolo`/`rtspUriPlantilla`/`idPerfilCamara`/`canales`), `CapacidadesDispositivoSchema` (+ `deteccion`), `CapacidadesDeteccionSchema`, `ProtocoloDispositivoSchema`, `FuenteInferenciaSchema`, `CanalDispositivoSchema`. `capacidades.deteccion.identificacionRostro` gatea aprobado automático (decisión E). **`InventarioDispositivoSchema`** (owner edge, se pisa entero en cada reporte: `firmware`/`red`/`hora`/`ingesta`/`nube`) y **`FirmwareDispositivoSchema`** (owner cloud, veredicto derivado del catálogo — `soporte`/`bloqueaEnrolamiento`). El edge lee el veredicto, no lo calcula. |
 | `dispositivo-acceso.ts` | `DispositivoAccesoSchema` / `IDispositivoAcceso`, `ComportamientoCredencialValidaSchema`, `ComportamientoCredencialInvalidaSchema`, + (M4) `RolEnEventoSchema`, `ComportamientoDeteccionSchema`, `DisparoDeteccionSchema` (cadenas de detección). |
 | `evento-visita.ts` | `EventoVisitaSchema` / `IEventoVisita`, `RecurrenciaEventoVisitaSchema`, estados, aprobación. Campo `idTurno?` cuando el evento fue auto-generado desde un turno |
 | `ingreso-egreso.ts` | `IngresoEgresoSchema` / `IIngresoEgreso`, `VisitanteSnapshotSchema`, `VehiculoSnapshotSchema` (snapshot inmutable). `CategoriaIngresoEgresoSchema` enum: `Propietario` \| `Visita` \| `Administración` \| `Guardia` \| `Prestador de Servicio` \| `Mantenimiento`. Coherencia con `idPermiso.categoriaPermiso` validada en `acceso-api`. Entidad de alto volumen. M2 (IA-video): `OrigenIngresoEgresoSchema` (`Terminal`/`Detección Video`/`Manual`, independiente de `aprobadoPor`) + `confianza`/`tipoDeteccion[]`/`idsDetecciones[]` para eventos de inferencia de video |
@@ -217,6 +217,16 @@ export class StrictCreateFooDto extends createZodDto(CreateFooSchema.strict()) {
 ---
 
 ## Tipos utilitarios (`src/auxiliares/`)
+
+### Catálogo de firmware (`auxiliares/firmware.ts`)
+
+`CATALOGO_FIRMWARE` declara, por modelo, la `minimaSoportada` y la `minimaRecomendada`, con una `nota` que dice de dónde salen los números. `evaluarSoporteFirmware(modelo, version)` resuelve el nivel (`Soportado` / `Actualización recomendada` / `No soportado` / `Desconocido`) y si bloquea el enrolamiento.
+
+**Fail-open**: un modelo sin entrada resuelve `Desconocido` y no bloquea nada — un modelo nuevo no puede quedar trabado por omisión del catálogo.
+
+**Nunca bloquea la adopción**: un dispositivo que no se puede adoptar tampoco se puede actualizar. El único gate es el enrolamiento de credenciales.
+
+Lo evalúa `acceso-api` al materializar el inventario que reporta el edge, y persiste el resultado en `IDispositivo.firmware`. El agent edge (Go) lo consume del documento replicado — no reimplementa la política.
 
 ```typescript
 // Respuestas normalizadas de acceso-datos (genéricos)

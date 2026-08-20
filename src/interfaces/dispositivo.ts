@@ -189,6 +189,140 @@ export const CapacidadesDispositivoSchema = z.object({
   video: CapacidadesVideoSchema.optional(),
 });
 
+/**
+ * Nivel de soporte del firmware que corre el dispositivo. Lo resuelve el cloud
+ * contra el catálogo de `acceso-modelos/auxiliares/firmware` cada vez que el
+ * edge reporta una versión nueva — el edge NO reimplementa la política.
+ *
+ * - `Soportado`: dentro de las versiones con las que operamos.
+ * - `Actualización recomendada`: opera, pero conviene subirlo.
+ * - `No soportado`: por debajo de la mínima. **Bloquea el enrolamiento de
+ *   credenciales**, nunca la adopción — un device que no se puede adoptar
+ *   tampoco se puede actualizar.
+ * - `Desconocido`: falta el dato o el modelo no está en el catálogo. No bloquea.
+ */
+export const NivelSoporteFirmwareSchema = z.enum([
+  "Soportado",
+  "Actualización recomendada",
+  "No soportado",
+  "Desconocido",
+]);
+
+/**
+ * Veredicto de soporte del firmware — **owner: cloud**. Derivado de
+ * `inventario.firmware.version` + el catálogo por modelo. Se persiste (en vez de
+ * calcularse en cada lectura) porque el agent edge lo consume del documento
+ * replicado para gatear el enrolamiento, y el edge no tiene el catálogo.
+ */
+export const FirmwareDispositivoSchema = z.object({
+  soporte: NivelSoporteFirmwareSchema.optional(),
+  // Versión sobre la que se emitió este veredicto. Si difiere de la que reporta
+  // el inventario, el veredicto quedó viejo.
+  versionEvaluada: z.string().optional(),
+  minimaSoportada: z.string().optional(),
+  minimaRecomendada: z.string().optional(),
+  // Frase lista para mostrar en la UI y para el motivo del skip de enrolamiento.
+  motivo: z.string().optional(),
+  // `true` ⇒ el edge saltea este device en el loop de enrolamiento.
+  bloqueaEnrolamiento: z.boolean().optional(),
+  evaluadoEn: z.string().optional(),
+});
+
+// ── Inventario relevado por el edge (owner: edge) ──────────────────────
+// Todo lo de abajo sale de GETs ISAPI contra el terminal. El edge pisa el objeto
+// `inventario` COMPLETO en cada reporte (no hace merge por campo): lo que el
+// device dejó de exponer tiene que desaparecer, no quedar pegado de un relevo
+// anterior. Por eso el veredicto de soporte vive fuera, en `firmware`.
+
+/** Versión de firmware tal cual la reporta el device. */
+export const FirmwareRelevadoSchema = z.object({
+  // `<firmwareVersion>` — ej. "V4.31.0".
+  version: z.string().optional(),
+  // `<firmwareReleasedDate>` — ej. "build 250421".
+  build: z.string().optional(),
+  // `<hardwareVersion>`.
+  hardwareVersion: z.string().optional(),
+  // `<bspVersion>`. Un sufijo `_S<fecha><n>` marca rama BSP especial de
+  // fábrica: dos equipos del mismo modelo pueden no ser la misma plataforma.
+  bspVersion: z.string().optional(),
+  // `<deviceType>` / `<subDeviceType>`.
+  deviceType: z.string().optional(),
+});
+
+/** Configuración de red del device (`/ISAPI/System/Network/interfaces/1/ipAddress`). */
+export const RedRelevadaSchema = z.object({
+  ipAddress: z.string().optional(),
+  macAddress: z.string().optional(),
+  // `<addressingType>`: dynamic ⇒ DHCP. Relevante para cualquier operación
+  // larga contra el device: un renew a mitad de camino es un corte.
+  direccionamiento: z.enum(["DHCP", "Estática"]).optional(),
+  subnetMask: z.string().optional(),
+  gateway: z.string().optional(),
+  dnsPrimario: z.string().optional(),
+  // `<DNSEnable>`. En false el device no resuelve FQDN — el push por hostname
+  // no llega aunque el slot esté bien configurado.
+  dnsHabilitado: z.boolean().optional(),
+  puerto: z.number().int().positive().optional(),
+  // `/ISAPI/System/Network/ssh` → `<enabled>`. Canal de consola habilitable sin
+  // tocar el hardware; útil como red de seguridad ante una operación riesgosa.
+  sshHabilitado: z.boolean().optional(),
+});
+
+/** Hora del device (`/ISAPI/System/time` + `/time/ntpServers`). */
+export const HoraRelevadaSchema = z.object({
+  // `<timeMode>`: NTP | manual. En manual el reloj driftea sin corrección.
+  modo: z.string().optional(),
+  zona: z.string().optional(),
+  local: z.string().optional(),
+  // Diferencia contra el reloj del edge al momento del relevo. El drift de hora
+  // rompe la validación de credenciales con vigencia.
+  driftSegundos: z.number().int().optional(),
+  ntpServidor: z.string().optional(),
+});
+
+/** Cómo llegan los eventos del device al edge. */
+export const IngestaRelevadaSchema = z.object({
+  // `push` = el device postea al edge; `pull` = el edge poolea AcsEvent.
+  clase: z.enum(["push", "pull"]).optional(),
+  // Slot 1 de `/ISAPI/Event/notification/httpHosts` tal como está hoy en el
+  // device — sirve para detectar drift contra lo que el edge cree haber puesto.
+  host: z.string().optional(),
+  puerto: z.number().int().positive().optional(),
+  protocolo: z.string().optional(),
+  formato: z.string().optional(),
+  autenticacion: z.string().optional(),
+});
+
+/**
+ * Vínculo del device con la nube del fabricante
+ * (`/ISAPI/System/onlineUpgrade/server`). Con `servidorUpgradeConectado` en
+ * true hay un segundo actor con capacidad de escribir el firmware del equipo
+ * sin pasar por nosotros — es un dato de gobierno, no una curiosidad.
+ */
+export const NubeFabricanteRelevadaSchema = z.object({
+  servidorUpgradeConectado: z.boolean().optional(),
+  versionDisponible: z.string().optional(),
+  hayVersionNueva: z.boolean().optional(),
+});
+
+/**
+ * Inventario del device relevado por el agent edge — **owner: edge**. Se reporta
+ * por outbox `dispositivo`/update en un tick lento, gateado a devices Online
+ * (cada GET va autenticado; pegarle a un device con la credencial mal extiende
+ * el lockout).
+ */
+export const InventarioDispositivoSchema = z.object({
+  actualizadoEn: z.string().optional(),
+  firmware: FirmwareRelevadoSchema.optional(),
+  red: RedRelevadaSchema.optional(),
+  hora: HoraRelevadaSchema.optional(),
+  ingesta: IngestaRelevadaSchema.optional(),
+  nube: NubeFabricanteRelevadaSchema.optional(),
+  // Mensaje del relevo que falló parcialmente. El inventario es best-effort: un
+  // endpoint que no responde no invalida el resto de lo relevado.
+  error: z.string().optional(),
+});
+
 // Entrada del historial de IPs LAN (auditoría DHCP drift). Schema nombrado
 // (no inline) para no inflar la inferencia de tipos de la cadena de populate
 // IDispositivo ⊂ IIngresoEgreso ⊂ IVinculoEventoIngreso (evita TS7056).
@@ -313,6 +447,13 @@ export const DispositivoSchema = z.object({
         actualizadoEn: z.string().optional(),
       })
       .optional(),
+    // Inventario relevado por el edge (firmware, red, hora, ingesta, nube del
+    // fabricante). Owner edge — se pisa entero en cada reporte.
+    inventario: InventarioDispositivoSchema.optional(),
+    // Veredicto de soporte del firmware. Owner cloud — lo deriva acceso-api del
+    // `inventario.firmware.version` contra el catálogo por modelo. El edge lo lee
+    // (no lo calcula) para gatear el enrolamiento de credenciales.
+    firmware: FirmwareDispositivoSchema.optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
@@ -344,3 +485,17 @@ export type ICapacidadesDispositivo = z.infer<
 export type IDispositivo = z.infer<typeof DispositivoSchema>;
 export type ICreateDispositivo = z.infer<typeof CreateDispositivoSchema>;
 export type IUpdateDispositivo = z.infer<typeof UpdateDispositivoSchema>;
+export type INivelSoporteFirmwareDispositivo = z.infer<
+  typeof NivelSoporteFirmwareSchema
+>;
+export type IFirmwareDispositivo = z.infer<typeof FirmwareDispositivoSchema>;
+export type IFirmwareRelevado = z.infer<typeof FirmwareRelevadoSchema>;
+export type IRedRelevada = z.infer<typeof RedRelevadaSchema>;
+export type IHoraRelevada = z.infer<typeof HoraRelevadaSchema>;
+export type IIngestaRelevada = z.infer<typeof IngestaRelevadaSchema>;
+export type INubeFabricanteRelevada = z.infer<
+  typeof NubeFabricanteRelevadaSchema
+>;
+export type IInventarioDispositivo = z.infer<
+  typeof InventarioDispositivoSchema
+>;

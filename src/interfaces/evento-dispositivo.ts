@@ -19,6 +19,7 @@ export const EventoDispositivoTipoSchema = z.enum([
   "self-heal", // reconciliación automática (ej. ipAddress vieja → nueva)
   "enrolamiento", // operación de enrolamiento (alta/baja de cara/tarjeta/huella)
   "conexion", // transición de conectividad (online/offline/lockout)
+  "firmware", // veredicto de soporte del firmware relevado (subtipo='soporte-evaluado')
 ]);
 
 export const EventoDispositivoResultadoSchema = z.enum(["ok", "error"]);
@@ -38,6 +39,14 @@ export const EventoDispositivoDetalleSchema = z.object({
   codigoHttp: z.number().int().optional(),
   // Contexto de canal de video cuando aplica (snapshot-canal / RTSP).
   canal: z.string().optional(),
+  // Firmware (tipo='firmware'): versión relevada, modelo contra el que se
+  // evaluó, y el veredicto resultante vs el anterior. Deja explicado en la
+  // bitácora por qué un terminal dejó de enrolar credenciales.
+  version: z.string().optional(),
+  modelo: z.string().optional(),
+  soporte: z.string().optional(),
+  soporteAnterior: z.string().optional(),
+  minimaSoportada: z.string().optional(),
 });
 
 export const EventoDispositivoSchema = z.object({

@@ -435,6 +435,14 @@ A partir de v2.11.0, `acceso-modelos` es la **fuente de verdad** del contrato HT
 
 `info.version` dentro del yaml refleja la versión semver del spec (puede divergir del package version si solo cambia el spec sin tocar Zod schemas — raro, normalmente bumpear ambos en sync).
 
+### Paridad a nivel campo (v2.50.0)
+
+`Listado_Entidad` / `Documento_Entidad` declaran `datos: array<object>` — shape opaca. Sirve para verificar que el path existe, pero **no** detecta que una implementación deje de emitir un campo: así se filtró el drift de `IDispositivo` (el edge nunca mandó `nombre`, `mac`, `capacidades`, `inventario`, `firmware` ni la telemetría de liveness, y las vistas del Hub edge quedaron vacías sin que fallara ningún check).
+
+El antídoto es declarar el row entity por entity, como ya lo hacía `Acceso`. `Dispositivo` (+ `Documento_Dispositivo` / `Listado_Dispositivo`) se transcribe de `dist/json-schema/DispositivoSchema.json` — marcado con `x-source` — y las respuestas de `/dispositivos*` lo referencian. `acceso-edge` genera el tipo Go con `make hub-edge-spec` y un test de paridad (`internal/api/rest/contract_fields_test.go`) compara por reflexión las claves que emite su mapper contra ese tipo: campo declarado y no emitido = test rojo. El resto de las entidades sigue con la shape genérica — migrarlas es el trabajo pendiente de esta línea.
+
+`cliente` / `complejo` no se declaran: son populate, viajan sólo cuando el query los pide.
+
 ### Consumidores conocidos
 
 - **`acceso-api`**: workflow `.github/workflows/hub-edge-contract-check.yml` lee `node_modules/acceso-modelos/spec/hub-edge-contract.yaml` para validar que el cloud cubre el subset declarado como `edge-required` / `edge-candidate`.

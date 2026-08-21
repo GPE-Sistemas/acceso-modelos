@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.7.0
+  version: 0.8.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -425,7 +425,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Listado_Entidad'
+                $ref: '#/components/schemas/Listado_Dispositivo'
     post:
       tags:
       - control-acceso
@@ -445,7 +445,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Documento_Entidad'
+                $ref: '#/components/schemas/Documento_Dispositivo'
   /credenciales-dispositivos:
     get:
       tags:
@@ -1647,7 +1647,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Documento_Entidad'
+                $ref: '#/components/schemas/Documento_Dispositivo'
         '404':
           $ref: '#/components/responses/NotFound'
     put:
@@ -1669,7 +1669,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Documento_Entidad'
+                $ref: '#/components/schemas/Documento_Dispositivo'
     delete:
       tags:
       - control-acceso
@@ -1683,7 +1683,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Documento_Entidad'
+                $ref: '#/components/schemas/Documento_Dispositivo'
   /dispositivos-accesos/{id}:
     parameters:
     - $ref: '#/components/parameters/IdPath'
@@ -3891,6 +3891,275 @@ components:
       - nombre
       - tipo
       - tipoPersona
+    Documento_Dispositivo:
+      type: object
+      required:
+      - dato
+      properties:
+        dato:
+          $ref: '#/components/schemas/Dispositivo'
+        duration:
+          type: number
+    Listado_Dispositivo:
+      type: object
+      required:
+      - datos
+      properties:
+        datos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dispositivo'
+        totalCount:
+          type: integer
+        duration:
+          type: number
+    Dispositivo:
+      type: object
+      x-source: acceso-modelos/dist/json-schema/DispositivoSchema.json
+      description: 'Row de dispositivo tal como lo emite el listado/detalle. Todo campo declarado acá DEBE
+        viajar en la respuesta del edge cuando el dato existe: el test de paridad de acceso-edge (internal/api/rest/contract_fields_test.go)
+        compara las claves emitidas contra este schema. `cliente`/`complejo` no figuran: son populate.'
+      properties:
+        _id:
+          type: string
+        fechaCreacion:
+          type: string
+        habilitado:
+          type: boolean
+        idCliente:
+          type: string
+        idComplejo:
+          type: string
+        nombre:
+          type: string
+        formFactor:
+          type: string
+          enum:
+          - Terminal de control de acceso
+          - Cámara IP
+          - NVR
+          - XVR
+          - Otro
+        serialNumber:
+          type: string
+        marca:
+          type: string
+        modelo:
+          type: string
+        mac:
+          type: string
+        config:
+          type: object
+          description: Passthrough opaco (credenciales ISAPI, red, canales de video).
+        capacidades:
+          type: object
+          properties:
+            credencial:
+              type: object
+              properties:
+                face:
+                  type: boolean
+                card:
+                  type: boolean
+                pin:
+                  type: boolean
+                fingerprint:
+                  type: boolean
+            fuenteVideo:
+              type: boolean
+            aperturaComando:
+              type: boolean
+            enrolamiento:
+              type: boolean
+            video:
+              type: object
+              description: Capacidades de video (M1) — passthrough opaco.
+        idEdgeAppliancePrimario:
+          type: string
+        idEdgeApplianceSecundario:
+          type: string
+        estado:
+          type: string
+          enum:
+          - Pendiente Adopción
+          - Online
+          - Degradado
+          - Offline
+          - Locked
+          - Desconocido
+        estadoActualizado:
+          type: string
+        ultimaVistaHeartbeat:
+          type: string
+        lagHeartbeatSegundos:
+          type: number
+        consecutivosFallos:
+          type: integer
+        ultimoHeartbeatError:
+          type: string
+        lockout:
+          type: object
+          properties:
+            unlockTimeRemainingSec:
+              type: integer
+            lockedSince:
+              type: string
+        enrolamiento:
+          type: object
+          properties:
+            userNumber:
+              type: integer
+            faceNumber:
+              type: integer
+            cardNumber:
+              type: integer
+            fingerNumber:
+              type: integer
+            capacidadFaces:
+              type: integer
+            capacidadCards:
+              type: integer
+            capacidadFingers:
+              type: integer
+            actualizadoEn:
+              type: string
+        inventario:
+          type: object
+          properties:
+            actualizadoEn:
+              type: string
+            firmware:
+              type: object
+              properties:
+                version:
+                  type: string
+                build:
+                  type: string
+                hardwareVersion:
+                  type: string
+                bspVersion:
+                  type: string
+                deviceType:
+                  type: string
+            red:
+              type: object
+              properties:
+                ipAddress:
+                  type: string
+                macAddress:
+                  type: string
+                direccionamiento:
+                  type: string
+                  enum:
+                  - DHCP
+                  - Estática
+                subnetMask:
+                  type: string
+                gateway:
+                  type: string
+                dnsPrimario:
+                  type: string
+                dnsHabilitado:
+                  type: boolean
+                puerto:
+                  type: integer
+                sshHabilitado:
+                  type: boolean
+            hora:
+              type: object
+              properties:
+                modo:
+                  type: string
+                zona:
+                  type: string
+                local:
+                  type: string
+                driftSegundos:
+                  type: integer
+                ntpServidor:
+                  type: string
+            ingesta:
+              type: object
+              properties:
+                clase:
+                  type: string
+                  enum:
+                  - push
+                  - pull
+                host:
+                  type: string
+                puerto:
+                  type: integer
+                protocolo:
+                  type: string
+                formato:
+                  type: string
+                autenticacion:
+                  type: string
+            nube:
+              type: object
+              properties:
+                servidorUpgradeConectado:
+                  type: boolean
+                versionDisponible:
+                  type: string
+                hayVersionNueva:
+                  type: boolean
+            error:
+              type: string
+        firmware:
+          type: object
+          properties:
+            soporte:
+              type: string
+              enum:
+              - Soportado
+              - Actualización recomendada
+              - No soportado
+              - Desconocido
+            versionEvaluada:
+              type: string
+            minimaSoportada:
+              type: string
+            minimaRecomendada:
+              type: string
+            motivo:
+              type: string
+            bloqueaEnrolamiento:
+              type: boolean
+            evaluadoEn:
+              type: string
+            actualizacion:
+              type: object
+              properties:
+                estado:
+                  type: string
+                  enum:
+                  - Solicitada
+                  - Descargando
+                  - Enviando
+                  - Reiniciando
+                  - Verificando
+                  - Completada
+                  - Fallida
+                idPaquete:
+                  type: string
+                versionOrigen:
+                  type: string
+                versionDestino:
+                  type: string
+                progreso:
+                  type: integer
+                mensaje:
+                  type: string
+                idComandoEdge:
+                  type: string
+                solicitadaPorIdPermiso:
+                  type: string
+                iniciadaEn:
+                  type: string
+                finalizadaEn:
+                  type: string
 x-ws-events:
   description: 'Eventos Socket.io del Hub edge. Conexión: `/socket.io/` con handshake auth (JWT + X-Permiso-Id query).
 

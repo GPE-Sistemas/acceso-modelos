@@ -35,8 +35,12 @@ export const EstadoCredencialSchema = z.enum([
   "Pendiente", // creada, sin captura aún
   "Capturada", // dato cargado (foto/pin/...), validado client-side
   "Enrolando", // el edge está materializándola en los devices
-  "Activa", // enrolada y verificada en al menos un device
-  "Fallida", // falló la captura/validación/enrolamiento
+  // Enrolada y verificada en TODOS los terminales que le corresponden. Con un
+  // solo terminal que no la haya tomado, la credencial NO está Activa: el
+  // portador no puede pasar por ese acceso, y mostrarle verde le hace creer que
+  // sí. Lo deriva acceso-api del agregado de los shells.
+  "Activa",
+  "Fallida", // falló la captura/validación/enrolamiento en algún terminal
   "Revocada", // dada de baja → borrado en device(s)
 ]);
 
@@ -135,6 +139,17 @@ export const CredencialSchema = z.object({
   vigenciaHasta: z.string().optional(),
   /** Mensaje legible del último fallo de captura/validación/enrolamiento. */
   ultimoError: z.string().optional(),
+  /**
+   * `true` cuando el fallo se resuelve capturando de nuevo (la foto no servía).
+   * `false` cuando el problema es del terminal —caído, credenciales inválidas,
+   * firmware por debajo de la mínima soportada—: ahí repetir la captura no
+   * cambia nada y pedírselo al residente lo deja reintentando algo que no puede
+   * funcionar.
+   *
+   * Lo deriva acceso-api del `origenFallo` de los shells que fallaron, junto con
+   * `estado`. Sólo tiene sentido con `estado: "Fallida"`.
+   */
+  requiereRecaptura: z.boolean().optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),

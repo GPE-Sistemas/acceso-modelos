@@ -20,6 +20,25 @@ export const EstadoEnrolamientoSchema = z.enum([
 ]);
 
 /**
+ * A qué se debe un `estadoEnrolamiento: "Fallida"`.
+ *
+ * Existe para decidir si tiene sentido pedirle al residente que capture de
+ * nuevo. Una foto sin rostro se arregla sacando otra; un terminal caído o con
+ * firmware no soportado no se arregla repitiendo la captura, y pedírselo lo deja
+ * repitiendo algo que nunca va a funcionar.
+ *
+ * - `Credencial`: el dato aportado no sirve (foto sin rostro, borrosa, con más
+ *   de una cara, demasiado pesada, o falta el número de tarjeta / el PIN).
+ * - `Dispositivo`: el terminal no pudo tomarla (inalcanzable, credenciales de
+ *   acceso inválidas, firmware por debajo de la mínima soportada, error de
+ *   configuración del propio equipo).
+ */
+export const OrigenFalloEnrolamientoSchema = z.enum([
+  "Credencial",
+  "Dispositivo",
+]);
+
+/**
  * Materialización FÍSICA de una credencial lógica en un terminal concreto
  * (capa 2, spec §1). Una por par device-user. El `identificador` es el device-user
  * (= employeeNo); las modalidades (cara/tarjeta/pin) cuelgan de ese mismo usuario
@@ -50,6 +69,12 @@ export const CredencialDispositivoSchema = z.object({
     numOfFinger: z.number().int().nonnegative().optional(),
     /** Mensaje legible del último error de enrolamiento (subStatusCode mapeado). */
     ultimoErrorEnrolamiento: z.string().optional(),
+    /**
+     * A qué se debe el fallo, cuando `estadoEnrolamiento` es `Fallida`. Lo
+     * clasifica el edge, que es quien conoce el error concreto del terminal.
+     * Gobierna si al residente se le ofrece capturar de nuevo.
+     */
+    origenFallo: OrigenFalloEnrolamientoSchema.optional(),
     /** ISO — cuándo se completó el último enrolamiento exitoso. */
     fechaUltimoEnrolamiento: z.string().optional(),
     /** ISO — cuándo el edge verificó por última vez el estado real contra el device. */
@@ -87,6 +112,9 @@ export const UpdateCredencialDispositivoSchema = CredencialDispositivoSchema.omi
 ).partial();
 
 export type IEstadoEnrolamiento = z.infer<typeof EstadoEnrolamientoSchema>;
+export type IOrigenFalloEnrolamiento = z.infer<
+  typeof OrigenFalloEnrolamientoSchema
+>;
 export type ICredencialDispositivo = z.infer<typeof CredencialDispositivoSchema>;
 export type ICreateCredencialDispositivo = z.infer<
   typeof CreateCredencialDispositivoSchema

@@ -29,6 +29,21 @@ import { z } from "zod";
  */
 export const VarianteFirmwareSchema = z.enum(["STD", "NEU", "Desconocida"]);
 
+/**
+ * Qué hay realmente en el objeto subido.
+ *
+ * - `dav`: el binario tal cual, listo para enviar al terminal.
+ * - `zip`: un contenedor del que hay que extraerlo. Es lo que entrega el
+ *   fabricante, y se acepta tal cual por dos razones: la herramienta estándar de
+ *   macOS no descomprime bien el anidado, y el contenedor pesa la mitad que el
+ *   binario (188 MB contra 356 MB en el caso del K1T344 V4.47.0) — menos
+ *   almacenamiento y menos tráfico hasta el edge, que es quien lo abre.
+ *
+ * El contenedor puede venir anidado (un ZIP con otro ZIP adentro más el release
+ * note); el edge busca el `.dav` recursivamente.
+ */
+export const FormatoArchivoFirmwareSchema = z.enum(["dav", "zip"]);
+
 export const PaqueteFirmwareSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
@@ -58,8 +73,17 @@ export const PaqueteFirmwareSchema = z.object({
   /** objectName en el bucket privado (carpeta `firmware`). Nunca una URL. */
   archivo: z.string(),
   nombreArchivo: z.string().optional(),
-  /** Lo calcula acceso-api al registrar el paquete; el edge lo revalida antes
-   *  de mandarle un solo byte al terminal. */
+  /**
+   * Qué contiene el objeto. Lo detecta acceso-api leyendo los primeros bytes
+   * del archivo subido, no la extensión del nombre: un archivo mal nombrado
+   * abortaría la operación recién en el edge.
+   */
+  formatoArchivo: FormatoArchivoFirmwareSchema.optional(),
+  /**
+   * SHA-256 del objeto **tal como se subió** (el contenedor, si es ZIP). Lo
+   * calcula acceso-api y el edge lo revalida sobre lo que descargó: verifica la
+   * transferencia, que es lo que puede corromperse en el camino.
+   */
   sha256: z.string().optional(),
   tamanioBytes: z.number().int().nonnegative().optional(),
 
@@ -91,6 +115,9 @@ export const UpdatePaqueteFirmwareSchema =
   CreatePaqueteFirmwareSchema.partial();
 
 export type IVarianteFirmware = z.infer<typeof VarianteFirmwareSchema>;
+export type IFormatoArchivoFirmware = z.infer<
+  typeof FormatoArchivoFirmwareSchema
+>;
 export type IPaqueteFirmware = z.infer<typeof PaqueteFirmwareSchema>;
 export type ICreatePaqueteFirmware = z.infer<
   typeof CreatePaqueteFirmwareSchema

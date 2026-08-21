@@ -121,6 +121,14 @@ export const AccionesRolSchema = z.enum([
   "Hardware - Editar red y credenciales del dispositivo",
   // Revela el password de red del device en el form (render del campo sensible).
   "Hardware - Ver credenciales de red del dispositivo",
+  // Catálogo de paquetes de firmware: subir/retirar los archivos que después se
+  // aplican a los terminales. Separada de la acción de aplicar: quien consigue y
+  // sube el binario no es necesariamente quien decide actualizar un equipo.
+  "Hardware - Gestionar paquetes de firmware",
+  // Dispara la actualización de firmware de UN dispositivo. Operación
+  // irreversible (el fabricante bloquea el downgrade) y con riesgo de dejar el
+  // equipo inutilizable: gate propio, nunca incluida en "Editar dispositivos".
+  "Hardware - Actualizar firmware dispositivo",
 
   // MODULO VISITAS
   "Visitas - Ver eventos",

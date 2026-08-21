@@ -214,6 +214,51 @@ export const NivelSoporteFirmwareSchema = z.enum([
  * calcularse en cada lectura) porque el agent edge lo consume del documento
  * replicado para gatear el enrolamiento, y el edge no tiene el catálogo.
  */
+/**
+ * Estado de una actualización de firmware en curso o de la última ejecutada.
+ *
+ * La operación es irreversible —el downgrade está bloqueado por el fabricante— y
+ * el único rescate conocido ante un fallo grave exige power-cycle físico. Por eso
+ * se registra cada fase: si algo sale mal, la diferencia entre "no llegó a
+ * enviarse" y "se cortó a mitad del flasheo" cambia por completo qué hacer.
+ *
+ * - `Solicitada`: el comando se emitió, el edge todavía no lo tomó.
+ * - `Descargando`: el edge está bajando el paquete y verificando su hash.
+ * - `Enviando`: el archivo está viajando al terminal. **Fase crítica**: un corte
+ *   acá puede dejar el equipo inutilizable.
+ * - `Reiniciando`: el terminal aceptó el firmware y se está reiniciando solo.
+ * - `Verificando`: el edge está releyendo la versión para confirmar el resultado.
+ * - `Completada`: el terminal reporta la versión de destino.
+ * - `Fallida`: ver `mensaje`.
+ */
+export const EstadoActualizacionFirmwareSchema = z.enum([
+  "Solicitada",
+  "Descargando",
+  "Enviando",
+  "Reiniciando",
+  "Verificando",
+  "Completada",
+  "Fallida",
+]);
+
+export const ActualizacionFirmwareSchema = z.object({
+  estado: EstadoActualizacionFirmwareSchema.optional(),
+  idPaquete: z.string().optional(),
+  versionOrigen: z.string().optional(),
+  versionDestino: z.string().optional(),
+  // Progreso que reporta el propio terminal, cuando lo reporta. Informativo: no
+  // se gatea ninguna decisión en él.
+  progreso: z.number().int().min(0).max(100).optional(),
+  mensaje: z.string().optional(),
+  // Correlación con la auditoría del comando (IComandoEdge.correlationId).
+  idComandoEdge: z.string().optional(),
+  // Quién la disparó. La actualización siempre nace de una acción manual de un
+  // administrador — nunca es automática.
+  solicitadaPorIdPermiso: z.string().optional(),
+  iniciadaEn: z.string().optional(),
+  finalizadaEn: z.string().optional(),
+});
+
 export const FirmwareDispositivoSchema = z.object({
   soporte: NivelSoporteFirmwareSchema.optional(),
   // Versión sobre la que se emitió este veredicto. Si difiere de la que reporta
@@ -226,6 +271,8 @@ export const FirmwareDispositivoSchema = z.object({
   // `true` ⇒ el edge saltea este device en el loop de enrolamiento.
   bloqueaEnrolamiento: z.boolean().optional(),
   evaluadoEn: z.string().optional(),
+  // Actualización en curso, o la última ejecutada sobre este dispositivo.
+  actualizacion: ActualizacionFirmwareSchema.optional(),
 });
 
 // ── Inventario relevado por el edge (owner: edge) ──────────────────────
@@ -487,6 +534,12 @@ export type ICreateDispositivo = z.infer<typeof CreateDispositivoSchema>;
 export type IUpdateDispositivo = z.infer<typeof UpdateDispositivoSchema>;
 export type INivelSoporteFirmwareDispositivo = z.infer<
   typeof NivelSoporteFirmwareSchema
+>;
+export type IEstadoActualizacionFirmware = z.infer<
+  typeof EstadoActualizacionFirmwareSchema
+>;
+export type IActualizacionFirmware = z.infer<
+  typeof ActualizacionFirmwareSchema
 >;
 export type IFirmwareDispositivo = z.infer<typeof FirmwareDispositivoSchema>;
 export type IFirmwareRelevado = z.infer<typeof FirmwareRelevadoSchema>;

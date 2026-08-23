@@ -118,12 +118,50 @@ export const ConfigOperacionDispositivoSchema = z.object({
 });
 
 /**
+ * Cómo se gobierna la configuración de operación de un dispositivo.
+ *
+ * Los tres modos son **excluyentes**, y eso es la decisión (no un detalle de
+ * implementación): antes `idPerfilDispositivo` y `configDeseada` eran dos capas
+ * que se sumaban, con el override pisando al perfil campo a campo. Medido en
+ * producción: un terminal quedó con los 19 knobs declarados como ajuste propio
+ * *además* del perfil asignado. Los valores coincidían, así que convergía igual
+ * y no había ningún error a la vista — pero ese equipo había dejado de seguir al
+ * perfil sin que nadie lo decidiera: cambiar el perfil no lo iba a mover nunca.
+ *
+ * - `Perfil`: lo gobierna el perfil asignado. `idPerfilDispositivo` presente y
+ *   `configDeseada` VACÍO. Cambiar el perfil mueve a todos sus equipos.
+ * - `Manual`: lo gobierna la configuración propia del equipo. `configDeseada`
+ *   con lo declarado y `idPerfilDispositivo` ausente.
+ * - `Sin gestionar`: no se declara nada. El sistema no toca el equipo (sigue
+ *   relevando y reportando lo que tiene, que es otra cosa).
+ *
+ * El terminal es de uso exclusivo de este sistema, así que lo que el device
+ * tiene puesto (`configuracion.real`) es una SALIDA —sirve para verificar
+ * convergencia y para detectar que alguien lo tocó por fuera—, nunca la fuente
+ * del deseado. Importar los valores del equipo es una operación de arranque
+ * (onboarding, o pasar a `Manual` un equipo que el integrador ya había
+ * configurado a mano), no una acción de rutina sobre un equipo ya gobernado.
+ *
+ * El invariante lo hace cumplir `acceso-api` en el create/update: el modo no es
+ * una etiqueta decorativa sobre dos campos que pueden contradecirla.
+ */
+export const ModoConfigDispositivoSchema = z.enum([
+  "Perfil",
+  "Manual",
+  "Sin gestionar",
+]);
+
+/**
  * Estado de la configuración de un dispositivo respecto de lo deseado.
  * - `Coincide`: lo declarado ya está aplicado en el device (verificado por read-back).
  * - `No coincide`: hay diferencias; el reconciliador las va a corregir.
  * - `Pendiente`: se declaró/cambió algo y el reconciliador todavía no comparó.
- * - `No aplicable`: no hay nada declarado para este dispositivo (sin perfil ni
- *   overrides), o el device no soporta ninguno de los knobs declarados.
+ * - `No aplicable`: no hay nada declarado para este dispositivo (modo
+ *   `Sin gestionar`), o el device no soporta ninguno de los knobs declarados.
+ *   En la UI se muestra como "Sin gestionar": para el operador "No aplicable" se
+ *   lee como "esto no corre acá", cuando lo que pasa es que nadie declaró nada.
+ *   El VALOR del enum no se renombra — vive en constantes Go del edge y en datos
+ *   ya persistidos en producción.
  */
 export const EstadoConfigDispositivoSchema = z.enum([
   "Coincide",
@@ -197,6 +235,9 @@ export type IConfigPrivacidadPantalla = z.infer<
 export type IConfigImagenesEvento = z.infer<typeof ConfigImagenesEventoSchema>;
 export type IConfigOperacionDispositivo = z.infer<
   typeof ConfigOperacionDispositivoSchema
+>;
+export type IModoConfigDispositivo = z.infer<
+  typeof ModoConfigDispositivoSchema
 >;
 export type IEstadoConfigDispositivo = z.infer<
   typeof EstadoConfigDispositivoSchema

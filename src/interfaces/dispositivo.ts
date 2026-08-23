@@ -414,18 +414,15 @@ export const ConfigDispositivoSchema = z.object({
 export const DispositivoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
-    // Marca de versión del documento. La escribe Mongoose (`timestamps.updatedAt`)
-    // en acceso-datos; nadie la manda en un Create/Update.
-    //
-    // No es cosmética: la reconciliación de integridad del edge calcula el sha de
-    // cada tabla sobre `<_id>:<fechaActualizacion>`, y una entidad sin la marca
-    // sólo puede aportar `<_id>` — o sea que un cambio de contenido con el mismo
-    // id es INVISIBLE para la integridad. Para `IDispositivo` eso significaba que
-    // un `config.ipAddress` reconciliado cloud-side dependía enteramente del
-    // broadcast en vivo: si el edge estaba desconectado en ese instante —el caso
-    // normal cuando un corte de energía devuelve al router y al edge en momentos
-    // distintos— la IP nueva no llegaba nunca y nada la reparaba después.
-    fechaActualizacion: z.string().optional(),
+    // `IDispositivo` NO declara `fechaActualizacion`, y es deliberado: el edge le
+    // escribe telemetría de liveness cada 60 s, así que la marca cambiaría
+    // permanentemente y —si entrara al sha de integridad— el checker se bajaría
+    // el snapshot completo de la entidad en cada tick. Es el loop que se observó
+    // en producción con `credencial` (2026-06-03). Tampoco tendría consumidor:
+    // todos los call sites de `ApplyEntidadSnapshot` piden el snapshot completo,
+    // ninguno usa `since`. La detección de cambios de contenido cloud-side va por
+    // evento (snapshot al arrancar el agent, y snapshot dirigido cuando un device
+    // deja de responder en la IP registrada), no por hash.
     habilitado: z.boolean().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
@@ -553,13 +550,11 @@ export const DispositivoSchema = z.object({
 export const CreateDispositivoSchema = DispositivoSchema.omit({
   _id: true,
   fechaCreacion: true,
-  fechaActualizacion: true,
 });
 
 export const UpdateDispositivoSchema = DispositivoSchema.omit({
   _id: true,
   fechaCreacion: true,
-  fechaActualizacion: true,
 }).partial();
 
 export type IFormFactorDispositivo = z.infer<typeof FormFactorDispositivoSchema>;

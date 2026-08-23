@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.10.0
+  version: 0.10.1
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -3924,11 +3924,6 @@ components:
           type: string
         fechaCreacion:
           type: string
-        fechaActualizacion:
-          type: string
-          description: 'Marca de versión del documento. El edge la replica y la usa en el sha de integridad
-            de la tabla `dispositivo` (`<_id>:<fechaActualizacion>`); sin ella un cambio de contenido con
-            el mismo id es invisible para la reconciliación.'
         habilitado:
           type: boolean
         idCliente:

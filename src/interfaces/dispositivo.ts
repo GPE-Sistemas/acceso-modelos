@@ -414,6 +414,18 @@ export const ConfigDispositivoSchema = z.object({
 export const DispositivoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
+    // Marca de versión del documento. La escribe Mongoose (`timestamps.updatedAt`)
+    // en acceso-datos; nadie la manda en un Create/Update.
+    //
+    // No es cosmética: la reconciliación de integridad del edge calcula el sha de
+    // cada tabla sobre `<_id>:<fechaActualizacion>`, y una entidad sin la marca
+    // sólo puede aportar `<_id>` — o sea que un cambio de contenido con el mismo
+    // id es INVISIBLE para la integridad. Para `IDispositivo` eso significaba que
+    // un `config.ipAddress` reconciliado cloud-side dependía enteramente del
+    // broadcast en vivo: si el edge estaba desconectado en ese instante —el caso
+    // normal cuando un corte de energía devuelve al router y al edge en momentos
+    // distintos— la IP nueva no llegaba nunca y nada la reparaba después.
+    fechaActualizacion: z.string().optional(),
     habilitado: z.boolean().optional(),
     idCliente: z.string().optional(),
     idComplejo: z.string().optional(),
@@ -435,6 +447,16 @@ export const DispositivoSchema = z.object({
     // registrado va por MAC (y serial), NUNCA por IP (que es lo que cambia).
     // Cloud SoT — no debería cambiar salvo reemplazo físico de hardware.
     // Doc 28-discovery-lan-edge.md.
+    //
+    // **NORMALIZADA EN MINÚSCULAS**, sin excepción. Las dos fuentes de la MAC
+    // difieren en case: el discovery la saca de la tabla ARP (minúsculas) y la
+    // adopción de ISAPI `deviceInfo` (mayúsculas). Con el case libre, el
+    // matching por MAC —comparación directa cloud-side y filtro Mongo, ambos
+    // case-sensitive— falla en silencio: es exactamente lo que dejó dos
+    // terminales Offline 4,8 h en Chascomús (2026-08-23) con el descubrimiento
+    // de la IP nueva ya persistido al lado. Normalizan el productor (edge) y el
+    // persistidor (acceso-datos, `lowercase: true`); quien compara igual lo
+    // hace en minúsculas, porque una MAC vieja sin migrar sigue siendo posible.
     mac: z.string().optional(),
     config: ConfigDispositivoSchema.optional(),
     // Capacidades del device (D49, Capa 1): credencial + intrínsecos
@@ -531,11 +553,13 @@ export const DispositivoSchema = z.object({
 export const CreateDispositivoSchema = DispositivoSchema.omit({
   _id: true,
   fechaCreacion: true,
+  fechaActualizacion: true,
 });
 
 export const UpdateDispositivoSchema = DispositivoSchema.omit({
   _id: true,
   fechaCreacion: true,
+  fechaActualizacion: true,
 }).partial();
 
 export type IFormFactorDispositivo = z.infer<typeof FormFactorDispositivoSchema>;

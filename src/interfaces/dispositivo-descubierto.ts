@@ -75,7 +75,14 @@ export const DispositivoDescubiertoSchema = z.object({
   idComplejo: z.string(),
   reachableFrom: z.array(z.string()), // ids de IEdgeAppliance que lo descubren
 
-  macAddress: z.string(), // identidad estable cross-discovery
+  // Identidad estable cross-discovery, **normalizada en minúsculas**. El edge la
+  // saca de la tabla ARP (que ya la entrega en minúsculas) y la normaliza igual,
+  // porque la otra fuente de la misma MAC —ISAPI `deviceInfo`, que alimenta
+  // `IDispositivo.mac` al adoptar— la entrega en MAYÚSCULAS. Sin un único case
+  // canónico el matching por MAC falla en silencio: la comparación directa
+  // cloud-side y el filtro Mongo son los dos case-sensitive. Ver la nota de
+  // `IDispositivo.mac`.
+  macAddress: z.string(),
   ipLan: z.string(), // mutable — DHCP refresca
   ipLanHistorico: z
     .array(DispositivoDescubiertoIpLanHistoricoEntrySchema)
@@ -182,6 +189,8 @@ export const AdoptarResultSchema = z.object({
   model: z.string().optional(),
   serialNumber: z.string().optional(),
   shortSerial: z.string().optional(),
+  // Normalizar a minúsculas antes de persistirla en `IDispositivo.mac`: ISAPI la
+  // entrega en MAYÚSCULAS y el discovery en minúsculas. Ver `IDispositivo.mac`.
   macAddress: z.string().optional(),
   firmwareVersion: z.string().optional(),
   // Check 3: reconfig push slot 1.

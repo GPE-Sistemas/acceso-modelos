@@ -28,9 +28,17 @@ export const EventoDispositivoResultadoSchema = z.enum(["ok", "error"]);
 // modela explícito en vez de un record libre para sobrevivir a Mongoose strict
 // y para que la UI lo renderice sin adivinar shape.
 export const EventoDispositivoDetalleSchema = z.object({
-  // self-heal de IP (subtipo='ip-reconciliada').
+  // self-heal de IP (subtipo='ip-reconciliada' | 'ip-drift-detectado').
   ipVieja: z.string().optional(),
   ipNueva: z.string().optional(),
+  // Qué disparó la re-resolución. `reachability` = el edge la propuso tras N
+  // fallos consecutivos (el camino que no depende del barrido periódico);
+  // `discovery` = salió del barrido normal. Distinguirlos importa para el
+  // diagnóstico: si sólo aparecen `discovery`, el camino rápido no está
+  // funcionando y la recuperación quedó atada al intervalo del barrido.
+  disparadoPor: z.enum(["reachability", "discovery"]).optional(),
+  // Fallos de reachability acumulados al momento de disparar la re-resolución.
+  consecutivosFallos: z.number().int().optional(),
   // Cómo se matcheó el device descubierto ↔ registrado (NUNCA por IP).
   matchedBy: z.enum(["mac", "serial", "fingerprint"]).optional(),
   // Falla / check: mensaje crudo del transporte (ej.
@@ -61,7 +69,17 @@ export const EventoDispositivoSchema = z.object({
 
   tipo: EventoDispositivoTipoSchema,
   // Discriminador fino del tipo: reachability | onvif-getprofiles | snapshot |
-  // rtsp | ip-reconciliada | lockout | enrolamiento-cara | ... String libre.
+  // rtsp | ip-reconciliada | ip-drift-detectado | lockout | enrolamiento-cara |
+  // ... String libre.
+  //
+  // Los dos subtipos del self-heal de IP son el par "edge propone / cloud
+  // arbitra" y hay que emitir LOS DOS — cada uno prueba una mitad distinta:
+  //  - `ip-drift-detectado` (edge): la reachability falló N veces y el sondeo
+  //    dirigido por MAC encontró el equipo en otra IP. Es una PROPUESTA: el edge
+  //    no escribe `config.ipAddress`, publica el descubrimiento y nada más.
+  //  - `ip-reconciliada` (cloud): el cloud aceptó la propuesta y escribió. Es la
+  //    única traza que prueba que la cadena cerró de punta a punta.
+  // Ver `detalle.ipVieja`/`ipNueva`/`matchedBy`.
   subtipo: z.string().optional(),
 
   resultado: EventoDispositivoResultadoSchema,

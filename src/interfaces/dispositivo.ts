@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
+import {
+  ConfigOperacionDispositivoSchema,
+  ConfiguracionReportadaDispositivoSchema,
+} from "./config-operacion-dispositivo";
+import { PerfilDispositivoSchema } from "./perfil-dispositivo";
 
 /**
  * Form-factor / familia física del dispositivo (eje físico, single-select). NO
@@ -501,9 +506,26 @@ export const DispositivoSchema = z.object({
     // `inventario.firmware.version` contra el catálogo por modelo. El edge lo lee
     // (no lo calcula) para gatear el enrolamiento de credenciales.
     firmware: FirmwareDispositivoSchema.optional(),
+    // --- Configuración de operación del device (D51) ---
+    // Doc 40-configuracion-dispositivos.md. Distinguir de `config` (credenciales
+    // ISAPI + red + video, input del integrador): esto es la config OPERATIVA del
+    // terminal (voz, pantalla, privacidad, imágenes por evento) modelada como
+    // estado deseado que el edge persigue y verifica.
+    //
+    // Perfil asignado (cloud SoT). El deseado efectivo = perfil ⊕ configDeseada.
+    idPerfilDispositivo: z.string().optional(),
+    // Overrides por dispositivo: pisan el perfil campo a campo. Sparse — lo que
+    // no está declarado ni acá ni en el perfil NO se gestiona (el reconciliador
+    // no lo toca, para no pisar ajustes manuales legítimos del integrador).
+    configDeseada: ConfigOperacionDispositivoSchema.optional(),
+    // Bloque REPORTADO por el edge (real + soportados + diffs + estado + backoff).
+    // Llega por outbox con merge; nunca pisa `config` ni `configDeseada`. Mismo
+    // patrón que la telemetría de liveness y `enrolamiento` (H-DEV-8).
+    configuracion: ConfiguracionReportadaDispositivoSchema.optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
+    perfilDispositivo: PerfilDispositivoSchema.optional(),
   });
 
 export const CreateDispositivoSchema = DispositivoSchema.omit({

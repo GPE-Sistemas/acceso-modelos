@@ -110,6 +110,16 @@ export const AccionesRolSchema = z.enum([
   // Estado/conexión + métricas en vivo del dispositivo (H-DEV-8).
   // Doc 29-hik-terminal-adopcion.md § Monitoreo runtime.
   "Hardware - Ver estado/métricas dispositivo",
+  // Configuración de operación del device (D51): declarar el deseado (perfil u
+  // override) y forzar la reconciliación. Gate separado de "Editar dispositivos"
+  // porque escribe en el hardware — no es master-data.
+  // Doc 40-configuracion-dispositivos.md.
+  "Hardware - Configurar dispositivos",
+  // Catálogo de perfiles de configuración (entidad del cliente, no de GPE).
+  "Hardware - Ver perfiles dispositivo",
+  "Hardware - Crear perfiles dispositivo",
+  "Hardware - Editar perfiles dispositivo",
+  "Hardware - Eliminar perfiles dispositivo",
   // Bitácora de salud / eventos técnicos por device (IEventoDispositivo):
   // checks, fallas, self-heal de IP, lockout, enrolamiento.
   // Doc 12-dispositivos-y-accesos.md § Auditoría / salud por dispositivo.

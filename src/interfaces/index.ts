@@ -49,6 +49,8 @@ export * from './edge-appliance-purge';
 export * from './edge-auth';
 export * from './edge-integridad';
 export * from './perfil-camara';
+export * from './perfil-dispositivo';
+export * from './config-operacion-dispositivo';
 export * from './sync-status';
 export * from './dispositivo-descubierto';
 export * from './tipo-actividad';

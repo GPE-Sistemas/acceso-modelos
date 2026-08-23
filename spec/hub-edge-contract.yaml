@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.8.0
+  version: 0.9.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -4160,6 +4160,183 @@ components:
                   type: string
                 finalizadaEn:
                   type: string
+        idPerfilDispositivo:
+          type: string
+        configDeseada:
+          description: 'Overrides de configuración de operación por dispositivo (D51). Sparse: campo ausente = no gestionado. El deseado efectivo es perfil ⊕ este bloque; el cloud lo resuelve y lo emite ya aplanado.'
+          type: object
+          properties:
+            voz:
+              type: object
+              properties:
+                habilitada:
+                  type: boolean
+                volumen:
+                  type: integer
+            textos:
+              type: object
+              properties:
+                habilitados:
+                  type: boolean
+                exitoAutenticacion:
+                  type: string
+                falloAutenticacion:
+                  type: string
+                desconocido:
+                  type: string
+            pantalla:
+              type: object
+              properties:
+                apagadoAutomatico:
+                  type: boolean
+                apagarTrasSegundos:
+                  type: integer
+                standbySegundos:
+                  type: integer
+                modo:
+                  type: string
+                  enum:
+                  - Normal
+                  - Simple
+                mostrarPreview:
+                  type: boolean
+                previewSegundos:
+                  type: integer
+            privacidad:
+              type: object
+              properties:
+                mostrarNombre:
+                  type: boolean
+                mostrarFoto:
+                  type: boolean
+                mostrarLegajo:
+                  type: boolean
+                ofuscarNombre:
+                  type: boolean
+                ofuscarLegajo:
+                  type: boolean
+            imagenes:
+              type: object
+              properties:
+                subirCaptura:
+                  type: boolean
+                guardarCaptura:
+                  type: boolean
+                subirVerificacion:
+                  type: boolean
+                guardarVerificacion:
+                  type: boolean
+                guardarRostro:
+                  type: boolean
+                guardarImagenCertificada:
+                  type: boolean
+        configuracion:
+          description: 'Bloque reportado por el edge (D51): config real leída del device, knobs soportados/no soportados por ese firmware, diffs contra el deseado, estado de convergencia y back-off.'
+          type: object
+          properties:
+            real:
+              type: object
+              properties:
+                voz:
+                  type: object
+                  properties:
+                    habilitada:
+                      type: boolean
+                    volumen:
+                      type: integer
+                textos:
+                  type: object
+                  properties:
+                    habilitados:
+                      type: boolean
+                    exitoAutenticacion:
+                      type: string
+                    falloAutenticacion:
+                      type: string
+                    desconocido:
+                      type: string
+                pantalla:
+                  type: object
+                  properties:
+                    apagadoAutomatico:
+                      type: boolean
+                    apagarTrasSegundos:
+                      type: integer
+                    standbySegundos:
+                      type: integer
+                    modo:
+                      type: string
+                      enum:
+                      - Normal
+                      - Simple
+                    mostrarPreview:
+                      type: boolean
+                    previewSegundos:
+                      type: integer
+                privacidad:
+                  type: object
+                  properties:
+                    mostrarNombre:
+                      type: boolean
+                    mostrarFoto:
+                      type: boolean
+                    mostrarLegajo:
+                      type: boolean
+                    ofuscarNombre:
+                      type: boolean
+                    ofuscarLegajo:
+                      type: boolean
+                imagenes:
+                  type: object
+                  properties:
+                    subirCaptura:
+                      type: boolean
+                    guardarCaptura:
+                      type: boolean
+                    subirVerificacion:
+                      type: boolean
+                    guardarVerificacion:
+                      type: boolean
+                    guardarRostro:
+                      type: boolean
+                    guardarImagenCertificada:
+                      type: boolean
+            soportados:
+              type: array
+              items:
+                type: string
+            noSoportados:
+              type: array
+              items:
+                type: string
+            diffs:
+              type: array
+              items:
+                type: object
+                properties:
+                  campo:
+                    type: string
+                  esperado:
+                  real:
+                  recurso:
+                    type: string
+            estado:
+              type: string
+              enum:
+              - Coincide
+              - No coincide
+              - Pendiente
+              - No aplicable
+            ultimaComparacion:
+              type: string
+            ultimaAplicacion:
+              type: string
+            reintentos:
+              type: integer
+            bloqueadoHasta:
+              type: string
+            divergenteDesde:
+              type: string
 x-ws-events:
   description: 'Eventos Socket.io del Hub edge. Conexión: `/socket.io/` con handshake auth (JWT + X-Permiso-Id query).
 

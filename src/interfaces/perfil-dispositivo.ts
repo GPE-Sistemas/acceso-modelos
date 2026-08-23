@@ -7,10 +7,15 @@ import { ConfigOperacionDispositivoSchema } from "./config-operacion-dispositivo
  * IPerfilDispositivo — configuración de operación con nombre, reutilizable (D51).
  *
  * En vez de configurar terminal por terminal, se define el perfil una vez y se
- * asigna a los dispositivos que correspondan. La configuración deseada de un
- * dispositivo es `perfil ⊕ IDispositivo.configDeseada` (el override por
- * dispositivo pisa campo a campo), y lo que no está declarado en ninguno de los
- * dos **no se gestiona**.
+ * asigna a los dispositivos que correspondan. Un dispositivo en modo `Perfil`
+ * toma su deseado ENTERO de acá (ver `IModoConfigDispositivo`: los modos son
+ * excluyentes, así que el perfil no se mezcla con configuración propia del
+ * equipo), y lo que el perfil no declara **no se gestiona** en ninguno de sus
+ * equipos.
+ *
+ * Que sea exclusivo es lo que hace que el perfil sirva: cambiar el perfil mueve
+ * a todos sus terminales. Cuando las dos capas se sumaban, un equipo con
+ * overrides encima seguía "asignado" al perfil pero ya no lo seguía.
  *
  * A diferencia de `IPerfilCamara` (catálogo curado por GPE, master data Tipo B),
  * este perfil lo crea el integrador/administrador: es del cliente, opcionalmente

@@ -4,6 +4,7 @@ import { ComplejoSchema } from "./complejo";
 import {
   ConfigOperacionDispositivoSchema,
   ConfiguracionReportadaDispositivoSchema,
+  ModoConfigDispositivoSchema,
 } from "./config-operacion-dispositivo";
 import { PerfilDispositivoSchema } from "./perfil-dispositivo";
 
@@ -531,11 +532,26 @@ export const DispositivoSchema = z.object({
     // terminal (voz, pantalla, privacidad, imágenes por evento) modelada como
     // estado deseado que el edge persigue y verifica.
     //
-    // Perfil asignado (cloud SoT). El deseado efectivo = perfil ⊕ configDeseada.
+    // Cómo se gobierna: `Perfil` | `Manual` | `Sin gestionar`. Los modos son
+    // EXCLUYENTES y `acceso-api` hace cumplir el invariante — en `Perfil`,
+    // `configDeseada` va vacío; en `Manual`, sin perfil asignado. Antes las dos
+    // capas se sumaban y el override pisaba al perfil campo a campo, así que un
+    // equipo podía dejar de seguir a su perfil sin que nadie lo decidiera y sin
+    // ningún síntoma (pasó en producción). Ver el schema para el detalle.
+    //
+    // Cloud-only: el edge nunca lo ve. Recibe el deseado YA resuelto en
+    // `configDeseada` (lo resuelve el bridge), así que el modo es un concepto de
+    // gobierno de la nube y no entra en el contrato del Hub edge.
+    modoConfig: ModoConfigDispositivoSchema.optional(),
+    // Perfil asignado (cloud SoT). Sólo en modo `Perfil`.
     idPerfilDispositivo: z.string().optional(),
-    // Overrides por dispositivo: pisan el perfil campo a campo. Sparse — lo que
-    // no está declarado ni acá ni en el perfil NO se gestiona (el reconciliador
-    // no lo toca, para no pisar ajustes manuales legítimos del integrador).
+    // Configuración propia del equipo. Sólo en modo `Manual`. Sparse — lo que no
+    // está declarado NO se gestiona (el reconciliador no lo toca, para no pisar
+    // lo que el integrador dejó configurado y nadie declaró).
+    //
+    // OJO: en el mensaje que el bridge cloud→edge le manda al edge, este campo
+    // viaja con el deseado RESUELTO (el del perfil, si el modo es `Perfil`). Es
+    // el mismo campo con dos lecturas según de qué lado se lo mire.
     configDeseada: ConfigOperacionDispositivoSchema.optional(),
     // Bloque REPORTADO por el edge (real + soportados + diffs + estado + backoff).
     // Llega por outbox con merge; nunca pisa `config` ni `configDeseada`. Mismo

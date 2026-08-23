@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.10.1
+  version: 0.11.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -4163,7 +4163,7 @@ components:
         idPerfilDispositivo:
           type: string
         configDeseada:
-          description: 'Overrides de configuración de operación por dispositivo (D51). Sparse: campo ausente = no gestionado. El deseado efectivo es perfil ⊕ este bloque; el cloud lo resuelve y lo emite ya aplanado.'
+          description: 'Configuración de operación deseada del dispositivo (D51), YA RESUELTA por el cloud. Sparse: campo ausente = no gestionado. El modo de gobierno (perfil asignado o configuración propia del equipo) es EXCLUYENTE y cloud-only: el edge no lo ve ni lo necesita, recibe acá el deseado que tiene que perseguir, venga del perfil o del equipo. Ya no es un merge de dos capas.'
           type: object
           properties:
             voz:

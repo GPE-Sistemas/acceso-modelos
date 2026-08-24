@@ -5,8 +5,22 @@ import { ComplejoSchema } from "./complejo";
 import { DispositivoSchema } from "./dispositivo";
 import { VerifyModeSchema } from "./credencial";
 
+/**
+ * Qué hace el sistema cuando el dispositivo reconoce una credencial válida.
+ *
+ * Decide **sólo el estado del `IIngresoEgreso`**: aprobado de una, o pendiente de
+ * que el guardia lo apruebe. NO decide si se acciona el fierro — eso sale de la
+ * actuación del acceso (`actuador` + `IAcceso.idDispositivoAccesoActuador`).
+ *
+ * El valor `Aprobación Automática` se llamaba `Apertura Automática`, y el nombre
+ * viejo prometía algo que este campo nunca hizo: la apertura. En un terminal con
+ * padrón local la hace el propio equipo (medido el 2026-08-24 en el historial del
+ * K1T344: cada acceso concedido trae `minor 29` = relé ON en el mismo segundo,
+ * sin ningún comando nuestro), y cuando la tiene que ordenar el sistema, la
+ * decisión es del actuador, no de este enum. Ver D53 / doc 42.
+ */
 export const ComportamientoCredencialValidaSchema = z.enum([
-  "Apertura Automática",
+  "Aprobación Automática",
   "Aprobación Manual",
 ]);
 export const ComportamientoCredencialInvalidaSchema = z.enum([
@@ -170,6 +184,33 @@ export const ModoActuacionSchema = z.enum([
  * sintetizados de su propio relé, sin sensor cableado y con `magneticStatus` en
  * 0. No confundirlos con realimentación real (doc 42 §4).
  */
+/**
+ * Quién controla la apertura en el flujo AUTOMÁTICO (credencial válida con
+ * `Aprobación Automática`) — D53.
+ *
+ * - `Dispositivo`: el equipo concede por su padrón local y acciona su propia
+ *   salida. El sistema NO manda comando en ese flujo: sería un pulso redundante,
+ *   y en una barrera de abrir/cerrar un segundo pulso puede leerse como otra
+ *   orden.
+ * - `Sistema`: la apertura la ordena el sistema. Es el caso del terminal que
+ *   identifica pero no acciona, del actuador que es otro equipo (controlador de
+ *   barrera o de I/O), y de toda validación que el device no puede hacer por sí
+ *   mismo (ANPR, vigencia del permiso, turno reservado).
+ *
+ * Es del PAR dispositivo-acceso porque depende del cableado y de la topología: el
+ * mismo terminal puede ser `Dispositivo` en el portón donde su relé está cableado
+ * y `Sistema` en otro acceso donde sólo identifica.
+ *
+ * Ortogonal a la operatoria manual: el comando del guardia (abrir/cerrar desde el
+ * panel) funciona siempre que el actuador lo soporte, incluso con `Dispositivo`.
+ *
+ * Apagar la apertura autónoma del equipo, si alguna vez hace falta, es
+ * configuración del terminal (D51) y no se declara acá. Al 2026-08-24 el knob que
+ * la controla NO está relevado: `CardReaderCfg/1` no expone la relación
+ * lector↔puerta y `notRelateReaderDoorIDList` del capabilities es read-only.
+ */
+export const ControlAperturaSchema = z.enum(["Dispositivo", "Sistema"]);
+
 export const FeedbackActuacionSchema = z.enum([
   "Ninguna",
   "RelayDelActuador",
@@ -195,6 +236,11 @@ export const FeedbackActuacionSchema = z.enum([
 export const ActuadorDispositivoAccesoSchema = z.object({
   rol: RolActuacionSchema.optional(),
   modo: ModoActuacionSchema.optional(),
+  /** Quién abre en el flujo automático: el propio equipo o el sistema. Ausente
+   *  ⇒ se opera como `Dispositivo` (el equipo ya abría solo antes de D53: no
+   *  cambiarle el comportamiento a una instalación andando sin que nadie lo
+   *  declare). */
+  controlApertura: ControlAperturaSchema.optional(),
   /** Salida que abre. HIK: `"1"` = door 1 de `RemoteControl/door/1`. */
   salidaAbrir: z.string().optional(),
   /** Salida que cierra (sólo `AbrirCerrar*`). */
@@ -230,11 +276,6 @@ export const DispositivoAccesoSchema = z.object({
       ComportamientoCredencialValidaSchema.optional(),
     comportamientoCredencialInvalida:
       ComportamientoCredencialInvalidaSchema.optional(),
-    /** Indica si el dispositivo puede recibir un comando para abrir el acceso.
-     *  DEPRECADO por `actuador` (D53): equivale a
-     *  `actuador.rol='Actuador Principal'` + `modo='PulsoUnico'`. Se mantiene
-     *  mientras haya consumidores; lo deriva acceso-api. */
-    aperturaConComando: z.boolean().optional(),
     /** Configuración de actuación de este par (D53, Capa 2): rol, modo, mapeo a
      *  salidas físicas, tiempos y realimentación. Ausente = este dispositivo no
      *  acciona nada en este acceso. */
@@ -301,6 +342,7 @@ export type IModoDisparo = z.infer<typeof ModoDisparoSchema>;
 export type ICondicionDisparo = z.infer<typeof CondicionDisparoSchema>;
 export type IDisparoDeteccion = z.infer<typeof DisparoDeteccionSchema>;
 export type IRolActuacion = z.infer<typeof RolActuacionSchema>;
+export type IControlApertura = z.infer<typeof ControlAperturaSchema>;
 export type IModoActuacion = z.infer<typeof ModoActuacionSchema>;
 export type IFeedbackActuacion = z.infer<typeof FeedbackActuacionSchema>;
 export type IActuadorDispositivoAcceso = z.infer<

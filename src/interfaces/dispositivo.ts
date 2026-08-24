@@ -440,6 +440,23 @@ export const InventarioDispositivoSchema = z.object({
   hora: HoraRelevadaSchema.optional(),
   ingesta: IngestaRelevadaSchema.optional(),
   nube: NubeFabricanteRelevadaSchema.optional(),
+  /**
+   * Capacidad de actuación MEDIDA en el equipo (D53). Va en el inventario y no
+   * en `capacidades.actuacion` por dos razones:
+   *
+   *  - `capacidades` lo edita también el operador desde la UI (credencial,
+   *    video). Si el edge escribiera ahí, un reporte parcial pisaría el objeto
+   *    entero y le borraría lo declarado. `inventario` es owner edge y se pisa
+   *    completo en cada reporte, que es exactamente la semántica de un relevo.
+   *  - Un equipo ya adoptado consigue la capacidad en el siguiente tick de
+   *    inventario, sin re-adoptarlo. Los dos terminales de producción se
+   *    adoptaron antes de que esto existiera.
+   *
+   * La capacidad EFECTIVA que valida acceso-api es `capacidades.actuacion` (lo
+   * declarado) con fallback a esto (lo medido) — mismo criterio que la capacidad
+   * efectiva de video: se resuelve en la api y no se persiste.
+   */
+  actuacion: CapacidadesActuacionSchema.optional(),
   // Mensaje del relevo que falló parcialmente. El inventario es best-effort: un
   // endpoint que no responde no invalida el resto de lo relevado.
   error: z.string().optional(),

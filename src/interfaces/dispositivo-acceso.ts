@@ -118,6 +118,105 @@ export const ConfigDeteccionCanalSchema = z.object({
   streamDetect: StreamDetectSchema.optional(),
 });
 
+/**
+ * Rol de ACTUACIÓN de este dispositivo en este acceso (D53). Distinto de
+ * `RolEnEventoSchema`, que es del plano evento (quién genera / enriquece /
+ * registra el `IIngresoEgreso`): un dispositivo puede generar el evento y no
+ * mover nada, o mover el fierro sin generar evento propio.
+ *
+ * Un acceso puede tener terminal Y controlador; el que actúa lo designa
+ * `IAcceso.idDispositivoAccesoActuador`. `Actuador Secundario` es respaldo
+ * declarado (no se usa solo porque el principal falle — eso es decisión de
+ * operador, no failover automático).
+ */
+export const RolActuacionSchema = z.enum([
+  "Actuador Principal",
+  "Actuador Secundario",
+  "No actúa",
+]);
+
+/**
+ * Cómo se acciona el fierro (D53). Define qué comandos tiene sentido ofrecer y
+ * cuántas salidas hace falta cablear.
+ *
+ * - `PulsoUnico`: una salida, un pulso, cierra solo (cerradura eléctrica,
+ *   molinete, barrera con autocierre). Es lo único que cubre un HIK K1T344.
+ * - `AbrirCerrar`: dos salidas pulsadas independientes, sin autocierre — el
+ *   sistema tiene que ordenar el cierre (caso Golf Chascomús).
+ * - `AbrirCerrarStop`: suma parada del movimiento (portón corredizo).
+ * - `Mantenida`: la salida queda energizada hasta nueva orden. Válido para
+ *   cerradura; NO para barrera pulsada (ver `ComandoActuacionSchema`).
+ */
+export const ModoActuacionSchema = z.enum([
+  "PulsoUnico",
+  "AbrirCerrar",
+  "AbrirCerrarStop",
+  "Mantenida",
+]);
+
+/**
+ * Qué realimentación hay CABLEADA en esta instalación (D53) — no qué soporta el
+ * hardware. Determina la confianza del estado que publica el sistema
+ * (`IAcceso.confianzaEstado`).
+ *
+ * - `Ninguna`: sólo se sabe qué se ordenó → estado `Inferido`.
+ * - `RelayDelActuador`: el device confirma que el contacto cerró (HIK
+ *   `doorLockStatus` + minors 29/31). Prueba el contacto, NO que el fierro se
+ *   haya movido → sigue siendo `Inferido`.
+ * - `SensorFisico`: fin de carrera / lazo / contacto de puerta cableado a una
+ *   entrada → estado `Reportado`.
+ *
+ * Cuidado con el HIK: reporta los minors 21/22 ("puerta abierta/cerrada")
+ * sintetizados de su propio relé, sin sensor cableado y con `magneticStatus` en
+ * 0. No confundirlos con realimentación real (doc 42 §4).
+ */
+export const FeedbackActuacionSchema = z.enum([
+  "Ninguna",
+  "RelayDelActuador",
+  "SensorFisico",
+]);
+
+/**
+ * Configuración de actuación del par (dispositivo, acceso) — D53, Capa 2.
+ * Análogo a `ConfigDeteccionCanalSchema` para video: la Capa 1 dice qué puede el
+ * hardware, esto dice cómo se usa acá.
+ *
+ * `modo` ⊆ capacidad efectiva del device (`capacidades.actuacion.comandos`) —
+ * validación dura cloud-side en acceso-api: pedir `AbrirCerrar` a un device de
+ * una sola salida se rechaza al guardar, no al operar.
+ *
+ * El mapeo `salidaAbrir`/`salidaCerrar`/`salidaDetener` es lo que resuelve el
+ * controlador de I/O que maneja N barreras: N filas `IDispositivoAcceso`, cada
+ * una apuntando a sus salidas. Son identificadores del device (índice de relé,
+ * `doorNo` del ISAPI, id de canal), no del sistema — el driver los interpreta.
+ * Reemplazan el uso de `canalDispositivo` para actuación, que es un string único
+ * y no alcanza para un juego de salidas.
+ */
+export const ActuadorDispositivoAccesoSchema = z.object({
+  rol: RolActuacionSchema.optional(),
+  modo: ModoActuacionSchema.optional(),
+  /** Salida que abre. HIK: `"1"` = door 1 de `RemoteControl/door/1`. */
+  salidaAbrir: z.string().optional(),
+  /** Salida que cierra (sólo `AbrirCerrar*`). */
+  salidaCerrar: z.string().optional(),
+  /** Salida que detiene el movimiento (sólo `AbrirCerrarStop`). */
+  salidaDetener: z.string().optional(),
+  /** Duración del pulso, cuando el actuador la acepta por comando. En el HIK NO
+   *  se manda por comando: la fija `Door/param.openDuration` del device y se
+   *  gobierna por configuración declarativa (D51). */
+  pulsoMs: z.number().int().positive().optional(),
+  /** Cuánto tarda el fierro en completar la carrera. Sin realimentación, es lo
+   *  que permite inferir `Abriendo → Abierto` en vez de dejarlo `Desconocido`. */
+  tiempoRecorridoSeg: z.number().positive().optional(),
+  /** Si el actuador cierra solo, en cuánto. Ausente = no cierra solo. */
+  autoCierreSeg: z.number().positive().optional(),
+  feedback: FeedbackActuacionSchema.optional(),
+  /** Entrada donde está cableado el sensor de "abierto" (`SensorFisico`). */
+  entradaAbierta: z.string().optional(),
+  /** Entrada donde está cableado el sensor de "cerrado" (`SensorFisico`). */
+  entradaCerrada: z.string().optional(),
+});
+
 export const DispositivoAccesoSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
@@ -131,8 +230,15 @@ export const DispositivoAccesoSchema = z.object({
       ComportamientoCredencialValidaSchema.optional(),
     comportamientoCredencialInvalida:
       ComportamientoCredencialInvalidaSchema.optional(),
-    /** Indica si el dispositivo puede recibir un comando para abrir el acceso */
+    /** Indica si el dispositivo puede recibir un comando para abrir el acceso.
+     *  DEPRECADO por `actuador` (D53): equivale a
+     *  `actuador.rol='Actuador Principal'` + `modo='PulsoUnico'`. Se mantiene
+     *  mientras haya consumidores; lo deriva acceso-api. */
     aperturaConComando: z.boolean().optional(),
+    /** Configuración de actuación de este par (D53, Capa 2): rol, modo, mapeo a
+     *  salidas físicas, tiempos y realimentación. Ausente = este dispositivo no
+     *  acciona nada en este acceso. */
+    actuador: ActuadorDispositivoAccesoSchema.optional(),
     /** Modo de verificación configurado para este terminal en este acceso (qué
      *  factores exige: tarjeta, huella, PIN o combinaciones). Configurable por
      *  puerta/lector, no hardcode. Aplica a terminales de credencial HIK que lo
@@ -194,6 +300,12 @@ export type IConfigDeteccionCanal = z.infer<typeof ConfigDeteccionCanalSchema>;
 export type IModoDisparo = z.infer<typeof ModoDisparoSchema>;
 export type ICondicionDisparo = z.infer<typeof CondicionDisparoSchema>;
 export type IDisparoDeteccion = z.infer<typeof DisparoDeteccionSchema>;
+export type IRolActuacion = z.infer<typeof RolActuacionSchema>;
+export type IModoActuacion = z.infer<typeof ModoActuacionSchema>;
+export type IFeedbackActuacion = z.infer<typeof FeedbackActuacionSchema>;
+export type IActuadorDispositivoAcceso = z.infer<
+  typeof ActuadorDispositivoAccesoSchema
+>;
 export type IDispositivoAcceso = z.infer<typeof DispositivoAccesoSchema>;
 export type ICreateDispositivoAcceso = z.infer<
   typeof CreateDispositivoAccesoSchema

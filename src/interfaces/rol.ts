@@ -104,7 +104,14 @@ export const AccionesRolSchema = z.enum([
   //    edge — no son decisión de operador, no hay acción de rol.
   //  - Resolución cara→dispositivos deriva del cruce permiso × IAcceso ×
   //    IDispositivoAcceso (sin overrides explicitos por permiso). Doc 29.
+  // Comando directo al device, sin pasar por el acceso (mantenimiento / prueba
+  // del relé). La operatoria del guardia usa las acciones de acceso de abajo.
   "Hardware - Apertura remota dispositivo",
+  // Operatoria del actuador del acceso (D53, doc 42-actuadores-y-barreras.md).
+  // Separadas a propósito: abrir/cerrar es rutina del guardia; dejar un acceso
+  // liberado o bloqueado es decisión de supervisión y persiste en el tiempo.
+  "Hardware - Operar acceso",
+  "Hardware - Cambiar modo operativo del acceso",
   "Hardware - Test cred dispositivo",
   "Hardware - Ver eventos crudos del dispositivo",
   // Estado/conexión + métricas en vivo del dispositivo (H-DEV-8).

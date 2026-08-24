@@ -22,6 +22,14 @@ import { PerfilDispositivoSchema } from "./perfil-dispositivo";
  *   M1). La cámara entrega stream; el NVR/XVR agrupa N canales. La inferencia
  *   corre en el device (smart events) o en el edge (RPi5+Hailo) — el proveedor
  *   se declara por capacidad en `capacidades.video.<tipo>.proveedor` (D49).
+ * - `Controlador de acceso`: controladora dedicada de control de acceso (N
+ *   puertas / N lectores). Puede actuar sobre más de un acceso — la relación va
+ *   por `IDispositivoAcceso`, una fila por acceso, con su juego de salidas.
+ * - `Controlador de I/O`: módulo de entradas/salidas genérico, sin lógica de
+ *   credencial. Su razón de ser es la ACTUACIÓN (`capacidades.actuacion`) —
+ *   típicamente varias salidas, que pueden manejar más de una barrera (D53).
+ * - `Barrera`: el actuador propiamente dicho, cuando habla IP por sí mismo
+ *   (barrera / portón con controladora integrada y API).
  * - `Otro`: fallback.
  *
  * La coherencia formFactor↔capacidades (Terminal ⇒ ≥1 credencial; Cámara/NVR/XVR
@@ -33,6 +41,9 @@ export const FormFactorDispositivoSchema = z.enum([
   "Cámara IP",
   "NVR",
   "XVR",
+  "Controlador de acceso",
+  "Controlador de I/O",
+  "Barrera",
   "Otro",
 ]);
 
@@ -156,6 +167,58 @@ export const CapacidadesVideoSchema = z.object({
 });
 
 /**
+ * Comando de actuación que el hardware soporta (D53, Capa 1). Vocabulario
+ * agnóstico: el mapa a la operación concreta del fabricante vive en el driver
+ * del edge.
+ *
+ * - `pulso`: energiza la salida por un tiempo y vuelve sola (HIK
+ *   `RemoteControl/door` `cmd=open`, con la duración de `Door/param.openDuration`).
+ * - `mantenerAbierto` / `mantenerCerrado`: modo mantenido hasta nueva orden
+ *   (HIK `alwaysOpen` / `alwaysClose`).
+ * - `detener`: interrumpe el movimiento en curso (portón corredizo).
+ *
+ * OJO: `mantenerAbierto` NO es "mantener la barrera arriba". Sobre la entrada de
+ * pulso de un controlador de barrera deja el contacto cerrado indefinidamente →
+ * comportamiento indefinido del controlador. Es válido para cerradura, no para
+ * barrera pulsada (doc 42 §3).
+ */
+export const ComandoActuacionSchema = z.enum([
+  "pulso",
+  "mantenerAbierto",
+  "mantenerCerrado",
+  "detener",
+]);
+
+/**
+ * Capacidad de ACTUACIÓN del hardware (D53, Capa 1): qué puede mover, no cómo se
+ * usa en un acceso concreto (eso es `IDispositivoAcceso.actuador`, Capa 2).
+ *
+ * Sustituye al booleano `aperturaComando`, que dice sí/no y no dice QUÉ. Se
+ * releva en la adopción **por sondeo del recurso**, nunca por los flags
+ * `isSupport*` del fabricante (mismo principio que D51: este firmware ya declaró
+ * como soportado lo que después responde `notSupport`).
+ *
+ * - HIK DS-K1T344MBWX-E1 (medido 2026-08-24, FW V4.47.0):
+ *   `{ salidas:1, canalesIndependientes:1, entradasFeedback:2,
+ *      comandos:['pulso','mantenerAbierto','mantenerCerrado'] }`.
+ *   Declara `relayNum:2` pero la segunda salida no es comandable por ISAPI, así
+ *   que no cuenta. Sin `detener`.
+ * - Controlador de I/O con 2 barreras de abrir/cerrar: `{ salidas:4,
+ *   canalesIndependientes:2, comandos:['pulso'] }`.
+ */
+export const CapacidadesActuacionSchema = z.object({
+  /** Salidas comandables por el sistema. NO es el conteo de relés del
+   *  datasheet: sólo las que se pueden accionar remotamente. */
+  salidas: z.number().int().nonnegative().optional(),
+  /** Cuántos accesos distintos puede accionar de forma independiente. */
+  canalesIndependientes: z.number().int().nonnegative().optional(),
+  /** Entradas disponibles para realimentación (fin de carrera, lazo, contacto
+   *  de puerta). Disponibles ≠ cableadas — el cableado se declara en la Capa 2. */
+  entradasFeedback: z.number().int().nonnegative().optional(),
+  comandos: z.array(ComandoActuacionSchema).optional(),
+});
+
+/**
  * Capacidades del dispositivo (D49, Capa 1). Declara SOLO lo intrínseco del
  * hardware; la detección/identificación de video lleva proveedor por capacidad
  * (device vs edge) en `video`. La capacidad EFECTIVA de un canal (intrínseco
@@ -186,7 +249,13 @@ export const CapacidadesDispositivoSchema = z.object({
   // entrega de stream(s) RTSP.
   fuenteVideo: z.boolean().optional(),
   // Apertura por comando (relé / ISAPI open).
+  // DEPRECADO por `actuacion` (D53): se mantiene como derivado mientras haya
+  // consumidores. `aperturaComando === true` ⇔ `actuacion.comandos` incluye
+  // `pulso` con al menos una salida. Lo deriva acceso-api, no el operador.
   aperturaComando: z.boolean().optional(),
+  // Capacidad de actuación (D53): qué salidas tiene y qué comandos acepta.
+  // Presente en terminales con relé, controladoras, módulos de I/O y barreras IP.
+  actuacion: CapacidadesActuacionSchema.optional(),
   // Almacena padrón facial/credencial on-device (HIK). Prerrequisito de las
   // capacidades de identificación provistas por el device.
   enrolamiento: z.boolean().optional(),
@@ -583,6 +652,8 @@ export type IEstadoDispositivo = z.infer<typeof EstadoDispositivoSchema>;
 export type IConfigDispositivo = z.infer<typeof ConfigDispositivoSchema>;
 export type ICapacidadVideo = z.infer<typeof CapacidadVideoSchema>;
 export type ICapacidadesVideo = z.infer<typeof CapacidadesVideoSchema>;
+export type IComandoActuacion = z.infer<typeof ComandoActuacionSchema>;
+export type ICapacidadesActuacion = z.infer<typeof CapacidadesActuacionSchema>;
 export type ICapacidadesDispositivo = z.infer<
   typeof CapacidadesDispositivoSchema
 >;

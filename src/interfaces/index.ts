@@ -6,6 +6,7 @@ export * from './credencial-vector';
 export * from './deteccion';
 export * from './dispositivo';
 export * from './dispositivo-acceso';
+export * from './actuacion';
 export * from './evento-dispositivo';
 export * from './paquete-firmware';
 export * from './salud-stream';

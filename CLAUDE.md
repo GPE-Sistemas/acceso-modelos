@@ -372,6 +372,35 @@ Para cortar historial al cambiar de dueño una UF: setear `fechaFinVigencia` en 
 
 ---
 
+## Tracking LoRaWAN — el eje `conectividad` (D54)
+
+Diseño completo: `acceso-doc-general/38-tracking-lorawan.md`. Decisión: `DECISIONES.md` § D54.
+
+**Un tracker LoRaWAN NO es una entidad nueva.** Es un `IDispositivo` con `formFactor: 'Tracker'` y `conectividad.clase: 'LoRaWAN'`. Lo mismo el gateway (`formFactor: 'Gateway LoRaWAN'`).
+
+`IDispositivo` tiene **tres ejes ortogonales** y hay que respetarlos al sumar hardware:
+
+| Eje | Campo | Cardinalidad |
+|---|---|---|
+| Familia física | `formFactor` | single-select |
+| Qué HACE | `capacidades` | multivalor |
+| Por dónde llegan los datos | `conectividad.clase` | single-select (`IP-LAN` / `LoRaWAN` / `Celular`) |
+
+Nombrar una entidad por su **función** (`ITracker`) repite el error que el refactor de `formFactor` ya corrigió cuando sacó las modalidades de credencial del enum físico. Nombrarla por su **transporte** (`IDispositivoLoRaWAN`) rompe el día que el mismo tracker llegue por 4G. Con los ejes separados, **ningún dispositivo IoT nuevo vuelve a pedir entidad**: un medidor LoRaWAN es un `formFactor` más y una capacidad más.
+
+`conectividad.clase` no es una etiqueta decorativa: **selecciona el pipeline de ingesta**. `LoRaWAN` entra por el ChirpStack local del edge; `Celular` entraría por un endpoint cloud y **no sobrevive un corte de internet**.
+
+### Reglas al tocar estos schemas
+
+- **`devEUI` y `gatewayEUI` van SIEMPRE en minúsculas.** Misma regla que `mac` y por la misma razón: el DevEUI llega en mayúsculas de la etiqueta / del fabricante y en minúsculas de ChirpStack, y tanto la comparación cloud-side como el filtro Mongo son case-sensitive. Con el case libre el matching falla en silencio — es el incidente de Chascomús (2026-08-23) con la MAC, que dejó dos terminales Offline 4,8 h. Normalizan el productor (edge) y el persistidor (`acceso-datos`, `lowercase: true`).
+- **Las claves LoRaWAN (AppKey / NwkKey) NO se modelan.** Se generan en el edge y viven solo en el Postgres de ChirpStack. El schema guarda `clavesAprovisionadas: boolean` + `fechaAprovisionamiento`, nada más. **No agregar un campo de clave "write-only"**: si el dato no está en Mongo, no hay nada que filtrar por accidente en un GET, un log o un populate. Esto rompe a propósito el patrón de `config.password` (que se guarda en claro y se devuelve en el GET).
+- `estadoInventario` (`Registrado`→`Configurado`→`EnServicio`→`EnCarga`→`FueraDeServicio`→`Baja`) va **separado** de `estado` (`EstadoDispositivoSchema`): el primero lo decide el operador, el segundo es alcanzabilidad runtime con owner el edge. Si compartieran campo, un reporte del edge pisaría la decisión del operador.
+- `telemetria` (`TelemetriaMovilSchema`: batería, último uplink, última posición) es owner **edge**, llega por outbox `dispositivo`/update con merge. No confundir con `inventario`, que es el relevo ISAPI de un device IP.
+- Entidades propias, dos y solo dos: **`IAsignacionDispositivo`** (Tipo A, nace en la garita, historial auditable del vínculo temporal tarjeta↔visita, con snapshot denormalizado de `idUnidadFuncionalDestino`) e **`IPosicionDispositivo`** (alto volumen, `expireAt`/TTL, `_id` determinístico para upsert idempotente — patrón `IDeteccion` / `ISaludStream`).
+- En `IPosicionDispositivo` el populate de `dispositivo` va como **`z.any()`**: `IDispositivo` tiene cadena profunda de populate y tiparlo arriesga `TS7056` al sumar la entidad al barrel (mismo criterio que `vinculo-evento-ingreso.ts`).
+- **`fechaDato` (el `collectTime` del propio device) es el eje temporal**, no `fechaRecepcion`. Los dos campos se persisten: sin ambos no se puede distinguir un dato viejo legítimo de un reloj roto.
+- Acciones nuevas (recordar que van también al `GRUPOS` de `acceso-web/roles/acciones-grupos.ts`): `Hardware - Aprovisionar dispositivo LoRaWAN`, `Hardware - Ver claves de aprovisionamiento LoRaWAN`, `Hardware - Ver posición de dispositivo`, `Hardware - Ver recorrido histórico`, `Movimientos - Entregar y devolver dispositivos de seguimiento`.
+
 ## Convenciones
 
 - **Campos populate** (virtuals): no se persisten en Mongo, solo para respuestas enriquecidas. En schemas Zod son `Schema.optional()` referenciando otros schemas.

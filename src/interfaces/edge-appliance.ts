@@ -422,32 +422,115 @@ export type IUpdateEdgeAppliance = z.infer<typeof UpdateEdgeApplianceSchema>;
 
 // E.S1d / D32 — logs-tail vía NATS request/reply.
 //
-// Units soportados son una whitelist cerrada (sin "arbitrary unit" para
-// evitar que un admin lea logs del host). El agent edge resuelve cada uno
-// a `journalctl -u <unit>` o a un file path concreto (install.log).
+// Las fuentes soportadas son una whitelist cerrada (sin "arbitrary unit" para
+// evitar que un admin lea cualquier cosa del host). El valor del enum es
+// *lógico*: el helper host lo resuelve a `journalctl -u`, `-t`, `-k`, al
+// journal completo, o al tail de un archivo concreto — ver
+// `EDGE_LOGS_FUENTES` más abajo.
 //
 // Cap server-side: `lines` se clamp a [1, EDGE_LOGS_MAX_LINES] en cloud y
 // edge. Defaults UI: lines=200.
 export const EDGE_LOGS_MAX_LINES = 1000;
 export const EDGE_LOGS_DEFAULT_LINES = 200;
 
+// Modo vivo (F1). El frontend repite el tail con `afterCursor` (o `since` si
+// el appliance todavía no tiene el helper nuevo) y appendea el delta.
+//   - LIVE_LINES: tail chico por tick; el delta normal son pocas líneas.
+//   - LIVE_INTERVAL_MS: cada cuánto se repite. No se encola un tick nuevo si
+//     el anterior sigue en vuelo (el RPC puede tardar segundos).
+//   - BUFFER_MAX_LINES: cap del buffer en memoria del navegador; se descarta
+//     por el frente.
+export const EDGE_LOGS_LIVE_LINES = 50;
+export const EDGE_LOGS_LIVE_INTERVAL_MS = 3000;
+export const EDGE_LOGS_BUFFER_MAX_LINES = 5000;
+
 export const EdgeApplianceLogsUnitSchema = z.enum([
+  // Agente + overlay.
   "acceso-edge",
   "tailscaled",
+  // Timers del host.
   "acceso-edge-cert-sync",
   "acceso-edge-update",
+  "acceso-edge-clock-sync",
+  // Containers (docker run dentro de una unit, stdout → journal).
+  "acceso-inferencia",
+  "acceso-anpr",
+  // Infraestructura del host.
+  "docker",
+  "postgresql",
+  // Bridge de comandos: no es unit, loguea con `logger -t` → journalctl -t.
+  "acceso-edge-command",
+  // Agregados.
+  "kernel",
+  "sistema",
+  // Archivos.
   "install.log",
+  "postgres.log",
+]);
+
+// Cómo resuelve el helper host cada fuente. `unit` → `journalctl -u <x>.service`,
+// `identifier` → `-t <x>`, `kernel` → `-k`, `journal` → journalctl sin filtro,
+// `file` → tail del path.
+export const EdgeApplianceLogsFuenteTipoSchema = z.enum([
+  "unit",
+  "identifier",
+  "kernel",
+  "journal",
+  "file",
+]);
+
+// Catálogo único de fuentes: label para la UI, tipo de resolución, y si la
+// fuente puede no existir en un appliance dado (inferencia y ANPR son
+// opcionales según el hardware instalado). El frontend arma el dropdown de
+// acá — sin labels duplicados en el componente.
+export const EDGE_LOGS_FUENTES: ReadonlyArray<{
+  readonly value: IEdgeApplianceLogsUnit;
+  readonly label: string;
+  readonly tipo: IEdgeApplianceLogsFuenteTipo;
+  readonly condicional: boolean;
+}> = [
+  { value: "acceso-edge", label: "acceso-edge (agente)", tipo: "unit", condicional: false },
+  { value: "sistema", label: "sistema (journal completo)", tipo: "journal", condicional: false },
+  { value: "kernel", label: "kernel (dmesg)", tipo: "kernel", condicional: false },
+  { value: "postgresql", label: "postgresql (unit)", tipo: "unit", condicional: false },
+  { value: "postgres.log", label: "postgres (log del server)", tipo: "file", condicional: false },
+  { value: "acceso-inferencia", label: "inferencia (Frigate)", tipo: "unit", condicional: true },
+  { value: "acceso-anpr", label: "ANPR (patentes)", tipo: "unit", condicional: true },
+  { value: "docker", label: "docker (daemon)", tipo: "unit", condicional: false },
+  { value: "tailscaled", label: "tailscaled (overlay)", tipo: "unit", condicional: false },
+  { value: "acceso-edge-command", label: "bridge de comandos", tipo: "identifier", condicional: false },
+  { value: "acceso-edge-cert-sync", label: "cert-sync (timer)", tipo: "unit", condicional: false },
+  { value: "acceso-edge-update", label: "update (timer)", tipo: "unit", condicional: false },
+  { value: "acceso-edge-clock-sync", label: "clock-sync (timer)", tipo: "unit", condicional: false },
+  { value: "install.log", label: "install.log (boot)", tipo: "file", condicional: false },
+] as const;
+
+// Filtro de severidad. Mapea a `journalctl -p <n>`: se piden las líneas de esa
+// prioridad *y más graves*. `debug` = sin filtro efectivo.
+export const EdgeApplianceLogsPrioridadSchema = z.enum([
+  "error",
+  "warn",
+  "info",
+  "debug",
 ]);
 
 // Args que el cloud envía al agent en el payload NATS request.
 //   - `lines`: tail count, cap por edge a EDGE_LOGS_MAX_LINES.
 //   - `since`: filtro temporal "más nuevo que" (ISO). Usa journalctl --since.
 //   - `before`: cursor pagination "más viejo que" (ISO). Para "cargar más".
+//   - `afterCursor`: cursor opaco del journal (`__CURSOR`) devuelto en
+//     `cursorNuevas`. Es el mecanismo correcto para el delta del modo vivo:
+//     `since` tiene resolución de segundo y duplica o pierde líneas.
+//   - `priority`: severidad mínima.
+//   - `boot`: solo el boot actual (`journalctl -b`).
 export const EdgeApplianceLogsRequestSchema = z.object({
   unit: EdgeApplianceLogsUnitSchema,
   lines: z.number().int().positive().max(EDGE_LOGS_MAX_LINES).optional(),
   since: z.string().optional(),
   before: z.string().optional(),
+  afterCursor: z.string().optional(),
+  priority: EdgeApplianceLogsPrioridadSchema.optional(),
+  boot: z.boolean().optional(),
 });
 
 // Nivel inferido server-side cuando el log lo trae (journalctl `PRIORITY`).
@@ -460,11 +543,16 @@ export const EdgeApplianceLogLevelSchema = z.enum([
 ]);
 
 export const EdgeApplianceLogLineSchema = z.object({
-  // ISO timestamp del log. Para journalctl viene de __REALTIME_TIMESTAMP.
-  // Para install.log es el ts del FS si la línea no trae prefix de fecha.
+  // ISO timestamp del log, con microsegundos cuando la fuente los tiene
+  // (journalctl `__REALTIME_TIMESTAMP`). Para install.log es el ts del FS si
+  // la línea no trae prefix de fecha.
   ts: z.string(),
   level: EdgeApplianceLogLevelSchema.optional(),
   message: z.string(),
+  // Nombre real de la unit/identifier que emitió la línea. Solo tiene sentido
+  // en las fuentes agregadas (`sistema`), donde cada línea viene de un
+  // proceso distinto y la UI necesita mostrar de quién es.
+  origen: z.string().optional(),
 });
 
 export const EdgeApplianceLogsResponseSchema = z.object({
@@ -474,15 +562,90 @@ export const EdgeApplianceLogsResponseSchema = z.object({
   // debe pasar `before=<cursor>` para traer logs anteriores. Ausente si no
   // hay más historia (o el agent no lo soporta para esa unit).
   cursor: z.string().optional(),
+  // Cursor opaco del journal de la ÚLTIMA línea devuelta. La siguiente
+  // request del modo vivo lo pasa como `afterCursor` y recibe exactamente el
+  // delta. Ausente en fuentes tipo `file` (no hay journal cursor) y en
+  // appliances con el helper host viejo — ahí el cliente cae a `since`.
+  cursorNuevas: z.string().optional(),
   // true = el edge truncó porque `lines` saturó el buffer. UI lo señaliza.
   truncated: z.boolean(),
   // ts ISO de cuando el agent terminó de armar la respuesta. Útil para
   // mostrar "snapshot @ HH:MM:SS" en la UI.
   fetchedAt: z.string(),
+  // false = la fuente no existe en este appliance (ej. `acceso-inferencia` en
+  // un edge sin Hailo). Distinto de "existe pero no tiene líneas".
+  disponible: z.boolean().optional(),
+});
+
+// ─── F3: follow real (stream) ────────────────────────────────────────────────
+//
+// El tail one-shot no alcanza para "logs en vivo" de verdad: cada tick paga el
+// RPC completo (pending → path unit → journalctl → processed → poll). El follow
+// abre una sesión: el helper host levanta
+// `acceso-edge-logs-follow@<sessionId>.service` (unit template con
+// `RuntimeMaxSec` = TTL) que corre `journalctl -f -o json` y appendea NDJSON
+// mapeado; el agent tailea ese archivo y publica chunks a NATS; la API los
+// reemite por el gateway socket.io al room del appliance.
+//
+// La sesión SIEMPRE muere sola por TTL: si el operador cierra el modal (o se
+// le corta el browser) no queda un journalctl -f colgado en el appliance.
+
+// TTL de una sesión de follow, en segundos. El frontend renueva mientras el
+// modal siga abierto.
+export const EDGE_LOGS_FOLLOW_TTL_S = 300;
+// Cap de líneas por chunk publicado a NATS. Un burst más grande se parte.
+export const EDGE_LOGS_FOLLOW_CHUNK_MAX_LINES = 200;
+// Cada cuánto el agent vacía lo acumulado del NDJSON hacia NATS.
+export const EDGE_LOGS_FOLLOW_FLUSH_MS = 500;
+
+// `sessionId` va como instance name de una unit systemd: solo hex, sin
+// separadores. El agent y el helper host validan contra este mismo regex.
+export const EDGE_LOGS_FOLLOW_SESSION_REGEX = /^[0-9a-f]{8,32}$/;
+
+export const EdgeApplianceLogsFollowStartSchema = z.object({
+  sessionId: z.string().regex(EDGE_LOGS_FOLLOW_SESSION_REGEX),
+  unit: EdgeApplianceLogsUnitSchema,
+  priority: EdgeApplianceLogsPrioridadSchema.optional(),
+  // Segundos. El cloud lo clampea a EDGE_LOGS_FOLLOW_TTL_S.
+  ttlS: z.number().int().positive().max(EDGE_LOGS_FOLLOW_TTL_S).optional(),
+});
+
+export const EdgeApplianceLogsFollowStopSchema = z.object({
+  sessionId: z.string().regex(EDGE_LOGS_FOLLOW_SESSION_REGEX),
+});
+
+export const EdgeApplianceLogsFollowStatusSchema = z.object({
+  sessionId: z.string(),
+  unit: EdgeApplianceLogsUnitSchema,
+  activa: z.boolean(),
+  // ts ISO en que la sesión expira si no se renueva.
+  expiraEn: z.string().optional(),
+  // Presente cuando la sesión no pudo arrancar (fuente inexistente, helper
+  // host viejo sin la unit template, etc).
+  error: z.string().optional(),
+});
+
+// Chunk que el agent publica a NATS y la API reemite por socket.io.
+export const EdgeApplianceLogsChunkSchema = z.object({
+  sessionId: z.string(),
+  unit: EdgeApplianceLogsUnitSchema,
+  lines: z.array(EdgeApplianceLogLineSchema),
+  // Monotónico por sesión. El cliente detecta huecos (chunk perdido) sin
+  // tener que comparar timestamps.
+  seq: z.number().int().nonnegative(),
+  // Líneas que el edge descartó por rate/cap desde el chunk anterior. La UI
+  // muestra "… N líneas omitidas" en vez de mentir con continuidad.
+  descartadas: z.number().int().nonnegative().optional(),
 });
 
 export type IEdgeApplianceLogsUnit = z.infer<
   typeof EdgeApplianceLogsUnitSchema
+>;
+export type IEdgeApplianceLogsFuenteTipo = z.infer<
+  typeof EdgeApplianceLogsFuenteTipoSchema
+>;
+export type IEdgeApplianceLogsPrioridad = z.infer<
+  typeof EdgeApplianceLogsPrioridadSchema
 >;
 export type IEdgeApplianceLogsRequest = z.infer<
   typeof EdgeApplianceLogsRequestSchema
@@ -493,4 +656,16 @@ export type IEdgeApplianceLogLevel = z.infer<
 export type IEdgeApplianceLogLine = z.infer<typeof EdgeApplianceLogLineSchema>;
 export type IEdgeApplianceLogsResponse = z.infer<
   typeof EdgeApplianceLogsResponseSchema
+>;
+export type IEdgeApplianceLogsFollowStart = z.infer<
+  typeof EdgeApplianceLogsFollowStartSchema
+>;
+export type IEdgeApplianceLogsFollowStop = z.infer<
+  typeof EdgeApplianceLogsFollowStopSchema
+>;
+export type IEdgeApplianceLogsFollowStatus = z.infer<
+  typeof EdgeApplianceLogsFollowStatusSchema
+>;
+export type IEdgeApplianceLogsChunk = z.infer<
+  typeof EdgeApplianceLogsChunkSchema
 >;

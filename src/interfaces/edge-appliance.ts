@@ -12,6 +12,12 @@ export const EdgeApplianceRolSchema = z.enum([
 export const EdgeApplianceEstadoSchema = z.enum([
   "Provisionando",
   "Online",
+  // Transición esperada, no falla: hay un `update-image` en vuelo. El agent
+  // se cae durante el pull + restart, así que un `Offline` acá sería ruido —
+  // el operador que disparó la actualización necesita ver "está en eso", y el
+  // amarillo se resuelve solo (heartbeat con la versión nueva, veredicto de
+  // error del host, o timeout). Ver `actualizacion` para el detalle del intento.
+  "Actualizando",
   "Offline",
   "Degradado",
   // Decomiso reversible: agent revocado (Headscale node down, tokens denylist,
@@ -207,6 +213,47 @@ export const EdgeCapacidadSchema = z.object({
   inferenciaCatalogo: z.array(InferenciaCatalogoItemSchema).optional(),
 });
 
+// IEdgeApplianceActualizacion — traza del último `update-image` disparado
+// sobre el appliance. Sobrevive al intento (no se limpia al terminar) para que
+// el panel muestre "qué se intentó, con qué tag y cómo salió" sin ir a la
+// auditoría de comandos.
+//
+// Ciclo: acceso-api lo escribe al publicar el comando (estado pasa a
+// `Actualizando`) y lo cierra por una de tres vías —
+//   - heartbeat con versión/digest distinto al previo → `aplicada`
+//   - veredicto `error` del helper host (commands.result) → `error`
+//   - timeout del scheduler → `sin-cambio` (volvió igual) o `sin-respuesta`
+//     (no volvió).
+export const EdgeApplianceActualizacionResultadoSchema = z.enum([
+  "aplicada",
+  "sin-cambio",
+  "error",
+  "sin-respuesta",
+]);
+
+export const EdgeApplianceActualizacionSchema = z.object({
+  // `correlationId` del IComandoEdge emitido. Ancla el cierre: un result o un
+  // heartbeat sólo cierra el intento que matchea este id.
+  correlationId: z.string(),
+  // Tag pedido (`args.tag` del comando). Puede ser mutable (`latest`), por eso
+  // el veredicto no se basa sólo en comparar contra él.
+  tagObjetivo: z.string(),
+  // Versión/digest que corría ANTES del intento. El heartbeat compara contra
+  // esto: si cambió, la imagen nueva efectivamente arrancó.
+  versionAnterior: z.string().optional(),
+  digestAnterior: z.string().optional(),
+  iniciadoEn: z.string(),
+  // idPermiso del operador que lo disparó.
+  iniciadoPor: z.string().optional(),
+  finalizadoEn: z.string().optional(),
+  resultado: EdgeApplianceActualizacionResultadoSchema.optional(),
+  // Mensaje del host (`hostMessage`) o motivo del cierre por timeout.
+  mensaje: z.string().optional(),
+  // Versión que quedó corriendo al cerrar. Con `sin-cambio` es igual a
+  // `versionAnterior` — es justamente el dato que explica el veredicto.
+  versionResultante: z.string().optional(),
+});
+
 export const EdgeApplianceUtilizacionSchema = z.object({
   cpuPct: z.number(),
   ramPct: z.number(),
@@ -329,6 +376,11 @@ export const EdgeApplianceSchema = z.object({
   estado: EdgeApplianceEstadoSchema,
   ultimoHeartbeat: z.string().optional(),
   versionAgent: z.string().optional(),
+  // Digest de la imagen Docker en curso (`sha256:...`), reportado por el agent
+  // en el heartbeat. Es el único discriminante cuando el tag es mutable
+  // (`latest` recompilado sin bump de versión) — de ahí que el veredicto de
+  // `update-image` lo mire además de `versionAgent`.
+  versionAgentDigest: z.string().optional(),
   versionHub: z.string().optional(),
 
   entorno: EdgeApplianceEntornoSchema,
@@ -348,6 +400,10 @@ export const EdgeApplianceSchema = z.object({
   utilizacion: EdgeApplianceUtilizacionSchema.optional(),
   diagnostico: EdgeApplianceDiagnosticoSchema.optional(),
   flagsEstado: z.array(EdgeApplianceFlagEstadoSchema).optional(),
+
+  // Último `update-image` (en curso o cerrado). Ver
+  // EdgeApplianceActualizacionSchema.
+  actualizacion: EdgeApplianceActualizacionSchema.optional(),
 
   // Decomiso reversible. Seteados cuando `estado='Decomisado'`. Quedan en
   // historial al volver a otro estado (no se limpian) para trazabilidad.
@@ -400,6 +456,12 @@ export type IInferenciaCatalogoItem = z.infer<
 export type IEdgeCapacidad = z.infer<typeof EdgeCapacidadSchema>;
 export type IEdgeApplianceUtilizacion = z.infer<
   typeof EdgeApplianceUtilizacionSchema
+>;
+export type IEdgeApplianceActualizacionResultado = z.infer<
+  typeof EdgeApplianceActualizacionResultadoSchema
+>;
+export type IEdgeApplianceActualizacion = z.infer<
+  typeof EdgeApplianceActualizacionSchema
 >;
 export type IEdgeApplianceNatsConnState = z.infer<
   typeof EdgeApplianceNatsConnStateSchema

@@ -81,6 +81,33 @@ export const CategoriaDeteccionTerminalSchema = z.enum([
 export const ResultadoDeteccionSchema = z.enum(["Validada", "No Reconocida"]);
 
 /**
+ * A quién identificó el terminal, denormalizado al momento de la detección
+ * (D56).
+ *
+ * El `identificador` que reporta el equipo NO es legible: en el enrolamiento
+ * facial el `employeeNo` que se le escribe al terminal es el ObjectId del
+ * permiso, así que la columna cruda muestra 24 caracteres de hex. Mostrar un id
+ * pelado en una vista de auditoría no sirve para nada.
+ *
+ * Va como SNAPSHOT y no como populate por dos razones: el Hub edge sirve las
+ * entidades planas (un populate ahí no existe, la vista quedaría en hex contra
+ * el edge y con nombre contra el cloud), y una detección es un registro
+ * histórico — si el permiso se borra o cambia de dueño, lo que hay que poder
+ * leer es a quién identificó el equipo ESE día. Mismo criterio que
+ * `visitantesSnapshot` en IIngresoEgreso.
+ *
+ * Sólo se puebla cuando el lookup de credencial resolvió (intento validado).
+ */
+export const IdentificacionDeteccionSchema = z.object({
+  /** Permiso resuelto. Trazabilidad; para mostrar, usar los otros campos. */
+  idPermiso: z.string().optional(),
+  /** Nombre de la persona al momento de la detección. */
+  nombre: z.string().optional(),
+  /** Nombre/número de la unidad funcional (ej. "102"). */
+  unidadFuncional: z.string().optional(),
+});
+
+/**
  * Códigos crudos del evento tal como los reportó el dispositivo (D56). Se
  * persisten SIEMPRE, esté el evento mapeado o no: es lo que vuelve accionable
  * una `categoria: 'No Mapeado'` y lo que permite descubrir el vocabulario de un
@@ -167,6 +194,11 @@ export const DeteccionSchema = z.object({
    * ausente hasta relevarlos. No inventar valores para llenarlo.
    */
   modalidadAutenticacion: VerifyModeSchema.optional(),
+  /**
+   * Quién fue, en legible. Snapshot al momento de la detección — el
+   * `identificador` crudo no sirve para leer (en facial es el id del permiso).
+   */
+  identificacion: IdentificacionDeteccionSchema.optional(),
   /** Códigos crudos del evento del dispositivo. Se persisten esté mapeado o no. */
   eventoOrigen: EventoOrigenDispositivoSchema.optional(),
   // Correlación
@@ -204,6 +236,9 @@ export type ICategoriaDeteccionTerminal = z.infer<
 export type IResultadoDeteccion = z.infer<typeof ResultadoDeteccionSchema>;
 export type IEventoOrigenDispositivo = z.infer<
   typeof EventoOrigenDispositivoSchema
+>;
+export type IIdentificacionDeteccion = z.infer<
+  typeof IdentificacionDeteccionSchema
 >;
 export type IEstadoCorrelacionDeteccion = z.infer<
   typeof EstadoCorrelacionDeteccionSchema

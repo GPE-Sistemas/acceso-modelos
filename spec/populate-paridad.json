@@ -1,0 +1,263 @@
+{
+  "$comment": "Registro de paridad de populate. Declara, por ruta REST, los paths de populate que pide el cliente único (bundle acceso-web). El cloud los resuelve con virtuals de Mongoose; el Hub edge los resuelve a mano en Go. Cuando el edge no implementa un path lo IGNORA en silencio y la celda de la vista cae a «—» sin un solo error: este archivo es lo que convierte ese silencio en una falla de CI. Consumidores: acceso-web (scripts/populate-registry.mjs — verifica que el cliente no pida nada sin declarar) y acceso-edge (internal/api/rest/populate_paridad_test.go — verifica que lo declarado esté soportado, o anotado como excepción con motivo). Alcance: paths de primer nivel; los populate anidados quedan afuera hasta que el edge los soporte.",
+  "generadoPor": "acceso-web: node scripts/populate-registry.mjs --print (revisar a mano antes de commitear)",
+  "rutas": {
+    "/accesos": {
+      "populate": [
+        "cliente",
+        "complejo"
+      ]
+    },
+    "/bloqueos-turnos": {
+      "populate": [
+        "unidadesFuncionales"
+      ]
+    },
+    "/botones-ticket": {
+      "populate": [
+        "cliente",
+        "complejo"
+      ]
+    },
+    "/comandos-edge": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "edgeAppliance"
+      ]
+    },
+    "/complejos": {
+      "populate": [
+        "cliente"
+      ]
+    },
+    "/credenciales": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "permiso"
+      ]
+    },
+    "/credenciales-dispositivos": {
+      "populate": [
+        "credencial",
+        "dispositivo",
+        "permiso"
+      ]
+    },
+    "/detecciones": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "dispositivo"
+      ]
+    },
+    "/dispositivos-accesos": {
+      "populate": [
+        "acceso",
+        "cliente",
+        "complejo",
+        "dispositivo"
+      ]
+    },
+    "/dispositivos-zonas": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "dispositivo",
+        "zona"
+      ]
+    },
+    "/edge-appliances": {
+      "populate": [
+        "cliente",
+        "complejo"
+      ]
+    },
+    "/empleados": {
+      "populate": [
+        "permiso"
+      ]
+    },
+    "/encuestas": {
+      "populate": [
+        "grupoUnidadFuncional"
+      ]
+    },
+    "/eventos-dispositivo": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "dispositivo",
+        "edgeAppliance"
+      ]
+    },
+    "/eventos-seguridad": {
+      "populate": [
+        "dispositivo",
+        "permisoAtencion",
+        "zona"
+      ]
+    },
+    "/eventos-visita": {
+      "populate": [
+        "permiso",
+        "unidadFuncional",
+        "unidadFuncionalDestino",
+        "vehiculos",
+        "visitantes"
+      ]
+    },
+    "/expensas-uf": {
+      "populate": [
+        "unidadFuncional"
+      ]
+    },
+    "/gastos": {
+      "populate": [
+        "proveedor"
+      ]
+    },
+    "/grupos-uf": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "unidadesFuncionales"
+      ]
+    },
+    "/infracciones": {
+      "populate": [
+        "unidadFuncional"
+      ]
+    },
+    "/ingresos-egresos": {
+      "populate": [
+        "acceso",
+        "aprobadoPorPermiso",
+        "permiso",
+        "permisosAcompanantes",
+        "unidadFuncional",
+        "vehiculo",
+        "visitantes"
+      ]
+    },
+    "/mascotas": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "unidadFuncional"
+      ]
+    },
+    "/multas": {
+      "populate": [
+        "unidadFuncional"
+      ]
+    },
+    "/notificaciones": {
+      "populate": [
+        "grupoUnidadFuncional",
+        "unidadFuncional"
+      ]
+    },
+    "/obras": {
+      "populate": [
+        "unidadFuncional"
+      ]
+    },
+    "/perfiles-dispositivo": {
+      "populate": [
+        "cliente",
+        "complejo"
+      ]
+    },
+    "/permisos": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "roles",
+        "unidadFuncional",
+        "unidadesFuncionales",
+        "usuario"
+      ]
+    },
+    "/plantillas-ronda": {
+      "populate": [
+        "permisoAsignadoDefault"
+      ]
+    },
+    "/plantillas-turno": {
+      "populate": [
+        "tipoActividad",
+        "unidadesFuncionales"
+      ]
+    },
+    "/rondas": {
+      "populate": [
+        "permisoAsignado",
+        "permisoEjecutor"
+      ]
+    },
+    "/salud-streams": {
+      "populate": [
+        "acceso",
+        "cliente",
+        "complejo",
+        "dispositivo",
+        "zona"
+      ]
+    },
+    "/tickets": {
+      "populate": [
+        "boton",
+        "permiso",
+        "permisoAtencion"
+      ]
+    },
+    "/tipos-actividad": {
+      "populate": [
+        "unidadesFuncionales"
+      ]
+    },
+    "/turnos": {
+      "populate": [
+        "permiso",
+        "plantilla",
+        "unidadFuncional",
+        "unidadFuncionalRecurso"
+      ]
+    },
+    "/unidades-funcionales": {
+      "populate": [
+        "cliente",
+        "complejo"
+      ]
+    },
+    "/vehiculos": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "unidadFuncional"
+      ]
+    },
+    "/vinculos-evento-ingreso": {
+      "populate": [
+        "eventoVisita",
+        "ingresoEgreso",
+        "visitantesAplicados"
+      ]
+    },
+    "/visitantes": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "unidadFuncional"
+      ]
+    },
+    "/zonas": {
+      "populate": [
+        "cliente",
+        "complejo"
+      ]
+    }
+  }
+}

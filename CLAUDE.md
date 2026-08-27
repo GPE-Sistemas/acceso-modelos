@@ -485,3 +485,32 @@ El antídoto es declarar el row entity por entity, como ya lo hacía `Acceso`. `
 ### Histórico
 
 El spec arrancó en `acceso-doc-general/spec/hub-edge-contract.yaml` (PR #5 doc-general). Se mueve acá en v2.11.0 (PR #16 acceso-modelos). El espacio en doc-general queda libre para documentación arquitectónica de alto nivel (`DECISIONES.md`, `docs/analisis/`, docs numerados); el contrato técnico vive donde se distribuye.
+
+## Registro de paridad de populate (`spec/populate-paridad.json`)
+
+Declara, **por ruta REST, qué paths de `populate` pide el bundle de `acceso-web`**.
+Viaja en el mismo paquete que el spec (`files: ["spec", ...]`) por la misma razón:
+lo consumen dos repos.
+
+Por qué existe: el bundle es uno y lo sirven dos backends. El cloud resuelve el
+populate con virtuals de Mongoose; el Hub edge lo resuelve a mano en Go. Un path
+que el edge no implementa **no da error** — la respuesta sale sin la clave, la
+celda de la vista muestra "—" y no hay nada en ninguna consola. Este archivo es lo
+que convierte ese silencio en una falla de CI.
+
+Consumidores:
+
+- **`acceso-web`**: `npm run paridad:populate` escanea sus llamadas a
+  `ApiService` y falla si el cliente pide un populate que no está declarado acá.
+  `npm run paridad:populate:print` imprime el scan (es la fuente para actualizar
+  este archivo).
+- **`acceso-edge`**: `make hub-edge-spec` lo copia a
+  `internal/core/contract/populate-paridad.json` (embed) y
+  `internal/api/rest/populate_paridad_test.go` falla si una ruta que el edge
+  sirve tiene un populate sin wrapper y sin excepción anotada con motivo.
+
+Alcance: paths de **primer nivel**. Los populate anidados quedan afuera hasta que
+el edge los soporte — declararlos daría un contrato que ningún lado cumple.
+
+Al agregar un populate en la web: correr el print, actualizar `rutas`, bumpear el
+paquete. Es cambio compatible (dato nuevo, no breaking).

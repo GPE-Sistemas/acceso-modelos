@@ -56,7 +56,30 @@ export const CategoriaNotificacionSchema = z.enum([
   "ronda_no_realizada",
   /** Mobile Complejo (Rondas - Ver rondas): el guardia reportó una novedad durante una ronda */
   "ronda_novedad",
+  /**
+   * Mobile UF: un menor de mi UF está esperando autorización para egresar
+   * (D57, doc 44). NO silenciable — ver `CATEGORIAS_NOTIFICACION_OBLIGATORIAS`.
+   */
+  "egreso_menor_autorizacion",
+  /** Mobile UF: el egreso del menor fue autorizado o rechazado, y por quién */
+  "egreso_menor_resuelto",
+  /**
+   * Mobile UF: un menor de mi UF ingresó o egresó. Se emite SIEMPRE, incluso
+   * cuando el egreso se aprobó solo por excepción vigente (permanente, franja,
+   * voucher o acompañamiento).
+   */
+  "menor_movimiento",
 ]);
+
+/**
+ * Categorías que el residente NO puede apagar (D57). Si un responsable silencia
+ * el pedido de autorización, el menor queda esperando en la garita sin que nadie
+ * se entere: el push es parte del control de acceso, no un aviso de cortesía.
+ * acceso-api las emite ignorando las preferencias y la app no ofrece el toggle.
+ */
+export const CATEGORIAS_NOTIFICACION_OBLIGATORIAS = [
+  "egreso_menor_autorizacion",
+] as const satisfies readonly ICategoriaNotificacion[];
 
 export const CATEGORIAS_NOTIFICACION =
   CategoriaNotificacionSchema.options;
@@ -93,6 +116,9 @@ export const CategoriasNotificacionMapSchema = z.object({
   seguridad_evento: z.boolean(),
   ronda_no_realizada: z.boolean(),
   ronda_novedad: z.boolean(),
+  egreso_menor_autorizacion: z.boolean(),
+  egreso_menor_resuelto: z.boolean(),
+  menor_movimiento: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -165,4 +191,7 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   seguridad_evento: true,
   ronda_no_realizada: true,
   ronda_novedad: true,
+  egreso_menor_autorizacion: true,
+  egreso_menor_resuelto: true,
+  menor_movimiento: true,
 };

@@ -49,6 +49,58 @@ export const VehiculoSnapshotSchema = z.object({
   datosVehiculo: DatosVehiculoSchema,
 });
 
+/**
+ * Estado de la autorización de egreso de un menor (D57, doc 44). No existe un
+ * estado previo a `Solicitada`: la notificación al responsable es automática, la
+ * solicitud nace pedida.
+ */
+export const EstadoAutorizacionEgresoSchema = z.enum([
+  "Solicitada",
+  "Aprobada",
+  "Rechazada",
+  /** Venció `timeoutSolicitudMin` sin respuesta — queda en manos del guardia. */
+  "Vencida",
+]);
+
+/**
+ * Por qué vía se resolvió el egreso (D57). Las cuatro primeras son excepciones
+ * evaluadas por el edge sin intervención humana; `Responsable` y `Administración`
+ * son resoluciones explícitas.
+ */
+export const ViaAutorizacionEgresoSchema = z.enum([
+  /** Permiso nivel UF con `Movimientos - Autorizar egreso de menor`. */
+  "Responsable",
+  /** Permiso nivel Complejo (administración / guardia) con la misma acción. */
+  "Administración",
+  "Permanente",
+  "Franja",
+  "Voucher",
+  /** Un responsable de la UF egresó por el mismo acceso dentro de la ventana. */
+  "Acompañado",
+]);
+
+/**
+ * Traza de la autorización de egreso de un menor (D57, doc 44). Subdocumento y
+ * no entidad aparte: el `IIngresoEgreso` ya viaja bidireccional entre edge y
+ * cloud, y la solicitud no sobrevive al evento que la originó.
+ *
+ * Un egreso resuelto con el edge aislado se reconoce por `idsPermisosNotificados`
+ * vacío + `via: 'Administración'` — no hay flag de contingencia.
+ */
+export const AutorizacionEgresoSchema = z.object({
+  requerida: z.literal(true),
+  estado: EstadoAutorizacionEgresoSchema,
+  via: ViaAutorizacionEgresoSchema.optional(),
+  /** Voucher (`IAutorizacionEgresoMenor`) consumido, si `via === 'Voucher'`. */
+  idAutorizacion: z.string().optional(),
+  /** A quiénes se les pidió. Vacío = no salió push (edge aislado). */
+  idsPermisosNotificados: z.array(z.string()).optional(),
+  fechaSolicitud: z.string().optional(),
+  resueltoPorIdPermiso: z.string().optional(),
+  fechaResolucion: z.string().optional(),
+  motivoRechazo: z.string().optional(),
+});
+
 export const IngresoEgresoSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
@@ -78,6 +130,14 @@ export const IngresoEgresoSchema = z.object({
    *  `currentVerifyMode` del evento HIK (tarjeta, huella, PIN o combinaciones).
    *  Solo aplica cuando `origen === 'Terminal'`. Ausente = no informado. */
   modalidadAutenticacion: VerifyModeSchema.optional(),
+  /**
+   * Autorización de egreso de un menor (D57, doc 44). Presente sólo cuando el
+   * permiso tiene `politicaEgreso.requiereAutorizacion`. Mientras el estado sea
+   * `Solicitada` el evento queda pendiente (`aprobado` ausente) aunque el
+   * `IDispositivoAcceso` esté en `Aprobación Automática`, y el sistema no ordena
+   * la apertura.
+   */
+  autorizacionEgreso: AutorizacionEgresoSchema.optional(),
   // --- Origen detección de video (M2, módulo IA-video) ---
   /** Qué generó el evento. Ausente = legacy (Terminal). */
   origen: OrigenIngresoEgresoSchema.optional(),
@@ -131,6 +191,13 @@ export type ITipoIngresoEgreso = z.infer<typeof TipoIngresoEgresoSchema>;
 export type IAprobadoPorIngresoEgreso = z.infer<typeof AprobadoPorIngresoEgresoSchema>;
 export type IOrigenIngresoEgreso = z.infer<typeof OrigenIngresoEgresoSchema>;
 export type ICategoriaIngresoEgreso = z.infer<typeof CategoriaIngresoEgresoSchema>;
+export type IEstadoAutorizacionEgreso = z.infer<
+  typeof EstadoAutorizacionEgresoSchema
+>;
+export type IViaAutorizacionEgreso = z.infer<
+  typeof ViaAutorizacionEgresoSchema
+>;
+export type IAutorizacionEgreso = z.infer<typeof AutorizacionEgresoSchema>;
 export type IVisitanteSnapshot = z.infer<typeof VisitanteSnapshotSchema>;
 export type IVehiculoSnapshot = z.infer<typeof VehiculoSnapshotSchema>;
 export type IIngresoEgreso = z.infer<typeof IngresoEgresoSchema>;

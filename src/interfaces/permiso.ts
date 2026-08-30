@@ -32,6 +32,72 @@ export type IConfigPermiso = z.infer<typeof ConfigPermisoSchema>;
 export type INivelPermiso = z.infer<typeof NivelPermisoSchema>;
 export type ICategoriaPermiso = z.infer<typeof CategoriaPermisoSchema>;
 
+/**
+ * Franja horaria en la que un integrante con `politicaEgreso.requiereAutorizacion`
+ * puede egresar sin pedir autorización (D57). Mismo vocabulario que la
+ * recurrencia de eventos de visita y turnos.
+ */
+export const FranjaEgresoLibreSchema = z.object({
+  /** 0..6 (0 = domingo). Los 7 equivalen a "todos los días". */
+  diasSemana: z.array(z.number().int().min(0).max(6)),
+  /** 'HH:mm'. Si `horaHasta` < `horaDesde` se interpreta cruzando medianoche. */
+  horaDesde: z.string(),
+  horaHasta: z.string(),
+  /** Vigencia de la franja (ej. ciclo lectivo). Ausente = sin límite. */
+  desde: z.string().optional(),
+  hasta: z.string().optional(),
+  /** Auditoría — los inyecta acceso-api con el permiso que otorgó la excepción. */
+  otorgadaPorIdPermiso: z.string().optional(),
+  fechaOtorgamiento: z.string().optional(),
+});
+
+/**
+ * Excepción abierta: el integrante egresa siempre sin pedir autorización (D57).
+ * Convive con `franjasLibres` — se evalúa primero.
+ */
+export const AutorizacionEgresoPermanenteSchema = z.object({
+  /** Vigencia de la excepción. Ausente = sin límite. */
+  desde: z.string().optional(),
+  hasta: z.string().optional(),
+  otorgadaPorIdPermiso: z.string().optional(),
+  fechaOtorgamiento: z.string().optional(),
+});
+
+/**
+ * Política de egreso del integrante de la UF (D57, doc 44). Ausente = integrante
+ * sin restricción: es la marca de "menor" del sistema.
+ *
+ * La marca vive acá y no en `IUsuario`, ni en la credencial, ni en el
+ * dispositivo: es una condición de la pertenencia a la UF, no de la persona ni
+ * del fierro. `IUsuario.fechaNacimiento` sirve para que la UI SUGIERA la marca;
+ * nunca para decidirla — el control de acceso no cambia solo el día del
+ * cumpleaños.
+ *
+ * Deliberadamente NO se agregó un valor a `CategoriaPermisoSchema`: ese enum se
+ * copia a `IIngresoEgreso.categoria`, gatea diez acciones de rol
+ * `Crear/Editar permisos <categoría>` y filtra el panel del guardia; un valor
+ * nuevo haría que Mongoose rechace documentos productivos enteros. El rol
+ * `Menor UF` es un dato (como `Responsable UF`), no un enum.
+ *
+ * Con `requiereAutorizacion` y sin excepción vigente, el egreso queda PENDIENTE
+ * aunque el `IDispositivoAcceso` esté en `Aprobación Automática`, y el sistema no
+ * ordena la apertura. Orden de evaluación en el edge: sin marca → permanente →
+ * franja → voucher (`IAutorizacionEgresoMenor`) → acompañado → pendiente.
+ */
+export const PoliticaEgresoSchema = z.object({
+  requiereAutorizacion: z.boolean(),
+  /** "Sale siempre". `null`/ausente = sin excepción abierta. */
+  autorizacionPermanente: AutorizacionEgresoPermanenteSchema.nullish(),
+  /** "Sale solo 7-8 y 13-14, lunes a viernes". Vacío = sin franjas. */
+  franjasLibres: z.array(FranjaEgresoLibreSchema).optional(),
+});
+
+export type IFranjaEgresoLibre = z.infer<typeof FranjaEgresoLibreSchema>;
+export type IAutorizacionEgresoPermanente = z.infer<
+  typeof AutorizacionEgresoPermanenteSchema
+>;
+export type IPoliticaEgreso = z.infer<typeof PoliticaEgresoSchema>;
+
 const PermisoBaseFields = {
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
@@ -101,6 +167,12 @@ export const PermisoUnidadFuncionalSchema = z.object({
    * Setear solo vía PUT /permisos/:id/desactivar.
    */
   fechaFinVigencia: z.string().optional(),
+  /**
+   * Política de egreso del integrante (D57, doc 44). Ausente = sin restricción.
+   * La edita el responsable de la UF (acción `Movimientos - Configurar egreso de
+   * menores`) vía endpoint acotado, sin darle el ABM completo de permisos.
+   */
+  politicaEgreso: PoliticaEgresoSchema.optional(),
   // Virtuals
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),

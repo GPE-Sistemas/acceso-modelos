@@ -198,6 +198,15 @@ export const AccionesRolSchema = z.enum([
   "Movimientos - Ver vinculos evento ingreso",
   "Movimientos - Crear vinculos evento ingreso",
   "Movimientos - Eliminar vinculos evento ingreso",
+  // Egreso de menores (D57, doc 44). UNA sola acción para autorizar: el alcance
+  // lo da el NIVEL del permiso que la lleva — nivel UF resuelve sólo su UF,
+  // nivel Complejo (administración / guardia) resuelve cualquier egreso de menor
+  // del complejo. Mismo criterio que la aprobación de eventos de visita.
+  "Movimientos - Autorizar egreso de menor",
+  // Marca de menor + excepciones (permanente, franjas) y alta/anulación de
+  // vouchers. La lleva el responsable de la UF; el endpoint acotado evita darle
+  // el ABM completo de permisos (que exige acciones de Administración).
+  "Movimientos - Configurar egreso de menores",
 
   // MODULO PUBLICACIONES
   "Publicaciones - Ver publicaciones",

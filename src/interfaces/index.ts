@@ -1,4 +1,5 @@
 export * from './acceso';
+export * from './autorizacion-egreso-menor';
 export * from './complejo';
 export * from './credencial';
 export * from './credencial-dispositivo';

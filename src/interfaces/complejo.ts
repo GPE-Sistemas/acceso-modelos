@@ -41,6 +41,29 @@ export const PinSchemeSchema = z.object({
   digitosPin: z.number().int().min(4).max(8).optional(),
 });
 
+/**
+ * Defaults del complejo para el egreso de menores (D57, doc 44). Sólo valores
+ * iniciales y una política dura: la configuración efectiva vive en
+ * `IPermisoUnidadFuncional.politicaEgreso`, por menor, y la edita el responsable
+ * de la UF. No hay configuración por acceso ni modo de solicitud configurable —
+ * la notificación al responsable sale siempre.
+ */
+export const ConfigEgresoMenoresSchema = z.object({
+  /** Se copia al marcar un permiso como menor. */
+  politicaEgresoDefault: z
+    .object({ requiereAutorizacion: z.boolean() })
+    .optional(),
+  /** Minutos hasta que la solicitud vence y queda en manos del guardia. */
+  timeoutSolicitudMin: z.number().int().positive().optional(),
+  /** Edad a partir de la cual la UI deja de sugerir la marca de menor. */
+  edadSugerida: z.number().int().positive().optional(),
+  /**
+   * Si la marca se levanta sola al alcanzar `edadSugerida`. Default `false`: el
+   * control de acceso no cambia solo un martes a la medianoche.
+   */
+  vencimientoAutomaticoAlCumplir: z.boolean().optional(),
+});
+
 export const ConfigComplejoSchema = z.object({
   imagenes: z.object({
       logo: z.string().optional(),
@@ -50,6 +73,8 @@ export const ConfigComplejoSchema = z.object({
   /** Política de identificador de PIN para terminales de teclado (opcional —
    *  ausente = el complejo no usa PIN). */
   pinScheme: PinSchemeSchema.optional(),
+  /** Defaults de egreso de menores (D57). Ausente = el complejo no lo usa. */
+  egresoMenores: ConfigEgresoMenoresSchema.optional(),
 });
 
 export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
@@ -85,6 +110,7 @@ export const UpdateComplejoSchema = ComplejoSchema.omit({
 
 export type IPinModo = z.infer<typeof PinModoSchema>;
 export type IPinScheme = z.infer<typeof PinSchemeSchema>;
+export type IConfigEgresoMenores = z.infer<typeof ConfigEgresoMenoresSchema>;
 export type IConfigComplejo = z.infer<typeof ConfigComplejoSchema>;
 export type ITipoComplejo = z.infer<typeof TipoComplejoSchema>;
 export type IComplejo = z.infer<typeof ComplejoSchema>;

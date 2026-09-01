@@ -18,6 +18,13 @@ export const CategoriaNotificacionSchema = z.enum([
   "ticket_emergencia_recibido",
   /** Mobile Complejo: nueva solicitud/reclamo recibido (admin atendedor) */
   "ticket_solicitud_recibido",
+  /**
+   * Mobile/Web Complejo (Administración - Ver solicitudes de permiso): un
+   * usuario sin permisos pidió acceso a una UF desde dentro del complejo.
+   * La respuesta al solicitante NO usa categoría: no tiene permiso todavía,
+   * así que se resuelve por `idUsuario` sin preferencias.
+   */
+  "solicitud_permiso_recibida",
   /** Mobile UF: alguien creó un evento de visita que requiere mi aprobación */
   "visita_pendiente_aprobacion",
   /** Mobile UF: mi evento de visita fue aprobado o rechazado */
@@ -97,6 +104,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   emergencia_estado: z.boolean(),
   ticket_emergencia_recibido: z.boolean(),
   ticket_solicitud_recibido: z.boolean(),
+  solicitud_permiso_recibida: z.boolean(),
   visita_pendiente_aprobacion: z.boolean(),
   visita_resuelta: z.boolean(),
   turno_reservado: z.boolean(),
@@ -172,6 +180,7 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   emergencia_estado: true,
   ticket_emergencia_recibido: true,
   ticket_solicitud_recibido: true,
+  solicitud_permiso_recibida: true,
   visita_pendiente_aprobacion: true,
   visita_resuelta: true,
   turno_reservado: true,

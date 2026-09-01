@@ -20,6 +20,7 @@ export * from './invitacion-visita';
 export * from './cliente';
 export * from './ingreso-egreso';
 export * from './permiso';
+export * from './solicitud-permiso';
 export * from './empleado';
 export * from './rol';
 export * from './unidad-funcional';

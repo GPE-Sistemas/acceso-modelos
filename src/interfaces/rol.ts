@@ -31,6 +31,12 @@ export const AccionesRolSchema = z.enum([
   "Administración - Editar permisos guardia",
   "Administración - Editar permisos prestadores",
   "Administración - Editar permisos mantenimiento",
+  // Solicitudes de permiso (ISolicitudPermiso): un usuario sin permisos, parado
+  // dentro del polígono del complejo, pide acceso a una UF por texto libre.
+  // Aprobar crea el IPermisoUnidadFuncional → además de "Resolver" se exige
+  // "Crear permisos propietarios".
+  "Administración - Ver solicitudes de permiso",
+  "Administración - Resolver solicitudes de permiso",
   // Roles
   "Administración - Ver roles",
   "Administración - Crear roles",

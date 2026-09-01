@@ -206,6 +206,13 @@
         "zona"
       ]
     },
+    "/solicitudes-permiso": {
+      "populate": [
+        "cliente",
+        "complejo",
+        "unidadFuncional"
+      ]
+    },
     "/tickets": {
       "populate": [
         "boton",

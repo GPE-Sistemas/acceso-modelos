@@ -19,6 +19,7 @@ export * from './evento-visita';
 export * from './invitacion-visita';
 export * from './cliente';
 export * from './ingreso-egreso';
+export * from './estadia';
 export * from './permiso';
 export * from './solicitud-permiso';
 export * from './empleado';

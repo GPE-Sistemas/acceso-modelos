@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.11.0
+  version: 0.12.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -542,6 +542,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Documento_Entidad'
+  /presencia:
+    get:
+      tags:
+      - ingresos-egresos
+      summary: Estadías (quién está adentro) plegando el stream de movimientos
+      description: 'Fold del stream de `ingresos-egresos` en estadías por SUJETO (D58).
+
+        Una estadía abre con el ingreso y cierra con el egreso del mismo sujeto: un movimiento es multi-sujeto
+        (`idsVisitantes[]`, `idsPermisosAcompanantes[]`), así que N sujetos en un mismo paso son N estadías.
+        No hay entidad persistida — cloud y edge calculan, y esta forma es la que van a persistir si se materializa.
+
+
+        El fold vive en UN solo lugar por motor (servicio en `acceso-api`, query en `acceso-edge`): antes estaba
+        escrito dos veces en el front, con reglas distintas.
+
+
+        `estado=Abiertas` (default) es el padrón del panel del guardia; `idEventoVisita` lo consume el diálogo de
+        ingreso/egreso de visita para saber quién está adentro de ese evento.
+
+        '
+      operationId: listPresencia
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - name: idComplejo
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        description: Acota al complejo. El scope del permiso lo inyecta el backend igual.
+      - name: idEventoVisita
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        description: Acota a las estadías habilitadas por ese evento de visita.
+      - name: categorias
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 'CSV de `CategoriaIngresoEgreso` (ej. `Visita,Prestador de Servicio`).'
+      - name: desde
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: 'Piso de la ventana del fold. Default: 48 h (`VENTANA_PRESENCIA_HORAS_DEFAULT`).'
+      - name: estado
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - Abiertas
+          - Todas
+        description: 'Default `Abiertas` (el sujeto está adentro).'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_EstadiaCalculada'
   /eventos-visita:
     get:
       tags:
@@ -3773,6 +3841,88 @@ components:
           type: array
           items:
             type: object
+        totalCount:
+          type: integer
+        duration:
+          type: number
+    EstadiaCalculada:
+      type: object
+      x-source: acceso-modelos/dist/json-schema/EstadiaCalculadaSchema.json
+      required:
+      - sujeto
+      - abierta
+      - fechaApertura
+      - idIngreso
+      properties:
+        sujeto:
+          type: object
+          required:
+          - tipo
+          - id
+          properties:
+            tipo:
+              type: string
+              enum:
+              - Permiso
+              - Visitante
+            id:
+              type: string
+              pattern: ^[a-f0-9]{24}$
+        idCliente:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        idComplejo:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        idUnidadFuncional:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        categoria:
+          type: string
+          enum:
+          - Propietario
+          - Visita
+          - Administración
+          - Guardia
+          - Prestador de Servicio
+          - Mantenimiento
+        abierta:
+          type: boolean
+          description: El sujeto está adentro (no hay egreso que cierre la apertura).
+        fechaApertura:
+          type: string
+          format: date-time
+        fechaCierre:
+          type: string
+          format: date-time
+        idIngreso:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        idEgreso:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        idEventoVisita:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+          description: Autorización que la habilitó — la referencia, no la reemplaza.
+        idPermiso:
+          type: string
+          pattern: ^[a-f0-9]{24}$
+        ingreso:
+          type: object
+          description: Movimiento de apertura populado (`IIngresoEgreso`).
+        egreso:
+          type: object
+          description: Movimiento de cierre populado, si la estadía cerró.
+    Listado_EstadiaCalculada:
+      type: object
+      required:
+      - datos
+      properties:
+        datos:
+          type: array
+          items:
+            $ref: '#/components/schemas/EstadiaCalculada'
         totalCount:
           type: integer
         duration:

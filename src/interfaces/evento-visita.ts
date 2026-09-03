@@ -85,6 +85,16 @@ export const EventoVisitaSchema = z.object({
   aprobadoPorIdPermiso: z.string().optional(),
   fechaAprobacion: z.string().optional(),
   motivoRechazo: z.string().optional(),
+  /**
+   * `true` cuando la aprobación la forzó un permiso con
+   * `Visitas - Forzar aprobación de eventos` (típicamente el guardia en la
+   * garita, con el propietario autorizando de palabra) en lugar del
+   * responsable de la UF. El quién/cuándo siguen en `aprobadoPorIdPermiso` /
+   * `fechaAprobacion`: este flag sólo marca el origen del acto.
+   */
+  aprobacionForzada: z.boolean().optional(),
+  /** Texto libre opcional que deja el guardia al forzar (ej. "autorizó el propietario en garita"). */
+  motivoAprobacionForzada: z.string().optional(),
   // Aprobación recurrente (admin Complejo). Sólo aplica si recurrencia presente.
   estadoAprobacionRecurrente: EstadoAprobacionEventoVisitaSchema.optional(),
   aprobadoRecurrentePorIdPermiso: z.string().optional(),

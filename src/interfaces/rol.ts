@@ -160,6 +160,13 @@ export const AccionesRolSchema = z.enum([
   "Visitas - Eliminar eventos",
   "Visitas - Aprobar eventos",
   "Visitas - Aprobar eventos recurrentes",
+  // Aprobación forzada desde la garita: el guardia crea el evento (queda
+  // Pendiente y se notifica al responsable de la UF como siempre) y acto
+  // seguido lo autoriza él mismo, para el caso del propietario que autoriza
+  // la visita verbalmente estando en la garita. NO es "Aprobar eventos":
+  // esa aprueba en nombre de la UF y además autoaprueba en el alta; ésta
+  // deja el evento marcado como `aprobacionForzada` y avisa a la UF.
+  "Visitas - Forzar aprobación de eventos",
   "Visitas - Ver visitantes",
   "Visitas - Crear visitantes",
   "Visitas - Editar visitantes",

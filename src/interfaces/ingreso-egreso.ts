@@ -8,7 +8,7 @@ import { DatosVehiculoSchema, VehiculoSchema } from "./vehiculo";
 import { DatosPersonalesSchema } from "./usuario";
 import { VisitanteSchema } from "./visitante";
 import { TipoDeteccionSchema } from "./deteccion";
-import { VerifyModeSchema } from "./credencial";
+import { CredencialSchema, VerifyModeSchema } from "./credencial";
 
 export const TipoIngresoEgresoSchema = z.enum(["Ingreso", "Egreso"]);
 export const AprobadoPorIngresoEgresoSchema = z.enum(["Sistema", "Guardia"]);
@@ -22,6 +22,21 @@ export const OrigenIngresoEgresoSchema = z.enum([
   "Terminal",
   "Detección Video",
   "Manual",
+]);
+/**
+ * Por qué se invalidó un movimiento ya registrado. El movimiento NO se borra:
+ * un evento anulado es precisamente lo que hay que poder auditar después.
+ *
+ * `Falso positivo de identificación` es el caso que originó la anulación (doc
+ * 47): el terminal hizo 1:N contra su padrón local y concedió a una persona
+ * que no es la titular de la credencial. Materializa además un
+ * `IEventoSeguridad` de tipo `SuplantacionIdentidad` en la bandeja de guardia.
+ */
+export const MotivoAnulacionIngresoEgresoSchema = z.enum([
+  "Falso positivo de identificación",
+  "Duplicado",
+  "Error de carga",
+  "Otro",
 ]);
 export const CategoriaIngresoEgresoSchema = z.enum([
   "Propietario",
@@ -131,6 +146,29 @@ export const IngresoEgresoSchema = z.object({
    *  Solo aplica cuando `origen === 'Terminal'`. Ausente = no informado. */
   modalidadAutenticacion: VerifyModeSchema.optional(),
   /**
+   * Credencial que identificó a la persona en este paso. La resuelve el edge en
+   * el ingest del evento del terminal (ya hace el lookup
+   * dispositivo_acceso → credencial → permiso, pero hasta acá lo descartaba).
+   * Ausente en los movimientos previos a doc 47 y en los de alta manual.
+   *
+   * Es lo que permite comparar la captura del terminal contra la foto EXACTA
+   * que produjo el match, en vez de contra "alguna credencial facial de ese
+   * permiso".
+   */
+  idCredencial: z.string().optional(),
+  // --- Anulación (doc 47) ---
+  /**
+   * Movimiento invalidado por un operador. Nunca se borra: sale del padrón de
+   * presencia y de las estadísticas, y queda visible marcado como anulado.
+   * Ausente = vigente.
+   */
+  anulado: z.boolean().optional(),
+  motivoAnulacion: MotivoAnulacionIngresoEgresoSchema.optional(),
+  observacionesAnulacion: z.string().optional(),
+  /** Permiso del operador que anuló. */
+  anuladoPorIdPermiso: z.string().optional(),
+  fechaAnulacion: z.string().optional(),
+  /**
    * Autorización de egreso de un menor (D57, doc 44). Presente sólo cuando el
    * permiso tiene `politicaEgreso.requiereAutorizacion`. Mientras el estado sea
    * `Solicitada` el evento queda pendiente (`aprobado` ausente) aunque el
@@ -169,6 +207,29 @@ export const IngresoEgresoSchema = z.object({
   acceso: AccesoSchema.optional(),
   vehiculo: VehiculoSchema.optional(),
   aprobadoPorPermiso: PermisoSchema.optional(),
+  /**
+   * Credencial que produjo el match — su `datos.fotoCredencial` es el lado
+   * "esperado" del comparador de la vista de detalle.
+   *
+   * Va SIN sus propios populate (`.omit`): `ICredencial` popula `IPermiso`, que
+   * es una discriminated union profunda, y `IIngresoEgreso` ya trae tres
+   * `PermisoSchema`. Con la cadena entera, `createZodDto` de los DTO de
+   * `acceso-api` revienta con TS7056. Acá no hace falta: quien tenga el
+   * movimiento ya tiene el permiso populado por su propio lado.
+   */
+  credencial: CredencialSchema.omit({
+    cliente: true,
+    complejo: true,
+    unidadFuncional: true,
+    permiso: true,
+  }).optional(),
+  /**
+   * `z.any()` y no `PermisoSchema` — mismo criterio que `turno.ts`: este
+   * schema ya popula tres `IPermiso` (union discriminada profunda) y el cuarto
+   * hace reventar `createZodDto` de los DTO de `acceso-api` con TS7056.
+   * Medido: con `PermisoSchema` acá, `dto.ts` de ingresos-egresos no compila.
+   */
+  anuladoPorPermiso: z.any().optional(),
 });
 
 export const CreateIngresoEgresoSchema = IngresoEgresoSchema.omit({
@@ -183,6 +244,8 @@ export const CreateIngresoEgresoSchema = IngresoEgresoSchema.omit({
   acceso: true,
   vehiculo: true,
   aprobadoPorPermiso: true,
+  credencial: true,
+  anuladoPorPermiso: true,
 });
 
 export const UpdateIngresoEgresoSchema = CreateIngresoEgresoSchema.partial();
@@ -191,6 +254,9 @@ export type ITipoIngresoEgreso = z.infer<typeof TipoIngresoEgresoSchema>;
 export type IAprobadoPorIngresoEgreso = z.infer<typeof AprobadoPorIngresoEgresoSchema>;
 export type IOrigenIngresoEgreso = z.infer<typeof OrigenIngresoEgresoSchema>;
 export type ICategoriaIngresoEgreso = z.infer<typeof CategoriaIngresoEgresoSchema>;
+export type IMotivoAnulacionIngresoEgreso = z.infer<
+  typeof MotivoAnulacionIngresoEgresoSchema
+>;
 export type IEstadoAutorizacionEgreso = z.infer<
   typeof EstadoAutorizacionEgresoSchema
 >;

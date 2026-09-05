@@ -133,7 +133,9 @@
     "/ingresos-egresos": {
       "populate": [
         "acceso",
+        "anuladoPorPermiso",
         "aprobadoPorPermiso",
+        "credencial",
         "permiso",
         "permisosAcompanantes",
         "unidadFuncional",

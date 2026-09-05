@@ -43,12 +43,20 @@ import { ZonaSchema } from "./zona";
  * credencial cuando se usa una huella de pánico (`hijackFP` del HIK) — abre la
  * puerta y dispara alarma silenciosa. Lleva `idDispositivo` (el terminal) en vez
  * de `idZona`/`idsDetecciones`.
+ *
+ * `SuplantacionIdentidad` tampoco viene del correlador (doc 47): lo materializa
+ * el cloud cuando un operador anula un movimiento con motivo
+ * `Falso positivo de identificación`. El terminal concedió a alguien que no es
+ * el titular de la credencial. Lleva `idDispositivo` (el terminal) +
+ * `idIngresoEgreso` (el movimiento anulado), y copia sus `imagenes` para que la
+ * bandeja muestre la captura sin depender de un populate anidado.
  */
 export const TipoEventoSeguridadSchema = z.enum([
   "IntrusionPersona",
   "IntrusionVehiculo",
   "Merodeo",
   "Coaccion",
+  "SuplantacionIdentidad",
 ]);
 
 /** Severidad del evento. F3 deriva `Critica` (zona) → `Critico`; el resto del enum queda para escalado/granularidad futura. */
@@ -69,6 +77,18 @@ export const EventoSeguridadSchema = z.object({
   idDispositivo: z.string().optional(),
   /** Canal del NVR/XVR que originó la(s) detección(es) (matchea IDispositivoZona.canalDispositivo). */
   canalDispositivo: z.string().optional(),
+  /**
+   * Movimiento que originó el evento — sólo `SuplantacionIdentidad` (doc 47).
+   * Va como id y no como populate a propósito: el consumidor lo usa para
+   * navegar al detalle del movimiento, y las `imagenes` (que es lo único que la
+   * bandeja necesita mostrar) se copian al crear el evento.
+   */
+  idIngresoEgreso: z.string().optional(),
+  /**
+   * Permiso cuya credencial fue suplantada — el titular legítimo, la víctima.
+   * Sólo `SuplantacionIdentidad`.
+   */
+  idPermisoSuplantado: z.string().optional(),
   // Hecho
   tipo: TipoEventoSeguridadSchema.optional(),
   nivel: NivelEventoSeguridadSchema.optional(),
@@ -93,6 +113,16 @@ export const EventoSeguridadSchema = z.object({
   zona: ZonaSchema.optional(),
   dispositivo: DispositivoSchema.optional(),
   permisoAtencion: PermisoSchema.optional(),
+  /**
+   * Titular legítimo de la credencial suplantada (doc 47).
+   *
+   * `z.any()` y no `PermisoSchema`: este schema ya popula un `IPermiso`
+   * (`permisoAtencion`) y `IPermiso` es una union discriminada con populate
+   * profundo — el segundo suma **114 KB** a CADA DTO de evento-seguridad en
+   * `openapi.json` (medido). Mismo criterio que `turno.ts` y
+   * `vinculo-evento-ingreso.ts`.
+   */
+  permisoSuplantado: z.any().optional(),
 });
 
 const EventoSeguridadPopulateOmit = {
@@ -101,6 +131,7 @@ const EventoSeguridadPopulateOmit = {
   zona: true,
   dispositivo: true,
   permisoAtencion: true,
+  permisoSuplantado: true,
 } as const;
 
 export const CreateEventoSeguridadSchema = EventoSeguridadSchema.omit({

@@ -200,6 +200,11 @@ export const AccionesRolSchema = z.enum([
   "Movimientos - Ver panel de guardia",
   "Movimientos - Ver ingresos egresos",
   "Movimientos - Registrar ingreso egreso",
+  // Invalidar un movimiento ya registrado (doc 47). Separada de "Registrar"
+  // a propósito: registrar es la rutina de la garita, anular es corregir el
+  // registro histórico — incluido el falso positivo del terminal, que con
+  // aprobación automática es el único lazo de cierre que tiene el sistema.
+  "Movimientos - Anular ingreso egreso",
   "Movimientos - Ver propietarios",
   "Movimientos - Ver administración",
   "Movimientos - Ver guardia",

@@ -140,7 +140,10 @@ export const DashboardComplejoCoberturaSchema = z.object({
   /** Permisos nivel UF vigentes en el complejo (los "integrantes"). */
   permisosVigentes: z.number(),
   /** ≥1 dispositivo del complejo con `capacidades.credencial.face`. Con `false`
-   *  el resto de los campos faciales viene en 0 y la UI oculta la métrica. */
+   *  la UI oculta la métrica facial y toda UF vinculada cuenta como completa
+   *  (nada que enrolar ⇒ nada faltante). Ojo: `permisosConFacial*` puede venir
+   *  > 0 con `soportaFacial: false` si el complejo tenía un terminal facial y
+   *  lo dio de baja — es el dato honesto, no una inconsistencia. */
   soportaFacial: z.boolean(),
   /** Permisos vigentes con credencial Facial en estado `Activa` (enrolada y
    *  verificada en TODOS sus terminales — ver `IEstadoCredencial`). */
@@ -150,7 +153,9 @@ export const DashboardComplejoCoberturaSchema = z.object({
   permisosConFacialEnProceso: z.number(),
   /** Permisos con Facial en `Fallida` — requieren acción, no solo espera. */
   permisosConFacialFallida: z.number(),
-  /** UF vinculadas donde TODOS los permisos vigentes tienen Facial `Activa`. */
+  /** UF vinculadas donde TODOS los permisos vigentes tienen Facial `Activa`
+   *  (o todas las vinculadas si `soportaFacial: false`). Invariante:
+   *  `ufsFacialCompleta + ufsFacialParcial + ufsSinFacial === ufsVinculadas`. */
   ufsFacialCompleta: z.number(),
   /** UF vinculadas con algunos permisos con Facial `Activa` y otros sin. */
   ufsFacialParcial: z.number(),

@@ -10,6 +10,7 @@ import { EventoVisitaSchema } from "./evento-visita";
 import { IngresoEgresoSchema } from "./ingreso-egreso";
 import { PublicacionSchema } from "./publicacion";
 import { VehiculoSchema } from "./vehiculo";
+import { TipoUnidadFuncionalSchema } from "./unidad-funcional";
 import { VinculoVehiculoSchema } from "./vinculo-vehiculo";
 
 // ─── Dashboard nivel Complejo ────────────────────────────────────────────────
@@ -115,6 +116,48 @@ export const DashboardComplejoTurnosSchema = z.object({
   proximos: z.array(z.any()),
 });
 
+/**
+ * Cobertura de vinculación de las UF del complejo: cuántas tienen permisos
+ * vigentes y, de esas, cuántas tienen las credenciales faciales enroladas.
+ *
+ * Denominador = UF `tipo: 'Privada'`. Las `Común` (pádel, SUM, portería) no
+ * tienen propietarios, así que contarlas como "sin vincular" sería ruido; salen
+ * de los porcentajes y en el mapa/tabla se marcan `no-aplica`.
+ *
+ * Los conteos faciales solo tienen sentido con `soportaFacial: true` — si el
+ * complejo no tiene ningún terminal con `capacidades.credencial.face`, pedirle
+ * al residente que cargue la cara es pedirle algo que no puede funcionar.
+ */
+export const DashboardComplejoCoberturaSchema = z.object({
+  /** UF `tipo: 'Privada'` del complejo — denominador de todo lo de acá. */
+  ufsPrivadas: z.number(),
+  /** UF privadas con ≥1 permiso UF vigente. */
+  ufsVinculadas: z.number(),
+  /** `ufsPrivadas - ufsVinculadas`. Redundante, pero es EL número que se mira. */
+  ufsSinVincular: z.number(),
+  /** UF `tipo: 'Común'` — informativas, fuera de los porcentajes. */
+  ufsComunes: z.number(),
+  /** Permisos nivel UF vigentes en el complejo (los "integrantes"). */
+  permisosVigentes: z.number(),
+  /** ≥1 dispositivo del complejo con `capacidades.credencial.face`. Con `false`
+   *  el resto de los campos faciales viene en 0 y la UI oculta la métrica. */
+  soportaFacial: z.boolean(),
+  /** Permisos vigentes con credencial Facial en estado `Activa` (enrolada y
+   *  verificada en TODOS sus terminales — ver `IEstadoCredencial`). */
+  permisosConFacialActiva: z.number(),
+  /** Permisos con Facial en `Pendiente | Capturada | Enrolando`. NO cuentan como
+   *  cobertura: hasta que no está `Activa` el residente no pasa. */
+  permisosConFacialEnProceso: z.number(),
+  /** Permisos con Facial en `Fallida` — requieren acción, no solo espera. */
+  permisosConFacialFallida: z.number(),
+  /** UF vinculadas donde TODOS los permisos vigentes tienen Facial `Activa`. */
+  ufsFacialCompleta: z.number(),
+  /** UF vinculadas con algunos permisos con Facial `Activa` y otros sin. */
+  ufsFacialParcial: z.number(),
+  /** UF vinculadas sin ningún permiso con Facial `Activa`. */
+  ufsSinFacial: z.number(),
+});
+
 // Type annotation explícita: los sub-schemas referencian populates profundos
 // (Ticket → Permiso → Rol → AccionesRolSchema) cuya inferencia, agregada,
 // supera el límite de serialización de TS (TS7056). Anotando como ZodObject
@@ -132,6 +175,7 @@ export const DashboardComplejoSchema: z.ZodObject<z.ZodRawShape> = z.object({
   publicaciones: DashboardComplejoPublicacionesSchema,
   turnos: DashboardComplejoTurnosSchema,
   archivados: DashboardComplejoArchivadosSchema,
+  cobertura: DashboardComplejoCoberturaSchema,
 });
 
 // ─── Dashboard mapa nivel Complejo ───────────────────────────────────────────
@@ -143,14 +187,48 @@ export const EstadoUFMapaSchema = z.enum([
   "emergencia",
 ]);
 
+/**
+ * Estado de cobertura de una UF — segundo eje de coloreado del mapa del
+ * dashboard, ortogonal a `EstadoUFMapaSchema` (que es el eje OPERATIVO: visitas
+ * y emergencias del momento). Son dos escalas sobre el mismo polígono, así que
+ * la UI elige una a la vez; no se superponen.
+ *
+ * - `no-aplica`: UF `tipo: 'Común'` — sin propietarios que vincular.
+ * - `sin-permisos`: privada sin ningún permiso UF vigente. El hueco real.
+ * - `sin-facial`: vinculada, ningún permiso con Facial `Activa`.
+ * - `facial-parcial`: algunos integrantes enrolados, otros no.
+ * - `facial-completa`: todos los permisos vigentes con Facial `Activa`.
+ *
+ * Con `soportaFacial: false` en el complejo, una UF vinculada queda siempre en
+ * `facial-completa` (nada que enrolar ⇒ nada faltante): así el mapa no pinta de
+ * ámbar un complejo entero por una capacidad que no tiene instalada.
+ */
+export const CoberturaUFMapaSchema = z.enum([
+  "no-aplica",
+  "sin-permisos",
+  "sin-facial",
+  "facial-parcial",
+  "facial-completa",
+]);
+
 export const DashboardMapaUFSchema = z.object({
   _id: z.string(),
   nombre: z.string().optional(),
   ubicacion: GeoJSONMultiPolygonSchema.optional(),
+  tipo: TipoUnidadFuncionalSchema.optional(),
   estado: EstadoUFMapaSchema,
   visitasActivas: z.number(),
   visitasPendientes: z.number(),
   emergenciasActivas: z.number(),
+  /** Permisos nivel UF vigentes (habilitado + sin fechaFinVigencia pasada). */
+  permisosVigentes: z.number(),
+  /** De `permisosVigentes`, cuántos tienen credencial Facial `Activa`. */
+  facialActiva: z.number(),
+  /** Facial en `Pendiente | Capturada | Enrolando`. */
+  facialEnProceso: z.number(),
+  /** Facial en `Fallida` — requiere recaptura o arreglo del terminal. */
+  facialFallida: z.number(),
+  cobertura: CoberturaUFMapaSchema,
 });
 
 export const DashboardMapaAccesoSchema = z.object({
@@ -175,6 +253,9 @@ export const DashboardMapaComplejoSchema = z.object({
   idComplejo: z.string(),
   generadoEn: z.string(),
   ubicacion: GeoJSONMultiPolygonSchema.optional(),
+  /** ≥1 dispositivo del complejo con `capacidades.credencial.face`. Gatea la
+   *  métrica facial en la UI: sin terminal facial no hay nada que enrolar. */
+  soportaFacial: z.boolean(),
   unidadesFuncionales: z.array(DashboardMapaUFSchema),
   accesos: z.array(DashboardMapaAccesoSchema),
   emergenciasActivas: z.array(DashboardMapaEmergenciaSchema),
@@ -375,6 +456,9 @@ export type IDashboardComplejoTurnos = z.infer<
 export type IDashboardComplejoArchivados = z.infer<
   typeof DashboardComplejoArchivadosSchema
 >;
+export type IDashboardComplejoCobertura = z.infer<
+  typeof DashboardComplejoCoberturaSchema
+>;
 // `DashboardComplejoSchema` está anotado como `z.ZodObject<z.ZodRawShape>` (ver
 // arriba) para evitar TS7056 — eso colapsa `z.infer<>` a `Record<string, unknown>`.
 // Re-declaramos el tipo manualmente componiéndolo de los sub-tipos, que sí
@@ -390,8 +474,10 @@ export interface IDashboardComplejo {
   publicaciones: IDashboardComplejoPublicaciones;
   turnos: IDashboardComplejoTurnos;
   archivados: IDashboardComplejoArchivados;
+  cobertura: IDashboardComplejoCobertura;
 }
 export type IEstadoUFMapa = z.infer<typeof EstadoUFMapaSchema>;
+export type ICoberturaUFMapa = z.infer<typeof CoberturaUFMapaSchema>;
 export type IDashboardMapaUF = z.infer<typeof DashboardMapaUFSchema>;
 export type IDashboardMapaAcceso = z.infer<typeof DashboardMapaAccesoSchema>;
 export type IDashboardMapaEmergencia = z.infer<

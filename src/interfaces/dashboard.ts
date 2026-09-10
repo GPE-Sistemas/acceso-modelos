@@ -42,6 +42,16 @@ export const DashboardComplejoMovimientosPorDiaSchema = z.object({
 export const DashboardComplejoMovimientosSchema = z.object({
   hoyIngresos: z.number(),
   hoyEgresos: z.number(),
+  /**
+   * @deprecated Usar `presencia.personasDentro`, que pliega estadías (D58) en
+   * vez de restar los movimientos del día.
+   *
+   * Este número corta a medianoche: el residente que entró ayer y sale hoy
+   * resta sin haber sumado, así que la diferencia se va a negativo y queda
+   * clampeada en 0. En un complejo residencial eso pasa todos los días —
+   * tiende a cero sin que haya nada roto. Se mantiene porque lo emiten cloud y
+   * edge; la UI ya no lo consume.
+   */
   personasDentroEstimado: z.number(),
   esperandoResolucion: z.number(),
   porHora: z.array(DashboardComplejoMovimientosPorHoraSchema),
@@ -158,6 +168,62 @@ export const DashboardComplejoCoberturaSchema = z.object({
   ufsSinFacial: z.number(),
 });
 
+/**
+ * Personas adentro por categoría del movimiento que abrió la estadía.
+ *
+ * A diferencia de `DashboardComplejoMovimientosPorCategoriaSchema`, incluye
+ * `Mantenimiento`: acá la suma de las categorías tiene que dar
+ * `personasDentro`, y dejar una afuera hace que el desglose no cierre.
+ */
+export const DashboardComplejoPresenciaPorCategoriaSchema = z.object({
+  Propietario: z.number(),
+  Visita: z.number(),
+  "Administración": z.number(),
+  Guardia: z.number(),
+  "Prestador de Servicio": z.number(),
+  Mantenimiento: z.number(),
+});
+
+/**
+ * Quién está adentro del complejo ahora, plegando el stream de movimientos en
+ * estadías (D58, `acceso-doc-general/45-estadias-y-presencia.md`). No hay
+ * entidad detrás: es el mismo fold que sirve el padrón del guardia, agregado.
+ *
+ * Dos límites que el número arrastra por diseño y que la UI tiene que
+ * comunicar, no esconder:
+ *
+ * - **Ventana** (`ventanaHoras`): quien entró antes de la ventana no está.
+ *   Sin materializar `IEstadia` el fold se acota o es un scan del histórico —
+ *   ningún motor indexa por sujeto. El residente que no pasa por un terminal
+ *   en la ventana desaparece del padrón aunque viva ahí.
+ * - **Egreso no registrado** (salida a pie por un portón sin terminal, guardia
+ *   que no lo carga): la estadía no cierra nunca y la persona queda contada
+ *   adentro. El cierre por política llega con la entidad (fase 3).
+ *
+ * Por eso `soportaPresencia`: sin ningún acceso de egreso con dispositivo el
+ * número sólo puede subir, y la UI oculta la métrica entera en vez de mostrar
+ * un complejo que se llena y no se vacía nunca. Mismo criterio que
+ * `soportaFacial` en la cobertura.
+ */
+export const DashboardComplejoPresenciaSchema = z.object({
+  /** ≥1 acceso `tipo: 'Egreso' | 'Ambos'` con al menos un dispositivo. Con
+   *  `false` el resto viene en 0 y la UI oculta la métrica. */
+  soportaPresencia: z.boolean(),
+  /** Ventana del fold en horas — es el "desde cuándo" del número. */
+  ventanaHoras: z.number(),
+  /** Estadías abiertas, todas las categorías. */
+  personasDentro: z.number(),
+  porCategoria: DashboardComplejoPresenciaPorCategoriaSchema,
+  /** Estadías abiertas de categoría `Propietario` (== `porCategoria.Propietario`,
+   *  repetido acá porque es el número de la card). */
+  residentesAdentro: z.number(),
+  /** Denominador: permisos nivel UF vigentes con `categoriaPermiso:
+   *  'Propietario'`. NO incluye empleados de la UF ni Mantenimiento. */
+  residentesTotal: z.number(),
+  /** UF con al menos un residente adentro — lo que se ve en el mapa. */
+  ufsOcupadas: z.number(),
+});
+
 // Type annotation explícita: los sub-schemas referencian populates profundos
 // (Ticket → Permiso → Rol → AccionesRolSchema) cuya inferencia, agregada,
 // supera el límite de serialización de TS (TS7056). Anotando como ZodObject
@@ -176,6 +242,7 @@ export const DashboardComplejoSchema: z.ZodObject<z.ZodRawShape> = z.object({
   turnos: DashboardComplejoTurnosSchema,
   archivados: DashboardComplejoArchivadosSchema,
   cobertura: DashboardComplejoCoberturaSchema,
+  presencia: DashboardComplejoPresenciaSchema,
 });
 
 // ─── Dashboard mapa nivel Complejo ───────────────────────────────────────────
@@ -229,6 +296,14 @@ export const DashboardMapaUFSchema = z.object({
   /** Facial en `Fallida` — requiere recaptura o arreglo del terminal. */
   facialFallida: z.number(),
   cobertura: CoberturaUFMapaSchema,
+  /** Integrantes de la UF: permisos vigentes con `categoriaPermiso:
+   *  'Propietario'`. Es un subconjunto de `permisosVigentes` (que cuenta
+   *  también al empleado de la UF y al de Mantenimiento asignado) — el
+   *  denominador del "1 de 3" del popup es este, no aquel. */
+  residentesUF: z.number(),
+  /** De `residentesUF`, cuántos tienen una estadía abierta ahora (D58). Con
+   *  `soportaPresencia: false` en el complejo viene siempre 0. */
+  residentesAdentro: z.number(),
 });
 
 export const DashboardMapaAccesoSchema = z.object({
@@ -256,6 +331,10 @@ export const DashboardMapaComplejoSchema = z.object({
   /** ≥1 dispositivo del complejo con `capacidades.credencial.face`. Gatea la
    *  métrica facial en la UI: sin terminal facial no hay nada que enrolar. */
   soportaFacial: z.boolean(),
+  /** ≥1 acceso `tipo: 'Egreso' | 'Ambos'` con al menos un dispositivo. Gatea
+   *  la capa de presencia en la UI: sin control de egreso la estadía no cierra
+   *  nunca y el mapa mostraría un complejo que se llena y no se vacía. */
+  soportaPresencia: z.boolean(),
   unidadesFuncionales: z.array(DashboardMapaUFSchema),
   accesos: z.array(DashboardMapaAccesoSchema),
   emergenciasActivas: z.array(DashboardMapaEmergenciaSchema),
@@ -459,6 +538,12 @@ export type IDashboardComplejoArchivados = z.infer<
 export type IDashboardComplejoCobertura = z.infer<
   typeof DashboardComplejoCoberturaSchema
 >;
+export type IDashboardComplejoPresenciaPorCategoria = z.infer<
+  typeof DashboardComplejoPresenciaPorCategoriaSchema
+>;
+export type IDashboardComplejoPresencia = z.infer<
+  typeof DashboardComplejoPresenciaSchema
+>;
 // `DashboardComplejoSchema` está anotado como `z.ZodObject<z.ZodRawShape>` (ver
 // arriba) para evitar TS7056 — eso colapsa `z.infer<>` a `Record<string, unknown>`.
 // Re-declaramos el tipo manualmente componiéndolo de los sub-tipos, que sí
@@ -475,6 +560,7 @@ export interface IDashboardComplejo {
   turnos: IDashboardComplejoTurnos;
   archivados: IDashboardComplejoArchivados;
   cobertura: IDashboardComplejoCobertura;
+  presencia: IDashboardComplejoPresencia;
 }
 export type IEstadoUFMapa = z.infer<typeof EstadoUFMapaSchema>;
 export type ICoberturaUFMapa = z.infer<typeof CoberturaUFMapaSchema>;

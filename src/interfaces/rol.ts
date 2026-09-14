@@ -48,6 +48,10 @@ export const AccionesRolSchema = z.enum([
   "Administración - Editar unidades funcionales",
   "Administración - Eliminar unidades funcionales",
   "Administración - Deshabilitar / habilitar unidades funcionales",
+  // Fusión de UF catastrales contiguas en una sola (lotes de una misma casa).
+  // Separada de Editar: reapunta permisos, credenciales, catálogos e historial
+  // de varias UF, y deja las absorbidas deshabilitadas.
+  "Administración - Unificar unidades funcionales",
   // Grupos de unidades funcionales (targeting para encuestas y futuros usos)
   "Administración - Ver grupos UF",
   "Administración - Crear grupos UF",

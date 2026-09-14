@@ -80,6 +80,38 @@ export const EstadiaCalculadaSchema = z.object({
   egreso: z.any().optional(),
 });
 
+/**
+ * Dónde quedó parado un permiso: adentro o afuera, y con qué movimiento.
+ *
+ * **No es el fold de estadías** y no comparte su ventana. El fold responde
+ * "quién está adentro ahora" sobre las últimas 48 h, que es lo que necesita un
+ * padrón de garita; acá la pregunta es por PERSONA —el integrante de una unidad
+ * que el admin está mirando— y la respuesta tiene que existir aunque su último
+ * movimiento sea de hace un mes. Un residente que entró el jueves y no volvió a
+ * pasar por ningún terminal desaparecería del fold, y "no figura" se leería como
+ * "está afuera", que es exactamente lo contrario.
+ *
+ * El sujeto es el permiso mirado desde los dos lados del movimiento: el titular
+ * (`idPermiso`) y el acompañante (`idsPermisosAcompanantes`). Quien entró de
+ * acompañante en el auto de otro no tiene movimientos propios, y sin esa
+ * segunda mitad la ficha lo muestra afuera con la persona adentro.
+ */
+export const UltimoMovimientoPermisoSchema = z.object({
+  idPermiso: z.string(),
+  /** `true` ⇔ el último movimiento del permiso es un `Ingreso`. */
+  dentro: z.boolean(),
+  /**
+   * El movimiento en cuestión, populado — `IIngresoEgreso`. Va como `z.any()`
+   * para no inflar la inferencia global del barrel, igual que `ingreso` /
+   * `egreso` de la estadía.
+   *
+   * Ausente cuando el permiso no tiene ningún movimiento: sin un movimiento no
+   * se puede afirmar de qué lado está, y `dentro: false` ahí significaría
+   * "afuera" cuando lo cierto es "no se sabe".
+   */
+  movimiento: z.any().optional(),
+});
+
 /** Qué estadías devuelve el fold. Default `Abiertas` — el padrón del panel. */
 export const EstadoPresenciaSchema = z.enum(["Abiertas", "Todas"]);
 
@@ -122,3 +154,6 @@ export type ISujetoEstadia = z.infer<typeof SujetoEstadiaSchema>;
 export type IEstadiaCalculada = z.infer<typeof EstadiaCalculadaSchema>;
 export type IEstadoPresencia = z.infer<typeof EstadoPresenciaSchema>;
 export type IPresenciaQuery = z.infer<typeof PresenciaQuerySchema>;
+export type IUltimoMovimientoPermiso = z.infer<
+  typeof UltimoMovimientoPermisoSchema
+>;

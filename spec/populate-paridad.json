@@ -158,6 +158,7 @@
     "/notificaciones": {
       "populate": [
         "grupoUnidadFuncional",
+        "unidadesFuncionales",
         "unidadFuncional"
       ]
     },

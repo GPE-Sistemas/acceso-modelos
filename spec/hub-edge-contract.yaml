@@ -4818,13 +4818,10 @@ x-entidades:
       replicadaEnEdge: true
       escrituraEdge: bridge
       live: edge
-    deteccion:
+    detecciones:
+      subject: deteccion
       replicadaEnEdge: false
       escrituraEdge: bridge
-      live: cloud
-    detecciones:
-      replicadaEnEdge: false
-      escrituraEdge: ninguna
       live: cloud
     dispositivos:
       subject: dispositivo
@@ -4864,13 +4861,10 @@ x-entidades:
       replicadaEnEdge: false
       escrituraEdge: ninguna
       live: cloud
-    evento-dispositivo:
+    eventos-dispositivo:
+      subject: evento-dispositivo
       replicadaEnEdge: false
       escrituraEdge: bridge
-      live: cloud
-    eventos-dispositivo:
-      replicadaEnEdge: false
-      escrituraEdge: ninguna
       live: cloud
     eventos-seguridad:
       subject: evento-seguridad
@@ -4975,10 +4969,6 @@ x-entidades:
     rondas:
       replicadaEnEdge: false
       escrituraEdge: ninguna
-      live: cloud
-    salud-stream:
-      replicadaEnEdge: false
-      escrituraEdge: bridge
       live: cloud
     salud-streams:
       subject: salud-stream

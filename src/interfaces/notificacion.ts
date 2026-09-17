@@ -9,12 +9,16 @@ import { UnidadFuncionalSchema } from "./unidad-funcional";
  * complejo. Todos los alcances resuelven a permisos nivel 'Unidad Funcional':
  * - Complejo: todas las UF del complejo.
  * - Grupo: las UF del grupo (`idGrupoUnidadFuncional`).
- * - UnidadFuncional: los permisos de una UF (`idUnidadFuncional`).
- * - Permiso: un permiso UF puntual (`idPermisoDestino`).
+ * - UnidadesFuncionales: los permisos de N UF sueltas (`idsUnidadesFuncionales`).
+ * - Permisos: N permisos UF puntuales (`idsPermisosDestino`).
+ * - UnidadFuncional / Permiso: variantes singulares, solo lectura de historial
+ *   previo a la selección múltiple. Los envíos nuevos usan las plurales.
  */
 export const AlcanceNotificacionSchema = z.enum([
   "Complejo",
   "Grupo",
+  "UnidadesFuncionales",
+  "Permisos",
   "UnidadFuncional",
   "Permiso",
 ]);
@@ -41,8 +45,10 @@ export const NotificacionSchema = z.object({
   // Targeting
   alcance: AlcanceNotificacionSchema.optional(),
   idGrupoUnidadFuncional: z.string().optional(), // alcance = 'Grupo'
-  idUnidadFuncional: z.string().optional(), // alcance = 'UnidadFuncional'
-  idPermisoDestino: z.string().optional(), // alcance = 'Permiso'
+  idsUnidadesFuncionales: z.array(z.string()).optional(), // alcance = 'UnidadesFuncionales'
+  idsPermisosDestino: z.array(z.string()).optional(), // alcance = 'Permisos'
+  idUnidadFuncional: z.string().optional(), // alcance = 'UnidadFuncional' (legacy)
+  idPermisoDestino: z.string().optional(), // alcance = 'Permiso' (legacy)
   // Auditoría — permiso del admin Complejo que envió (lo inyecta acceso-api)
   idPermisoEmisor: z.string().optional(),
   // Métrica de envío (la setea acceso-api tras materializar destinatarios)
@@ -51,6 +57,7 @@ export const NotificacionSchema = z.object({
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
   grupoUnidadFuncional: GrupoUnidadFuncionalSchema.optional(),
+  unidadesFuncionales: z.array(UnidadFuncionalSchema).optional(),
   unidadFuncional: UnidadFuncionalSchema.optional(),
 });
 
@@ -63,6 +70,7 @@ export const CreateNotificacionSchema = NotificacionSchema.omit({
   cliente: true,
   complejo: true,
   grupoUnidadFuncional: true,
+  unidadesFuncionales: true,
   unidadFuncional: true,
 });
 

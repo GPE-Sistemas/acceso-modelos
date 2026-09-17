@@ -3823,6 +3823,25 @@ components:
           type: string
         error:
           type: string
+    WsEnvelope:
+      type: object
+      description: >-
+        Envelope de los eventos Socket.io por entidad. Lo emiten los dos
+        gateways con la misma forma — `acceso-datos` publica al pub/sub y cada
+        gateway lo re-emite tal cual. La clave del documento es `doc`, no
+        `dato`: este spec declaró `dato` y `op: created|updated` hasta
+        2026-09-17 sin que ningún emisor lo usara.
+      required:
+      - op
+      properties:
+        op:
+          type: string
+          enum:
+          - create
+          - update
+          - delete
+        doc:
+          type: object
     Documento_Entidad:
       type: object
       required:
@@ -4488,47 +4507,177 @@ components:
             divergenteDesde:
               type: string
 x-ws-events:
-  description: 'Eventos Socket.io del Hub edge. Conexión: `/socket.io/` con handshake auth (JWT + X-Permiso-Id query).
+  description: >-
+    Eventos Socket.io. Conexión `/socket.io/` con handshake auth
+    (`{token, permisoId}`); el bundle usa `socket.io-client@4` contra los dos
+    gateways.
 
-    Rooms auto-join: `complejo:<idComplejo>` al conectar. Join explícito: `ticket:join` para tickets cloud-direct.
 
-    '
+    **El bundle target=edge mantiene DOS sockets** (D61, 2026-09-17): uno local
+    contra el Hub edge y uno contra el API cloud. El `x-scope` de cada evento
+    dice por cuál entra: `edge-required` = socket local (tiene que andar sin
+    internet), `cloud-direct` / `cloud-only` = socket cloud. Antes había uno
+    solo, contra el Hub, y todo lo cloud-direct esperaba en vano un evento que
+    ese gateway no emite: la emergencia no aparecía hasta recargar la página.
+    El reparto concreto vive en `acceso-web/src/app/core/ws/ws-routing.ts`,
+    generado de este spec.
+
+
+    Rooms auto-join del gateway local: `complejo:<idComplejo>` y `live`. Join
+    explícito: `ticket:join` y `logs:join`, los dos **contra el socket cloud**.
+
+
+    Envelope: salvo donde se aclare, el payload es
+    `{op: 'create'|'update'|'delete', doc: <documento>}`. Hasta 2026-09-17 este
+    spec declaraba `{op: 'created'|'updated', dato}` y `subscribe {channels}`,
+    que ningún emisor usó nunca — el eje WS del contrato no tenía gate que lo
+    contradijera.
   server-to-client:
     ingreso-egreso:
       x-scope: edge-required
+      description: Room `acceso:<idAcceso>` si el doc lo trae; si no, `complejo:<idComplejo>`.
       payload:
-        type: object
-        properties:
-          op:
-            type: string
-            enum:
-            - created
-            - updated
-          dato:
-            type: object
+        $ref: '#/components/schemas/WsEnvelope'
     evento-visita:
       x-scope: edge-required
       payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    evento-seguridad:
+      x-scope: edge-required
+      description: >-
+        D49 F3 — bandeja del panel de guardia. El correlador (create) y los
+        handlers atender/resolver/descartar (update) publican al bus del Hub.
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    live:
+      x-scope: edge-required
+      description: >-
+        Live update genérico de listados. Lo emiten **los dos** gateways, cada
+        uno para su mitad del modelo: el del edge sólo para las entidades con
+        `replicadaEnEdge: true` (nace de su `master-update`), el del cloud para
+        el resto. El socket cloud filtra las replicadas para no duplicar el
+        evento. Ver `x-entidades` y `LiveListService`.
+      payload:
         type: object
+        required:
+        - entidad
+        - op
         properties:
+          entidad:
+            type: string
+            description: Plural con guiones, la clave de `x-entidades`.
           op:
             type: string
             enum:
-            - created
-            - updated
-          dato:
+            - create
+            - update
+            - delete
+          doc:
             type: object
     ticket:
       x-scope: cloud-direct
-      description: Bundle edge conecta WS al cloud para tickets (D41)
+      description: >-
+        Emergencias y solicitudes (D41). Routing por categoría del ticket:
+        `ticket-emergencia-complejo:<idComplejo>` o
+        `ticket-solicitud-complejo:<idComplejo>`, y `ticket:<idTicket>` para el
+        emisor UF.
       payload:
-        type: object
+        $ref: '#/components/schemas/WsEnvelope'
     interaccion-ticket:
       x-scope: cloud-direct
+      description: Room `ticket:<idTicket>` — requiere `ticket:join`.
       payload:
-        type: object
+        $ref: '#/components/schemas/WsEnvelope'
     mensaje-ticket:
       x-scope: cloud-direct
+      description: Room `ticket:<idTicket>` — requiere `ticket:join`.
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    turno:
+      x-scope: cloud-direct
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    plantilla-turno:
+      x-scope: cloud-direct
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    bloqueo-turnos:
+      x-scope: cloud-direct
+      description: Plural en el nombre del evento — contrato desplegado, no renombrar.
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    tipo-actividad:
+      x-scope: cloud-direct
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    encuesta:
+      x-scope: cloud-direct
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    respuesta-encuesta:
+      x-scope: cloud-direct
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    dispositivo:
+      x-scope: cloud-only
+      description: >-
+        H-DEV-8 — estado y telemetría del terminal, room
+        `edge-status:<idComplejo>` (auto-join, no requiere subscribe). El
+        gateway del edge NO lo emite: en el Hub edge el estado del equipo llega
+        por el `live` de `dispositivos`.
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    edge-appliance:
+      x-scope: cloud-only
+      description: Heartbeat/estado del appliance (A.S3d) — fleet view cloud.
+      payload:
+        $ref: '#/components/schemas/WsEnvelope'
+    command-result:
+      x-scope: cloud-only
+      description: Resultado async de comando dirigido al edge.
+      payload:
+        type: object
+        required:
+        - idEdgeAppliance
+        - correlationId
+        - cmd
+        - status
+        properties:
+          idEdgeAppliance:
+            type: string
+          correlationId:
+            type: string
+          cmd:
+            type: string
+          status:
+            type: string
+            enum:
+            - queued
+            - ok
+            - error
+          message:
+            type: string
+          ts:
+            type: number
+    edge-log:
+      x-scope: cloud-only
+      description: >-
+        Chunks de log en vivo de un appliance; se filtran por `sessionId` y el
+        room lo abre `logs:join`.
+      payload:
+        type: object
+        required:
+        - sessionId
+        properties:
+          sessionId:
+            type: string
+          lineas:
+            type: array
+            items:
+              type: string
+    edge-conectividad:
+      x-scope: edge-required
+      description: Contraparte local del fleet view cloud-only `edge-status:<idComplejo>`.
       payload:
         type: object
     subscribed:
@@ -4543,36 +4692,346 @@ x-ws-events:
       x-scope: edge-required
       payload:
         $ref: '#/components/schemas/ErrorResponse'
-    command-result:
-      x-scope: cloud-only
-      description: Resultado async de comando dirigido al edge
-      payload:
-        type: object
-    edge-conectividad:
-      x-scope: edge-required
-      description: Contraparte local del fleet view cloud-only `edge-status:<idComplejo>`
-      payload:
-        type: object
   client-to-server:
     subscribe:
       x-scope: edge-required
+      description: >-
+        Rooms por acceso para `ingreso-egreso`. La clave es `idsAccesos`; este
+        spec declaraba `channels`, que ningún cliente mandó nunca.
       payload:
         type: object
+        required:
+        - idsAccesos
         properties:
-          channels:
+          idsAccesos:
             type: array
             items:
               type: string
+              pattern: ^[a-f0-9]{24}$
     unsubscribe:
       x-scope: edge-required
     ticket:join:
       x-scope: cloud-direct
       payload:
         type: object
+        required:
+        - idTicket
         properties:
           idTicket:
             type: string
+            pattern: ^[a-f0-9]{24}$
     ticket:leave:
       x-scope: cloud-direct
       payload:
         type: object
+        properties:
+          idTicket:
+            type: string
+            pattern: ^[a-f0-9]{24}$
+    logs:join:
+      x-scope: cloud-only
+      payload:
+        type: object
+        required:
+        - sessionId
+        properties:
+          sessionId:
+            type: string
+    logs:leave:
+      x-scope: cloud-only
+      payload:
+        type: object
+        properties:
+          sessionId:
+            type: string
+
+x-entidades:
+  description: >-
+    Registro de frontera **por entidad**. Es la contraparte del `x-scope` de los
+    paths (frontera por ruta) y del `x-scope` de `x-ws-events` (frontera por
+    evento): acá vive lo que esos dos ejes no pueden expresar — qué replica el
+    edge en su Postgres local, quién puede escribir la entidad desde el edge, y
+    de qué gateway sale su evento `live`.
+
+
+    Lo consumen tres gates espejo, uno por repo, y por eso una sola de estas
+    claves mal puesta se ve en CI en vez de en producción:
+
+
+    - `acceso-web` genera de acá las listas de `core/ws/ws-routing.ts`
+      (`ENTIDADES_LIVE_EDGE`) y valida las entidades que pasa a
+      `LiveListService.conectar`.
+
+    - `acceso-edge` compara `replicadaEnEdge` contra las claves del mapa de
+      `ApplyChange`, y `escrituraEdge` contra las entidades que encola al outbox.
+
+    - `acceso-api` compara `escrituraEdge` contra `SUBJECT_ENTIDAD_TO_PATH` del
+      bridge edge→cloud.
+
+
+    Historia: hasta 2026-09-17 estas tres cosas vivían en cinco listas escritas a
+    mano en tres repos, sin verificación cruzada, y el mismo drift se pagó tres
+    veces — en lectura (ruta que no existe en ningún backend y el SPA responde
+    200 text/html), en escritura (el edge responde 201 y el bridge descarta el
+    subject) y en realtime (D61: la emergencia no aparecía en el Hub edge hasta
+    recargar la página). Ver `acceso-doc-general/48-realtime-hub-edge.md`.
+  entidades:
+    accesos:
+      subject: acceso
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      x-deuda: >-
+        El edge la encola al outbox pero el bridge la descarta: el operador ve
+        "guardado", el integrity borra la fila local y no hay un solo error.
+        Se declara `no` a propósito — declarar `bridge` afirmaría que el camino
+        existe y obligaría al gate de la api a aceptarla, que es tomar por
+        adelantado una decisión abierta (sumarla al bridge, o mandarla
+        cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
+        acceso-doc-general § Realtime del Hub edge.
+      live: edge
+    botones-ticket:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    clientes:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge
+    comandos-edge:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    complejos:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge
+    contactos-usuario:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    credenciales:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge
+    credenciales-dispositivos:
+      subject: credencial-dispositivo
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    deteccion:
+      replicadaEnEdge: false
+      escrituraEdge: bridge
+      live: cloud
+    detecciones:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    dispositivos:
+      subject: dispositivo
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    dispositivos-accesos:
+      subject: dispositivo-acceso
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      x-deuda: >-
+        El edge la encola al outbox pero el bridge la descarta: el operador ve
+        "guardado", el integrity borra la fila local y no hay un solo error.
+        Se declara `no` a propósito — declarar `bridge` afirmaría que el camino
+        existe y obligaría al gate de la api a aceptarla, que es tomar por
+        adelantado una decisión abierta (sumarla al bridge, o mandarla
+        cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
+        acceso-doc-general § Realtime del Hub edge.
+      live: edge
+    dispositivos-descubiertos:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    dispositivos-zonas:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge
+    edge-appliance-modelos:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge
+    edge-appliances:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge
+    empleados:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    evento-dispositivo:
+      replicadaEnEdge: false
+      escrituraEdge: bridge
+      live: cloud
+    eventos-dispositivo:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    eventos-seguridad:
+      subject: evento-seguridad
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    eventos-visita:
+      subject: evento-visita
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    expensas-uf:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    gastos:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    grupos-uf:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    infracciones:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    ingresos-egresos:
+      subject: ingreso-egreso
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    liquidaciones-expensa:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    mascotas:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    multas:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    notificaciones:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    obras:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    paquetes-firmware:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    perfiles-camara:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge
+    perfiles-dispositivo:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    permisos:
+      subject: permiso
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      x-deuda: >-
+        El edge la encola al outbox pero el bridge la descarta: el operador ve
+        "guardado", el integrity borra la fila local y no hay un solo error.
+        Se declara `no` a propósito — declarar `bridge` afirmaría que el camino
+        existe y obligaría al gate de la api a aceptarla, que es tomar por
+        adelantado una decisión abierta (sumarla al bridge, o mandarla
+        cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
+        acceso-doc-general § Realtime del Hub edge.
+      live: edge
+    plantillas-ronda:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    protocolos:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    proveedores:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    publicaciones:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    puntos-control:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    roles:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge
+    rondas:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
+    salud-stream:
+      replicadaEnEdge: false
+      escrituraEdge: bridge
+      live: cloud
+    salud-streams:
+      subject: salud-stream
+      replicadaEnEdge: false
+      escrituraEdge: bridge
+      live: cloud
+    unidades-funcionales:
+      subject: unidad-funcional
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      x-deuda: >-
+        El edge la encola al outbox pero el bridge la descarta: el operador ve
+        "guardado", el integrity borra la fila local y no hay un solo error.
+        Se declara `no` a propósito — declarar `bridge` afirmaría que el camino
+        existe y obligaría al gate de la api a aceptarla, que es tomar por
+        adelantado una decisión abierta (sumarla al bridge, o mandarla
+        cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
+        acceso-doc-general § Realtime del Hub edge.
+      live: edge
+    usuarios:
+      subject: usuario
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      x-deuda: >-
+        El edge la encola al outbox pero el bridge la descarta: el operador ve
+        "guardado", el integrity borra la fila local y no hay un solo error.
+        Se declara `no` a propósito — declarar `bridge` afirmaría que el camino
+        existe y obligaría al gate de la api a aceptarla, que es tomar por
+        adelantado una decisión abierta (sumarla al bridge, o mandarla
+        cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
+        acceso-doc-general § Realtime del Hub edge.
+      live: edge
+    vehiculos:
+      subject: vehiculo
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    vinculos-evento-ingreso:
+      subject: vinculo-evento-ingreso
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    vinculos-vehiculo:
+      subject: vinculo-vehiculo
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    visitantes:
+      subject: visitante
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      live: edge
+    zonas:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      live: edge

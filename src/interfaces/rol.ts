@@ -52,6 +52,10 @@ export const AccionesRolSchema = z.enum([
   // Separada de Editar: reapunta permisos, credenciales, catálogos e historial
   // de varias UF, y deja las absorbidas deshabilitadas.
   "Administración - Unificar unidades funcionales",
+  // Inverso de la unificación: extrae uno o más polígonos de una UF multi-lote
+  // a una UF nueva. Separada de Editar porque crea una UF y reparte superficie
+  // y coeficiente; no mueve permisos, catálogos ni historial.
+  "Administración - Dividir unidades funcionales",
   // Grupos de unidades funcionales (targeting para encuestas y futuros usos)
   "Administración - Ver grupos UF",
   "Administración - Crear grupos UF",

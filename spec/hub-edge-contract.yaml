@@ -4975,6 +4975,10 @@ x-entidades:
       replicadaEnEdge: false
       escrituraEdge: bridge
       live: cloud
+    solicitudes-permiso:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
     unidades-funcionales:
       subject: unidad-funcional
       replicadaEnEdge: true

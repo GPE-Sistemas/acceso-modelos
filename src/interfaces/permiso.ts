@@ -98,6 +98,48 @@ export type IAutorizacionEgresoPermanente = z.infer<
 >;
 export type IPoliticaEgreso = z.infer<typeof PoliticaEgresoSchema>;
 
+/**
+ * Identificación formal de la persona para ESTE permiso — es decir, para este
+ * complejo y no para el resto del sistema.
+ *
+ * El nombre de una persona vive en `IUsuario.datosPersonales.nombre` y lo elige
+ * el propio titular desde ColivingApp, con la forma que quiera. La garita lo
+ * necesita en su forma formal para identificar a quien tiene enfrente, y eso hoy
+ * se resuelve por fuera del sistema. Acá lo carga la administración del complejo
+ * sin tocar la cuenta del vecino: el titular sigue viendo su nombre como lo
+ * eligió, y las superficies de guardia y administración muestran éste primero.
+ *
+ * Vive en el permiso y no en el usuario porque el permiso ES la tupla
+ * (persona × complejo/UF): el alcance del dato coincide exactamente con el
+ * alcance de la entidad. Es además el único lugar capaz de nombrar un permiso
+ * SIN usuario — el integrante sin cuenta de D57, que hoy se muestra como
+ * "Integrante 3 · Casa 6".
+ *
+ * Ausente o vacío = se muestra el nombre del `IUsuario`. Orden de resolución en
+ * los clientes: `datosFormales` → `usuario.datosPersonales.nombre` → `username`
+ * → `Integrante N · UF`.
+ *
+ * **Fuera del alta a propósito** (omitido de `CreatePermisoSchema`): la enorme
+ * mayoría de los permisos se resuelven con el nombre que declaró el titular.
+ * Cargar uno formal es una acción deliberada sobre un caso particular, no un
+ * paso del alta — ponerlo en el create lo convertiría en un campo que se llena
+ * por inercia y duplicaría el nombre del usuario en todos los permisos.
+ *
+ * Objeto y no dos campos sueltos: es la identificación formal del complejo sobre
+ * esa persona, y admite crecer (documento propio del complejo, legajo) sin
+ * volver a tocar la raíz del permiso. `type: Object` en acceso-datos y `jsonb`
+ * en el edge, mismo criterio que `politicaEgreso`.
+ */
+export const DatosFormalesPermisoSchema = z.object({
+  nombre: z.string().optional(),
+  apellido: z.string().optional(),
+  /** Auditoría — los inyecta acceso-api en el create/update. */
+  cargadoPorIdPermiso: z.string().optional(),
+  fechaCarga: z.string().optional(),
+});
+
+export type IDatosFormalesPermiso = z.infer<typeof DatosFormalesPermisoSchema>;
+
 const PermisoBaseFields = {
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
@@ -105,6 +147,11 @@ const PermisoBaseFields = {
   fechaExpiracion: z.string().optional(),
   username: z.string().optional(),
   categoriaPermiso: CategoriaPermisoSchema.optional(),
+  /**
+   * Identificación formal cargada por la administración del complejo (ver
+   * `DatosFormalesPermisoSchema`). Ausente = se usa el nombre del `IUsuario`.
+   */
+  datosFormales: DatosFormalesPermisoSchema.optional(),
   idsRoles: z.array(z.string()).optional(),
   config: ConfigPermisoSchema.optional(),
   // Virtuals
@@ -190,6 +237,7 @@ export const CreatePermisoSchema = z.discriminatedUnion("nivel", [
     .omit({
       _id: true,
       fechaCreacion: true,
+      datosFormales: true,
       usuario: true,
       roles: true,
       cliente: true,
@@ -199,6 +247,7 @@ export const CreatePermisoSchema = z.discriminatedUnion("nivel", [
     .omit({
       _id: true,
       fechaCreacion: true,
+      datosFormales: true,
       usuario: true,
       roles: true,
       cliente: true,
@@ -209,6 +258,7 @@ export const CreatePermisoSchema = z.discriminatedUnion("nivel", [
     .omit({
       _id: true,
       fechaCreacion: true,
+      datosFormales: true,
       usuario: true,
       roles: true,
       cliente: true,

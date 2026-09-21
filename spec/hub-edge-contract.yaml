@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.12.0
+  version: 0.13.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -4932,15 +4932,12 @@ x-entidades:
     permisos:
       subject: permiso
       replicadaEnEdge: true
-      escrituraEdge: ninguna
-      x-deuda: >-
-        El edge la encola al outbox pero el bridge la descarta: el operador ve
-        "guardado", el integrity borra la fila local y no hay un solo error.
-        Se declara `no` a propósito — declarar `bridge` afirmaría que el camino
-        existe y obligaría al gate de la api a aceptarla, que es tomar por
-        adelantado una decisión abierta (sumarla al bridge, o mandarla
-        cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
-        acceso-doc-general § Realtime del Hub edge.
+      # Decisión del usuario 2026-09-18, tras medir la pérdida en producción:
+      # 15 episodios de `localCount = cloudCount + 1` en el integrity del
+      # appliance de Golf Chascomús desde el 21-jul, cada uno un alta hecha en
+      # el Hub edge que el bridge descartó y el reconciliador borró. El camino
+      # elegido de los dos que estaban abiertos es sumarla al bridge.
+      escrituraEdge: bridge
       live: edge
     plantillas-ronda:
       replicadaEnEdge: false

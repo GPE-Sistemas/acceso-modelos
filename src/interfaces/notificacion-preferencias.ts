@@ -81,13 +81,19 @@ export const CategoriaNotificacionSchema = z.enum([
 ]);
 
 /**
- * Categorías que el residente NO puede apagar (D57). Si un responsable silencia
- * el pedido de autorización, el menor queda esperando en la garita sin que nadie
- * se entere: el push es parte del control de acceso, no un aviso de cortesía.
- * acceso-api las emite ignorando las preferencias y la app no ofrece el toggle.
+ * Categorías que el destinatario NO puede apagar. acceso-api las emite
+ * ignorando el toggle por categoría y la app no ofrece el switch.
+ *
+ * - `egreso_menor_autorizacion` (D57): si un responsable silencia el pedido,
+ *   el menor queda esperando en la garita sin que nadie se entere — el push es
+ *   parte del control de acceso, no un aviso de cortesía.
+ * - `seguridad_evento` y `ticket_emergencia_recibido`: el personal de
+ *   seguridad no elige no enterarse de una emergencia.
  */
 export const CATEGORIAS_NOTIFICACION_OBLIGATORIAS = [
   "egreso_menor_autorizacion",
+  "seguridad_evento",
+  "ticket_emergencia_recibido",
 ] as const satisfies readonly ICategoriaNotificacion[];
 
 export const CATEGORIAS_NOTIFICACION =

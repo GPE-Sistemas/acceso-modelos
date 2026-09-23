@@ -36,6 +36,7 @@ export * from './vinculo-vehiculo';
 export * from './vinculo-evento-ingreso';
 export * from './publicacion';
 export * from './device-token';
+export * from './canal-notificacion';
 export * from './notificacion-preferencias';
 export * from './notificacion';
 export * from './notificacion-usuario';

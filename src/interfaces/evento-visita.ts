@@ -101,6 +101,18 @@ export const EventoVisitaSchema = z.object({
   fechaAprobacionRecurrente: z.string().optional(),
   motivoRechazoRecurrente: z.string().optional(),
   /**
+   * Baja lógica de una visita RECURRENTE (`PUT /eventos-visita/:id/eliminar-recurrente`,
+   * acción `Visitas - Aprobar eventos recurrentes`). Al eliminarla acceso-api
+   * además pone `estado: 'Cerrada'`, así sale sola del panel y de las cachés de
+   * activos; el flag es lo que la saca de los listados y conserva el motivo.
+   * Se rechaza con gente adentro. Lo setea sólo el endpoint (omitido de Create/Update).
+   */
+  eliminado: z.boolean().optional(),
+  /** Motivo obligatorio de la baja: se le notifica a la UF (push `visita_eliminada`). */
+  motivoEliminacion: z.string().optional(),
+  eliminadoPorIdPermiso: z.string().optional(),
+  fechaEliminacion: z.string().optional(),
+  /**
    * Link al turno que originó este evento (cuando se auto-genera al aprobar
    * un turno con invitados). `null`/ausente = evento creado manualmente.
    */
@@ -135,10 +147,20 @@ export const CreateEventoVisitaSchema = EventoVisitaSchema.omit({
   vehiculos: true,
   aprobadoPorPermiso: true,
   aprobadoRecurrentePorPermiso: true,
+  eliminado: true,
+  motivoEliminacion: true,
+  eliminadoPorIdPermiso: true,
+  fechaEliminacion: true,
 });
 
 export const UpdateEventoVisitaSchema = CreateEventoVisitaSchema.partial();
 
+/** Body de `PUT /eventos-visita/:id/eliminar-recurrente`. El motivo es obligatorio. */
+export const EliminarRecurrenteEventoVisitaSchema = z.object({
+  motivo: z.string().min(1).max(500),
+});
+
 export type IEventoVisita = z.infer<typeof EventoVisitaSchema>;
 export type ICreateEventoVisita = z.infer<typeof CreateEventoVisitaSchema>;
 export type IUpdateEventoVisita = z.infer<typeof UpdateEventoVisitaSchema>;
+export type IEliminarRecurrenteEventoVisita = z.infer<typeof EliminarRecurrenteEventoVisitaSchema>;

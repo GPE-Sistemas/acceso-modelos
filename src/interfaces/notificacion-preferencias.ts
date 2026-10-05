@@ -31,6 +31,8 @@ export const CategoriaNotificacionSchema = z.enum([
   "visita_resuelta",
   /** Mobile UF: el guardia forzó la autorización de una visita a mi UF (aprobación de garita) */
   "visita_autorizada_por_guardia",
+  /** Mobile UF: la administración eliminó una visita recurrente de mi UF (con motivo) */
+  "visita_eliminada",
   /** Mobile UF: mi turno quedó confirmado (auto-aprobado) */
   "turno_reservado",
   /** Mobile UF: alguien de mi UF creó un turno que requiere mi aprobación */
@@ -110,6 +112,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   visita_pendiente_aprobacion: z.boolean(),
   visita_resuelta: z.boolean(),
   visita_autorizada_por_guardia: z.boolean(),
+  visita_eliminada: z.boolean(),
   turno_reservado: z.boolean(),
   turno_pendiente_aprobacion: z.boolean(),
   turno_aprobado: z.boolean(),
@@ -187,6 +190,7 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   visita_pendiente_aprobacion: true,
   visita_resuelta: true,
   visita_autorizada_por_guardia: true,
+  visita_eliminada: true,
   turno_reservado: true,
   turno_pendiente_aprobacion: true,
   turno_aprobado: true,

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.13.0
+  version: 0.14.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -2645,6 +2645,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Documento_Entidad'
+  /eventos-visita/{id}/eliminar-recurrente:
+    parameters:
+    - $ref: '#/components/parameters/IdPath'
+    put:
+      tags:
+      - eventos-visita
+      summary: Eliminar (baja lógica) evento visita recurrente con motivo
+      description: >-
+        Acción `Visitas - Aprobar eventos recurrentes`. Marca `eliminado` + motivo,
+        pone `estado: Cerrada` y notifica a la UF (push `visita_eliminada`). 409 si
+        no es recurrente, ya está eliminada o hay gente adentro. Cloud-only: el Hub
+        edge recibe la baja por el bridge cloud→edge.
+      operationId: EliminarRecurrenteEventoVisita
+      x-scope: cloud-direct
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties:
+                motivo:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+        '409':
+          description: No recurrente, ya eliminada o con gente adentro
   /eventos-visita/{id}/cerrar:
     parameters:
     - $ref: '#/components/parameters/IdPath'

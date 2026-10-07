@@ -152,6 +152,7 @@ export const TipoPushSchema = z.enum([
   "solicitud_permiso_recibida",
   "solicitud_permiso_aprobada",
   "solicitud_permiso_rechazada",
+  "credencial_recordatorio",
 ]);
 
 export type ITipoPush = z.infer<typeof TipoPushSchema>;

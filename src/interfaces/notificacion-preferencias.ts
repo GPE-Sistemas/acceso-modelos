@@ -80,6 +80,12 @@ export const CategoriaNotificacionSchema = z.enum([
    * voucher o acompañamiento).
    */
   "menor_movimiento",
+  /**
+   * Mobile UF: recordatorio periódico (cada 2 días, 13 h) de cargar la
+   * credencial facial, mientras el permiso no tenga una y el complejo tenga
+   * al menos un terminal facial habilitado.
+   */
+  "credencial_recordatorio",
 ]);
 
 /**
@@ -139,6 +145,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   egreso_menor_autorizacion: z.boolean(),
   egreso_menor_resuelto: z.boolean(),
   menor_movimiento: z.boolean(),
+  credencial_recordatorio: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -217,4 +224,5 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   egreso_menor_autorizacion: true,
   egreso_menor_resuelto: true,
   menor_movimiento: true,
+  credencial_recordatorio: true,
 };

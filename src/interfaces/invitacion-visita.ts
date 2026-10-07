@@ -44,6 +44,12 @@ export const InvitacionVisitaPublicaSchema = z.object({
   datosPersonales: DatosPersonalesSchema.optional(),
   /** Si el invitado ya confirmó sus datos alguna vez con este visitante. */
   validadoPorInvitado: z.boolean().optional(),
+  /**
+   * D63 (doc 50 §5.1): el evento es una recurrente vigente, así que la página
+   * ofrece "Activá tu credencial en la app". El mismo token del link se usa en
+   * `POST /portal-visitante/reclamar`.
+   */
+  permiteActivarCredencial: z.boolean().optional(),
 });
 
 /**

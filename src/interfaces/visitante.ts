@@ -43,6 +43,13 @@ export const VisitanteSchema = z.object({
     validadoPorInvitado: z.boolean().optional(),
     /** Timestamp ISO de la última vez que el invitado confirmó sus datos. */
     fechaUltimaValidacionInvitado: z.string().optional(),
+    /**
+     * Permiso `Visitante` de la persona (D63, doc 50 §4.2), si tiene credencial.
+     * El visitante privado de cada UF que la invita apunta al MISMO permiso; la
+     * relación se resuelve por DNI dentro del complejo. No cambia el ámbito: un
+     * privado sigue privado. System-managed: lo setea acceso-api.
+     */
+    idPermisoVisitante: z.string().optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
@@ -56,6 +63,7 @@ export const CreateVisitanteSchema = VisitanteSchema.omit({
   activo: true,
   validadoPorInvitado: true,
   fechaUltimaValidacionInvitado: true,
+  idPermisoVisitante: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,
@@ -68,6 +76,7 @@ export const UpdateVisitanteSchema = VisitanteSchema.omit({
   activo: true,
   validadoPorInvitado: true,
   fechaUltimaValidacionInvitado: true,
+  idPermisoVisitante: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,

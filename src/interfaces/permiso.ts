@@ -19,6 +19,13 @@ export const NivelPermisoSchema = z.enum([
  * - nivel 'Unidad Funcional' → 'Propietario'
  * - nivel 'Cliente'          → 'Administración'
  * - nivel 'Complejo'         → requerido (Administración | Guardia | Prestador de Servicio | Mantenimiento)
+ *
+ * `Visitante` (D63, doc 50) es nivel 'Complejo' pero NO se elige en el ABM de
+ * permisos: lo crea el sistema cuando el propio visitante reclama el link de una
+ * visita recurrente o cuando el guardia le carga la credencial. Uno por persona y
+ * complejo (employeeNo = idPermiso y una sola cara por persona). Sus acciones son
+ * fijas (`ACCIONES_PERMISO_VISITANTE`), no salen de roles. En el movimiento cae
+ * en la categoría `Visita` de `CategoriaIngresoEgresoSchema`.
  */
 export const CategoriaPermisoSchema = z.enum([
   "Propietario",
@@ -26,6 +33,7 @@ export const CategoriaPermisoSchema = z.enum([
   "Guardia",
   "Prestador de Servicio",
   "Mantenimiento",
+  "Visitante",
 ]);
 
 export type IConfigPermiso = z.infer<typeof ConfigPermisoSchema>;
@@ -167,6 +175,23 @@ export const PermisoClienteSchema = z.object({
   cliente: ClienteSchema.optional(),
 });
 
+/**
+ * Destino marcado por un visitante con credencial (D63, doc 50 §4.3): a qué de
+ * sus visitas recurrentes va ahora. El edge lo usa al reconocer la cara para
+ * vincular el ingreso solo a esos eventos; vencido `hasta`, se ignora y se
+ * vincula a todos los eventos en horario. Lo escribe únicamente el endpoint del
+ * propio visitante (`PUT /portal-visitante/destino`).
+ */
+export const DestinoVisitanteSchema = z.object({
+  idsEventosVisita: z.array(z.string()),
+  /** ISO. Hasta cuándo vale la marca. */
+  hasta: z.string(),
+  /** ISO. Cuándo la marcó. */
+  fechaMarcado: z.string(),
+});
+
+export type IDestinoVisitante = z.infer<typeof DestinoVisitanteSchema>;
+
 export const PermisoComplejoSchema = z.object({
   ...PermisoBaseFields,
   nivel: z.literal("Complejo"),
@@ -178,6 +203,8 @@ export const PermisoComplejoSchema = z.object({
    * Cada id debe apuntar a una UF del idComplejo con tipo='Común' (validado en acceso-api).
    */
   idsUnidadesFuncionales: z.array(z.string()).optional(),
+  /** Solo categoría 'Visitante'. System-managed: omitido de Create/Update. */
+  destinoVisitante: DestinoVisitanteSchema.optional(),
   // Virtuals
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
@@ -252,6 +279,7 @@ export const CreatePermisoSchema = z.discriminatedUnion("nivel", [
       roles: true,
       cliente: true,
       complejo: true,
+      destinoVisitante: true,
     })
     .extend({ password: z.string().optional() }),
   PermisoUnidadFuncionalSchema
@@ -289,6 +317,7 @@ export const UpdatePermisoSchema = z.discriminatedUnion("nivel", [
       roles: true,
       cliente: true,
       complejo: true,
+      destinoVisitante: true,
     })
     .partial()
     .extend({ nivel: z.literal("Complejo") }),

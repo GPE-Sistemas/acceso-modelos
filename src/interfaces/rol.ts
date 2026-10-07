@@ -185,6 +185,18 @@ export const AccionesRolSchema = z.enum([
   "Visitas - Crear visitantes globales",
   "Visitas - Editar visitantes globales",
   "Visitas - Eliminar visitantes globales",
+  // Visitante recurrente con credencial (D63, doc 50 §5.2): el guardia le carga
+  // la credencial facial en el momento de la visita. Crea el permiso
+  // `Visitante` sin cuenta si la persona todavía no lo tiene.
+  "Visitas - Cargar credencial de visitante",
+
+  // MODULO VISITANTE (D63, doc 50) — acciones del propio visitante con
+  // credencial. NO se asignan por rol: son las de `ACCIONES_PERMISO_VISITANTE`,
+  // fijas para todo permiso de categoría `Visitante`.
+  "Visitante - Ver mis visitas",
+  "Visitante - Marcar destino",
+  "Visitante - Ver mis movimientos",
+  "Visitante - Cargar mi credencial",
 
   // MODULO VEHÍCULOS
   "Vehículos - Ver vehículos",
@@ -546,3 +558,15 @@ export type IRolComplejo = z.infer<typeof RolComplejoSchema>;
 export type IRol = z.infer<typeof RolSchema>;
 export type ICreateRol = z.infer<typeof CreateRolSchema>;
 export type IUpdateRol = z.infer<typeof UpdateRolSchema>;
+
+/**
+ * Acciones de todo permiso de categoría `Visitante` (D63, doc 50 §4.1). Fijas:
+ * acceso-api las resuelve por la categoría e ignora `idsRoles`, así nadie puede
+ * ampliarle el alcance a un visitante asignándole un rol.
+ */
+export const ACCIONES_PERMISO_VISITANTE: readonly AccionesRol[] = [
+  "Visitante - Ver mis visitas",
+  "Visitante - Marcar destino",
+  "Visitante - Ver mis movimientos",
+  "Visitante - Cargar mi credencial",
+];

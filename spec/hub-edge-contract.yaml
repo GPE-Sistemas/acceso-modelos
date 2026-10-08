@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.14.0
+  version: 0.15.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -4825,6 +4825,10 @@ x-entidades:
         cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
         acceso-doc-general § Realtime del Hub edge.
       live: edge
+    autorizaciones-retiro:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      live: cloud
     botones-ticket:
       replicadaEnEdge: false
       escrituraEdge: ninguna

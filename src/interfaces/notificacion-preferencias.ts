@@ -33,6 +33,18 @@ export const CategoriaNotificacionSchema = z.enum([
   "visita_autorizada_por_guardia",
   /** Mobile UF: la administración eliminó una visita recurrente de mi UF (con motivo) */
   "visita_eliminada",
+  /**
+   * Mobile UF: la guardia pide autorización para que un visitante retire
+   * objetos de mi UF y la persona está esperando en la garita (D64, doc 51).
+   * NO silenciable — ver `CATEGORIAS_NOTIFICACION_OBLIGATORIAS`.
+   */
+  "retiro_pendiente_aprobacion",
+  /** Mobile UF: la guardia cargó un retiro sobre un egreso ya registrado y pide conformidad */
+  "retiro_registrado_posterior",
+  /** Mobile UF: el guardia forzó la autorización de un retiro de mi UF */
+  "retiro_autorizado_por_guardia",
+  /** Mobile UF: un visitante egresó con los objetos que autoricé */
+  "retiro_realizado",
   /** Mobile UF: mi turno quedó confirmado (auto-aprobado) */
   "turno_reservado",
   /** Mobile UF: alguien de mi UF creó un turno que requiere mi aprobación */
@@ -95,11 +107,14 @@ export const CategoriaNotificacionSchema = z.enum([
  * - `egreso_menor_autorizacion` (D57): si un responsable silencia el pedido,
  *   el menor queda esperando en la garita sin que nadie se entere — el push es
  *   parte del control de acceso, no un aviso de cortesía.
+ * - `retiro_pendiente_aprobacion` (D64): mismo argumento — hay una persona
+ *   esperando en la garita la respuesta de la UF.
  * - `seguridad_evento` y `ticket_emergencia_recibido`: el personal de
  *   seguridad no elige no enterarse de una emergencia.
  */
 export const CATEGORIAS_NOTIFICACION_OBLIGATORIAS = [
   "egreso_menor_autorizacion",
+  "retiro_pendiente_aprobacion",
   "seguridad_evento",
   "ticket_emergencia_recibido",
 ] as const satisfies readonly ICategoriaNotificacion[];
@@ -125,6 +140,10 @@ export const CategoriasNotificacionMapSchema = z.object({
   visita_resuelta: z.boolean(),
   visita_autorizada_por_guardia: z.boolean(),
   visita_eliminada: z.boolean(),
+  retiro_pendiente_aprobacion: z.boolean(),
+  retiro_registrado_posterior: z.boolean(),
+  retiro_autorizado_por_guardia: z.boolean(),
+  retiro_realizado: z.boolean(),
   turno_reservado: z.boolean(),
   turno_pendiente_aprobacion: z.boolean(),
   turno_aprobado: z.boolean(),
@@ -204,6 +223,10 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   visita_resuelta: true,
   visita_autorizada_por_guardia: true,
   visita_eliminada: true,
+  retiro_pendiente_aprobacion: true,
+  retiro_registrado_posterior: true,
+  retiro_autorizado_por_guardia: true,
+  retiro_realizado: true,
   turno_reservado: true,
   turno_pendiente_aprobacion: true,
   turno_aprobado: true,

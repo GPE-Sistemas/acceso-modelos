@@ -190,6 +190,17 @@ export const AccionesRolSchema = z.enum([
   // `Visitante` sin cuenta si la persona todavía no lo tiene.
   "Visitas - Cargar credencial de visitante",
 
+  // MODULO RETIROS (D64, doc 51) — autorización para que un visitante retire
+  // objetos de una UF al egresar. "Crear" cubre la previa (nivel UF) y la
+  // solicitud en garita o posterior (nivel Complejo): la instancia la deriva
+  // acceso-api del nivel. "Aprobar" responde en nombre de la UF; "Forzar" es la
+  // aprobación de garita sin respuesta, mismo criterio que en Visitas.
+  "Retiros - Ver",
+  "Retiros - Crear",
+  "Retiros - Aprobar",
+  "Retiros - Forzar aprobación",
+  "Retiros - Verificar",
+
   // MODULO VISITANTE (D63, doc 50) — acciones del propio visitante con
   // credencial. NO se asignan por rol: son las de `ACCIONES_PERMISO_VISITANTE`,
   // fijas para todo permiso de categoría `Visitante`.

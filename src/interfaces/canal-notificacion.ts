@@ -120,6 +120,10 @@ export const TipoPushSchema = z.enum([
   "visita_pendiente_aprobacion",
   "visita_resuelta",
   "visita_autorizada_por_guardia",
+  "retiro_pendiente_aprobacion",
+  "retiro_registrado_posterior",
+  "retiro_autorizado_por_guardia",
+  "retiro_realizado",
   "alerta_contacto",
   "contacto_invitacion",
   "seguridad_evento",
@@ -162,6 +166,7 @@ export const TIPOS_PUSH_URGENTES = [
   "seguridad_evento",
   "ticket_emergencia_recibido",
   "egreso_menor_autorizacion",
+  "retiro_pendiente_aprobacion",
   "alerta_contacto",
 ] as const satisfies readonly ITipoPush[];
 

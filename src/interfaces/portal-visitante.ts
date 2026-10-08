@@ -3,6 +3,7 @@ import {
   RecurrenciaEventoVisitaSchema,
   TipoEventoVisitaSchema,
 } from "./evento-visita";
+import { RecorridoVisitanteSchema } from "./recorrido-visitante";
 
 /**
  * Contratos del portal del visitante recurrente con credencial (D63, doc 50).
@@ -42,12 +43,40 @@ export const VisitaDeVisitanteSchema = z.object({
 });
 
 /**
- * `PUT /portal-visitante/destino`. `hasta` ausente = fin de la franja de hoy
- * de la primera visita marcada (o fin del día si no tiene horario).
+ * `PUT /portal-visitante/destino`. Reemplaza la lista completa: para sumar o
+ * quitar un lote la app reenvía todos los marcados (D65 decisión 9). `hasta`
+ * ausente = el fin de franja de hoy más tardío entre las visitas marcadas (o
+ * fin del día si alguna no tiene horario).
  */
 export const MarcarDestinoVisitanteSchema = z.object({
   idsEventosVisita: z.array(z.string()).min(1),
   hasta: z.string().optional(),
+});
+
+/**
+ * `POST /portal-visitante/recorrido/paradas` — "Voy a este lote" (D65, doc 52).
+ * Cierra la parada abierta (push de salida a esa UF) y abre una en este evento
+ * (push de llegada). Mismo lote que la parada abierta = no-op.
+ */
+export const MarcarParadaRecorridoSchema = z.object({
+  idEventoVisita: z.string().min(1),
+});
+
+/** Un lote que el visitante puede elegir estando adentro en modo recorrido. */
+export const LoteRecorridoSchema = VisitaDeVisitanteSchema.extend({
+  /** Estaba vinculado al ingreso. `false` = "Otros lotes en horario". */
+  candidato: z.boolean(),
+});
+
+/**
+ * `GET /portal-visitante/recorrido`. `recorrido` = `null` cuando no está
+ * adentro en modo recorrido (afuera, o adentro con una sola UF): la app
+ * muestra entonces "Mis lugares" como antes.
+ */
+export const RecorridoDeVisitanteSchema = z.object({
+  recorrido: RecorridoVisitanteSchema.nullable(),
+  /** Candidatos primero; vacío si `recorrido` es `null`. */
+  lotes: z.array(LoteRecorridoSchema),
 });
 
 /**
@@ -84,6 +113,11 @@ export type IVisitaDeVisitante = z.infer<typeof VisitaDeVisitanteSchema>;
 export type IMarcarDestinoVisitante = z.infer<
   typeof MarcarDestinoVisitanteSchema
 >;
+export type IMarcarParadaRecorrido = z.infer<
+  typeof MarcarParadaRecorridoSchema
+>;
+export type ILoteRecorrido = z.infer<typeof LoteRecorridoSchema>;
+export type IRecorridoDeVisitante = z.infer<typeof RecorridoDeVisitanteSchema>;
 export type ILugarFacial = z.infer<typeof LugarFacialSchema>;
 export type ICargarMiCredencialVisitante = z.infer<
   typeof CargarMiCredencialVisitanteSchema

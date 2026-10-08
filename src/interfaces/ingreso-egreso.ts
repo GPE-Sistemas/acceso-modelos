@@ -176,6 +176,14 @@ export const IngresoEgresoSchema = z.object({
    * la apertura.
    */
   autorizacionEgreso: AutorizacionEgresoSchema.optional(),
+  /**
+   * Ingreso por cara de un visitante con credencial cuyo plan vinculó dos o
+   * más eventos (D65, doc 52). Lo pone el edge al crear el movimiento; es
+   * inmutable. acceso-api no manda el push genérico de este ingreso (ni el del
+   * egreso que lo cierra): avisa a cada UF a medida que el visitante declara
+   * su recorrido (`IRecorridoVisitante`). Ausente = comportamiento de siempre.
+   */
+  recorridoVisitante: z.boolean().optional(),
   // --- Origen detección de video (M2, módulo IA-video) ---
   /** Qué generó el evento. Ausente = legacy (Terminal). */
   origen: OrigenIngresoEgresoSchema.optional(),

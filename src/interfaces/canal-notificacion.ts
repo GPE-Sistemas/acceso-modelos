@@ -108,6 +108,10 @@ export const CANALES_NOTIFICACION: Record<
 export const TipoPushSchema = z.enum([
   "visitor_entry",
   "visitor_exit",
+  /** D65: el visitante declaró que llegó a la propiedad (preferencia `visitor_entry`). */
+  "visitor_arrived_uf",
+  /** D65: el visitante se retiró de la propiedad y sigue en el complejo (preferencia `visitor_exit`). */
+  "visitor_left_uf",
   "egreso_menor_autorizacion",
   "egreso_menor_resuelto",
   "menor_movimiento",

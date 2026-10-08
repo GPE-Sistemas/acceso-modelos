@@ -19,6 +19,7 @@ export * from './evento-seguridad';
 export * from './evento-visita';
 export * from './invitacion-visita';
 export * from './portal-visitante';
+export * from './recorrido-visitante';
 export * from './cliente';
 export * from './ingreso-egreso';
 export * from './estadia';

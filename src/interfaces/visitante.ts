@@ -54,6 +54,14 @@ export const VisitanteSchema = z.object({
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
     unidadFuncional: UnidadFuncionalSchema.optional(),
+    /**
+     * Populate de `idPermisoVisitante`: el permiso `Visitante` de la persona.
+     * El panel de guardia lo pide con `select: 'datosFormales'` para mostrar
+     * el nombre real (el de la cuenta, que acceso-api copia a `datosFormales`
+     * al reclamar) en lugar del que cargó cada UF. `z.any()`: `IPermiso` es
+     * una discriminated union profunda (criterio de `vinculo-evento-ingreso.ts`).
+     */
+    permisoVisitante: z.any().optional(),
   });
 
 export const CreateVisitanteSchema = VisitanteSchema.omit({
@@ -67,6 +75,7 @@ export const CreateVisitanteSchema = VisitanteSchema.omit({
   cliente: true,
   complejo: true,
   unidadFuncional: true,
+  permisoVisitante: true,
 });
 
 export const UpdateVisitanteSchema = VisitanteSchema.omit({
@@ -80,6 +89,7 @@ export const UpdateVisitanteSchema = VisitanteSchema.omit({
   cliente: true,
   complejo: true,
   unidadFuncional: true,
+  permisoVisitante: true,
 }).partial();
 
 export type IVisitante = z.infer<typeof VisitanteSchema>;

@@ -156,6 +156,18 @@ export const AccionesRolSchema = z.enum([
   // aplican a los terminales. Separada de la acción de aplicar: quien consigue y
   // sube el binario no es necesariamente quien decide actualizar un equipo.
   "Hardware - Gestionar paquetes de firmware",
+  // LoRaWAN (D55 §5.1 + D66, doc 53 §4.6). Aprovisionar escribe en un sistema
+  // externo (el NS del edge) — mismo criterio que `Configurar dispositivos`.
+  // Ver claves es la más sensible del set: devuelve la AppKey en claro.
+  "Hardware - Aprovisionar dispositivo LoRaWAN",
+  "Hardware - Ver claves de aprovisionamiento LoRaWAN",
+  // Catálogo de plataforma: un perfil mal cargado corrompe la ingesta de todos
+  // los equipos de ese modelo.
+  "Hardware - Administrar perfiles de decodificación",
+  // MODULO SERVICIOS (telemetría de agua/gas, D66). Instalación del medidor en
+  // la UF con su lectura inicial.
+  "Servicios - Ver asignaciones de medidores",
+  "Servicios - Asignar medidores",
   // Dispara la actualización de firmware de UN dispositivo. Operación
   // irreversible (el fabricante bloquea el downgrade) y con riesgo de dejar el
   // equipo inutilizable: gate propio, nunca incluida en "Editar dispositivos".

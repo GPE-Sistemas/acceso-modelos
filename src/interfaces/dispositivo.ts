@@ -8,6 +8,7 @@ import {
 } from "./config-operacion-dispositivo";
 import { PerfilDispositivoSchema } from "./perfil-dispositivo";
 import { GeoJSONPointSchema } from "../auxiliares/geojson";
+import { ActivacionLoRaWANSchema, ClaseLoRaWANSchema } from "./perfil-decodificacion";
 
 /**
  * Form-factor / familia física del dispositivo (eje físico, single-select). NO
@@ -33,6 +34,10 @@ import { GeoJSONPointSchema } from "../auxiliares/geojson";
  *   (barrera / portón con controladora integrada y API).
  * - `Gateway LoRaWAN`: concentrador LoRaWAN del complejo (D59 / D66). No
  *   enrola, no abre, no mide: reenvía la radio al ChirpStack local del edge.
+ * - `Medidor`: medidor de servicio (agua, gas) con módulo LoRaWAN (D66). Se
+ *   instala en una UF con `IAsignacionDispositivo`.
+ * - `Tracker` / `Sensor`: tarjeta de seguimiento de visitas y sensor genérico
+ *   LoRaWAN (D55).
  * - `Otro`: fallback.
  *
  * La coherencia formFactor↔capacidades (Terminal ⇒ ≥1 credencial; Cámara/NVR/XVR
@@ -48,6 +53,9 @@ export const FormFactorDispositivoSchema = z.enum([
   "Controlador de I/O",
   "Barrera",
   "Gateway LoRaWAN",
+  "Medidor",
+  "Tracker",
+  "Sensor",
   "Otro",
 ]);
 
@@ -489,9 +497,18 @@ export const ConectividadLoRaWANSchema = z.object({
   // deriva el edge de la MAC (`ac1f09` + `fffe` + `0647f8`).
   gatewayEUI: z.string().regex(/^[0-9a-f]{16}$/).optional(),
   devEUI: z.string().regex(/^[0-9a-f]{16}$/).optional(),
+  joinEUI: z.string().regex(/^[0-9a-f]{16}$/).optional(),
   // Id de región del NS. Plataforma: `au915_sb6` (AU915 canales 40-47 + 69,
   // D66.8). Se verifica por frecuencias, nunca por este nombre.
   region: z.string().optional(),
+  // Del equipo; si falta, la del perfil.
+  clase: ClaseLoRaWANSchema.optional(),
+  activacion: ActivacionLoRaWANSchema.optional(),
+  // Cómo se lee y cómo se aprovisiona (modelo). Sin perfil, el uplink se
+  // guarda crudo: nunca se descarta un dato por no saber leerlo.
+  idPerfilDecodificacion: z.string().optional(),
+  // Perfil `DerivadaDeLote`: nombre del lote del que sale la llave.
+  lote: z.string().optional(),
 });
 
 export const ConectividadSchema = z.object({
@@ -500,6 +517,44 @@ export const ConectividadSchema = z.object({
 });
 
 export const DriverGatewayLoRaWANSchema = z.enum(["WisGateOS1", "WisGateOS2"]);
+
+/**
+ * Estado del equipo en el NS local (ChirpStack), reportado por el reconciliador
+ * del edge (D66.1). Owner edge, merge `$set`. Va en su propio campo y no dentro
+ * de `conectividad` (D55 §4.2 lo ponía ahí): `conectividad` lo declara el
+ * operador y el `$set` de un reporte lo pisaría entero.
+ */
+export const EstadoAprovisionamientoLoRaWANSchema = z.enum([
+  "Pendiente",
+  "Aprovisionado",
+  "Error",
+  "BajaPendiente",
+  "DadoDeBaja",
+]);
+
+export const AprovisionamientoLoRaWANSchema = z.object({
+  estado: EstadoAprovisionamientoLoRaWANSchema.optional(),
+  fecha: z.string().optional(),
+  ultimoError: z.string().optional(),
+  // Device profile de ChirpStack que usa (uno por perfil y versión).
+  deviceProfileId: z.string().optional(),
+  // Último uplink visto por el NS.
+  ultimoVisto: z.string().optional(),
+});
+
+/**
+ * Ciclo de vida de INVENTARIO (D55 §4.2), owner el operador. Separado de
+ * `estado` (alcanzabilidad runtime, owner edge): si compartieran campo, un
+ * reporte del edge pisaría la decisión del operador.
+ */
+export const EstadoInventarioDispositivoSchema = z.enum([
+  "Registrado",
+  "Configurado",
+  "EnServicio",
+  "EnCarga",
+  "FueraDeServicio",
+  "Baja",
+]);
 
 /**
  * Lo que el edge RELEVA del gateway (D66 doc 53 §3.7). Owner edge, llega por
@@ -548,6 +603,13 @@ export const ConfigDispositivoSchema = z.object({
     passwordAnteriorCifrada: z.string().optional(),
     // Lo que acceso-api expone en lugar de la credencial: si hay una cargada.
     tienePassword: z.boolean().optional(),
+    // AppKey LoRaWAN de un equipo `PorDispositivo` (D66.5, doc 53 §4.4): mismo
+    // trato que la password del gateway — en claro solo en el body, cifrada en
+    // `appKeyCifrada`, nunca en una respuesta. El edge recibe la clave final
+    // (por dispositivo, del perfil o derivada del lote) por `/sync`.
+    appKey: z.string().optional(),
+    appKeyCifrada: z.string().optional(),
+    tieneAppKey: z.boolean().optional(),
     apikey: z.string().optional(),
     // IP LAN del device. La resuelve discovery (MAC↔IP) + adopción la persiste.
     // Mutable por DHCP del integrador — discovery refresca cuando detecta cambio.
@@ -626,6 +688,12 @@ export const DispositivoSchema = z.object({
     conectividad: ConectividadSchema.optional(),
     // Relevamiento del gateway LoRaWAN por el edge. Solo en `Gateway LoRaWAN`.
     gatewayLorawan: EstadoGatewayLoRaWANSchema.optional(),
+    // Estado en el NS local de un equipo LoRaWAN (no gateway). Owner edge.
+    aprovisionamientoLorawan: AprovisionamientoLoRaWANSchema.optional(),
+    // Identificación corta que canta el guardia o que lleva la etiqueta del
+    // medidor (`T-07`, `AG-112`). Única por complejo.
+    etiqueta: z.string().optional(),
+    estadoInventario: EstadoInventarioDispositivoSchema.optional(),
     // Capacidades del device (D49, Capa 1): credencial + intrínsecos
     // (fuenteVideo/aperturaComando/enrolamiento) + `video` con proveedor por
     // capacidad. El proveedor per-capacidad reemplaza al viejo `fuenteInferencia`
@@ -755,6 +823,9 @@ export type IConectividadLoRaWAN = z.infer<typeof ConectividadLoRaWANSchema>;
 export type IConectividad = z.infer<typeof ConectividadSchema>;
 export type IDriverGatewayLoRaWAN = z.infer<typeof DriverGatewayLoRaWANSchema>;
 export type IEstadoGatewayLoRaWAN = z.infer<typeof EstadoGatewayLoRaWANSchema>;
+export type IEstadoAprovisionamientoLoRaWAN = z.infer<typeof EstadoAprovisionamientoLoRaWANSchema>;
+export type IAprovisionamientoLoRaWAN = z.infer<typeof AprovisionamientoLoRaWANSchema>;
+export type IEstadoInventarioDispositivo = z.infer<typeof EstadoInventarioDispositivoSchema>;
 export type ICapacidadVideo = z.infer<typeof CapacidadVideoSchema>;
 export type ICapacidadesVideo = z.infer<typeof CapacidadesVideoSchema>;
 export type IComandoActuacion = z.infer<typeof ComandoActuacionSchema>;

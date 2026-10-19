@@ -7,6 +7,7 @@ import {
   ModoConfigDispositivoSchema,
 } from "./config-operacion-dispositivo";
 import { PerfilDispositivoSchema } from "./perfil-dispositivo";
+import { GeoJSONPointSchema } from "../auxiliares/geojson";
 
 /**
  * Form-factor / familia física del dispositivo (eje físico, single-select). NO
@@ -30,6 +31,8 @@ import { PerfilDispositivoSchema } from "./perfil-dispositivo";
  *   típicamente varias salidas, que pueden manejar más de una barrera (D53).
  * - `Barrera`: el actuador propiamente dicho, cuando habla IP por sí mismo
  *   (barrera / portón con controladora integrada y API).
+ * - `Gateway LoRaWAN`: concentrador LoRaWAN del complejo (D59 / D66). No
+ *   enrola, no abre, no mide: reenvía la radio al ChirpStack local del edge.
  * - `Otro`: fallback.
  *
  * La coherencia formFactor↔capacidades (Terminal ⇒ ≥1 credencial; Cámara/NVR/XVR
@@ -44,6 +47,7 @@ export const FormFactorDispositivoSchema = z.enum([
   "Controlador de acceso",
   "Controlador de I/O",
   "Barrera",
+  "Gateway LoRaWAN",
   "Otro",
 ]);
 
@@ -470,9 +474,80 @@ export const IpLanHistoricoEntrySchema = z.object({
   visto: z.string(),
 });
 
+/**
+ * Eje de conectividad (D55 §4.2): por dónde llegan los datos del device. NO
+ * confundir con `formFactor` (familia física) ni con `capacidades` (lo que
+ * HACE). Selecciona además el pipeline de ingesta: `LoRaWAN` entra por el
+ * ChirpStack local del edge. Ausente = `IP-LAN` (todo lo que existía antes).
+ */
+export const ClaseConectividadSchema = z.enum(["IP-LAN", "LoRaWAN", "Celular"]);
+
+export const ConectividadLoRaWANSchema = z.object({
+  // **NORMALIZADO EN MINÚSCULAS**, misma regla que `mac` (y por el mismo
+  // incidente): el EUI llega en mayúsculas de la etiqueta y en minúsculas de
+  // ChirpStack, y la comparación cloud-side es case-sensitive. En un gateway lo
+  // deriva el edge de la MAC (`ac1f09` + `fffe` + `0647f8`).
+  gatewayEUI: z.string().regex(/^[0-9a-f]{16}$/).optional(),
+  devEUI: z.string().regex(/^[0-9a-f]{16}$/).optional(),
+  // Id de región del NS. Plataforma: `au915_sb6` (AU915 canales 40-47 + 69,
+  // D66.8). Se verifica por frecuencias, nunca por este nombre.
+  region: z.string().optional(),
+});
+
+export const ConectividadSchema = z.object({
+  clase: ClaseConectividadSchema,
+  lora: ConectividadLoRaWANSchema.optional(),
+});
+
+export const DriverGatewayLoRaWANSchema = z.enum(["WisGateOS1", "WisGateOS2"]);
+
+/**
+ * Lo que el edge RELEVA del gateway (D66 doc 53 §3.7). Owner edge, llega por
+ * outbox con merge `$set` y se pisa entero en cada reporte; nunca pisa lo que
+ * declaró el operador (`mac`, `ubicacion`, credencial).
+ */
+export const EstadoGatewayLoRaWANSchema = z.object({
+  driver: DriverGatewayLoRaWANSchema.optional(),
+  firmware: z.string().optional(),
+  ipLan: z.string().optional(),
+  // La del gateway (derivada de su MAC, 169.254.x.y). El edge escucha en su
+  // alias de servicio; esta es la del lado del gateway.
+  ipLinkLocal: z.string().optional(),
+  // Modo y servidor vigentes en el gateway (ej. `packet_forwarder` →
+  // `169.254.10.1:1700`).
+  modo: z.string().optional(),
+  servidor: z.string().optional(),
+  // Último uplink/stat visto por ChirpStack.
+  ultimoVisto: z.string().optional(),
+  // Diferencias contra el deseado en el último relevamiento (vacío = alineado).
+  // Incluye las de RF medidas sobre los canales reales del concentrador.
+  desvios: z.array(z.string()).optional(),
+  ultimoRelevamiento: z.string().optional(),
+  ultimaAplicacion: z.string().optional(),
+  // Último error de SSH / aplicación (para el detalle de la UI).
+  ultimoError: z.string().optional(),
+  // Huella SHA256 de la clave de host SSH fijada en el primer contacto (TOFU).
+  // Si el gateway presenta otra (reset de fábrica, otro equipo en la IP), el
+  // edge no le manda la credencial ni la config.
+  hostKey: z.string().optional(),
+  // true cuando el edge ya rotó la credencial de fábrica (doc 53 §3.7).
+  credencialRotada: z.boolean().optional(),
+});
+
 export const ConfigDispositivoSchema = z.object({
     username: z.string().optional(),
+    // En claro SOLO en el body de alta/edición. En un `Gateway LoRaWAN`
+    // acceso-api la cifra (AES-256-GCM) en `passwordCifrada` y NUNCA la devuelve
+    // en un GET (D66.6); el edge la pide por `/sync` con su token. Los HIK la
+    // siguen guardando en claro (migración fuera de D66).
     password: z.string().optional(),
+    // Credencial cifrada. Interno de acceso-api / acceso-datos: no sale en
+    // ninguna respuesta. La anterior se conserva durante una rotación, para que
+    // el edge pueda volver a entrar si la rotación quedó a medias.
+    passwordCifrada: z.string().optional(),
+    passwordAnteriorCifrada: z.string().optional(),
+    // Lo que acceso-api expone en lugar de la credencial: si hay una cargada.
+    tienePassword: z.boolean().optional(),
     apikey: z.string().optional(),
     // IP LAN del device. La resuelve discovery (MAC↔IP) + adopción la persiste.
     // Mutable por DHCP del integrador — discovery refresca cuando detecta cambio.
@@ -543,6 +618,14 @@ export const DispositivoSchema = z.object({
     // hace en minúsculas, porque una MAC vieja sin migrar sigue siendo posible.
     mac: z.string().optional(),
     config: ConfigDispositivoSchema.optional(),
+    // Ubicación declarada del equipo (GeoJSON Point, [lng, lat]). Hoy la usa el
+    // gateway LoRaWAN, que no trae GPS: el edge se la carga al gateway y a
+    // ChirpStack (D66).
+    ubicacion: GeoJSONPointSchema.optional(),
+    // Eje de conectividad (D55). Ausente = IP-LAN.
+    conectividad: ConectividadSchema.optional(),
+    // Relevamiento del gateway LoRaWAN por el edge. Solo en `Gateway LoRaWAN`.
+    gatewayLorawan: EstadoGatewayLoRaWANSchema.optional(),
     // Capacidades del device (D49, Capa 1): credencial + intrínsecos
     // (fuenteVideo/aperturaComando/enrolamiento) + `video` con proveedor por
     // capacidad. El proveedor per-capacidad reemplaza al viejo `fuenteInferencia`
@@ -667,6 +750,11 @@ export type IStreamCanal = z.infer<typeof StreamCanalSchema>;
 export type ICanalDispositivo = z.infer<typeof CanalDispositivoSchema>;
 export type IEstadoDispositivo = z.infer<typeof EstadoDispositivoSchema>;
 export type IConfigDispositivo = z.infer<typeof ConfigDispositivoSchema>;
+export type IClaseConectividad = z.infer<typeof ClaseConectividadSchema>;
+export type IConectividadLoRaWAN = z.infer<typeof ConectividadLoRaWANSchema>;
+export type IConectividad = z.infer<typeof ConectividadSchema>;
+export type IDriverGatewayLoRaWAN = z.infer<typeof DriverGatewayLoRaWANSchema>;
+export type IEstadoGatewayLoRaWAN = z.infer<typeof EstadoGatewayLoRaWANSchema>;
 export type ICapacidadVideo = z.infer<typeof CapacidadVideoSchema>;
 export type ICapacidadesVideo = z.infer<typeof CapacidadesVideoSchema>;
 export type IComandoActuacion = z.infer<typeof ComandoActuacionSchema>;

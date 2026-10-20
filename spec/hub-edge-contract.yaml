@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.18.0
+  version: 0.19.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -4854,6 +4854,14 @@ x-entidades:
       replicadaEnEdge: true
       escrituraEdge: ninguna
       live: edge
+    consumos-diarios:
+      subject: consumo-diario
+      replicadaEnEdge: false
+      escrituraEdge: bridge
+      live: cloud
+      # D66 Etapa 4 (doc 53 §4.3): consumo de un día por asignación de
+      # medidor. Lo calcula el edge desde el odómetro crudo y vive en el cloud
+      # SIN TTL (gráficos de más de 90 días). La web lo consulta en el cloud.
     contactos-usuario:
       replicadaEnEdge: false
       escrituraEdge: ninguna

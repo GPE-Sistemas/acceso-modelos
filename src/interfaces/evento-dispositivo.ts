@@ -20,6 +20,13 @@ export const EventoDispositivoTipoSchema = z.enum([
   "enrolamiento", // operación de enrolamiento (alta/baja de cara/tarjeta/huella)
   "conexion", // transición de conectividad (online/offline/lockout)
   "firmware", // veredicto de soporte del firmware relevado (subtipo='soporte-evaluado')
+  // Bit de estado de un equipo LoRaWAN que cambió (D66 Etapa 3): subtipo = el
+  // nombre estable del bit (`bateriaBaja`, `ataqueMagnetico`, `fuga`…),
+  // `detalle.activa` = flanco. Se emite por flanco, no por uplink.
+  "alarma",
+  // Uplink LoRaWAN que no se pudo leer (checksum, trama cifrada, tipo
+  // desconocido, sin perfil). El crudo queda en el edge para reprocesar.
+  "decodificacion",
 ]);
 
 export const EventoDispositivoResultadoSchema = z.enum(["ok", "error"]);
@@ -55,6 +62,12 @@ export const EventoDispositivoDetalleSchema = z.object({
   soporte: z.string().optional(),
   soporteAnterior: z.string().optional(),
   minimaSoportada: z.string().optional(),
+  // Alarma LoRaWAN (tipo='alarma'): flanco del bit. true = se activó.
+  activa: z.boolean().optional(),
+  // Uplink LoRaWAN que originó el evento (alarma / decodificación).
+  fCnt: z.number().int().optional(),
+  fPort: z.number().int().optional(),
+  payloadHex: z.string().optional(),
 });
 
 export const EventoDispositivoSchema = z.object({

@@ -171,6 +171,9 @@ export const AccionesRolSchema = z.enum([
   // la UF con su lectura inicial.
   "Servicios - Ver asignaciones de medidores",
   "Servicios - Asignar medidores",
+  // Consumo de todas las unidades del complejo (D66 Etapa 4). El consumo
+  // horario revela presencia: la UF solo ve el suyo (`Ver mi consumo`, Etapa 6).
+  "Servicios - Ver consumos de todas las UF",
   // Dispara la actualización de firmware de UN dispositivo. Operación
   // irreversible (el fabricante bloquea el downgrade) y con riesgo de dejar el
   // equipo inutilizable: gate propio, nunca incluida en "Editar dispositivos".

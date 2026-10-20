@@ -543,6 +543,48 @@ export const AprovisionamientoLoRaWANSchema = z.object({
 });
 
 /**
+ * Lo que la ingesta del edge sabe del equipo por sus uplinks (D66 Etapa 3,
+ * doc 53 §4.2). Owner edge, merge `$set`, se pisa entero en cada reporte.
+ * Separado de `aprovisionamientoLorawan` (estado en el NS, lo escribe el
+ * reconciliador) para que un reporte de uno no pise al otro.
+ *
+ * Alimenta el listado y la ficha: último uplink, señal, batería y la última
+ * lectura, sin consultar la serie de mediciones.
+ */
+export const TelemetriaLoRaWANSchema = z.object({
+  /** Recepción del último uplink (hora del edge). */
+  ultimoUplink: z.string().optional(),
+  fCnt: z.number().int().optional(),
+  fPort: z.number().int().optional(),
+  rssi: z.number().optional(),
+  snr: z.number().optional(),
+  /** Spreading factor del último uplink (7-12). */
+  sf: z.number().int().optional(),
+  frecuencia: z.number().optional(),
+  /** Gateway que mejor lo recibió. */
+  gatewayEUI: z.string().optional(),
+  /** Última batería reportada por el equipo (en `unidadBateria`). */
+  bateria: z.number().optional(),
+  unidadBateria: z.string().optional(),
+  /** Última lectura principal (odómetro de un medidor, magnitud del sensor). */
+  ultimaLectura: z
+    .object({
+      magnitud: z.string(),
+      valor: z.number().nullable(),
+      unidad: z.string().optional(),
+      valorServicio: z.number().optional(),
+      fechaDato: z.string().optional(),
+    })
+    .optional(),
+  /** Bits de estado del equipo vigentes (por nombre estable del decodificador:
+   *  `bateriaBaja`, `ataqueMagnetico`, `fuga`…). Solo los que están en true. */
+  alarmasActivas: z.array(z.string()).optional(),
+  /** Uplinks que el decodificador rechazó desde el último decodificado OK. */
+  uplinksSinDecodificar: z.number().int().optional(),
+  ultimoErrorDecodificacion: z.string().optional(),
+});
+
+/**
  * Ciclo de vida de INVENTARIO (D55 §4.2), owner el operador. Separado de
  * `estado` (alcanzabilidad runtime, owner edge): si compartieran campo, un
  * reporte del edge pisaría la decisión del operador.
@@ -690,6 +732,7 @@ export const DispositivoSchema = z.object({
     gatewayLorawan: EstadoGatewayLoRaWANSchema.optional(),
     // Estado en el NS local de un equipo LoRaWAN (no gateway). Owner edge.
     aprovisionamientoLorawan: AprovisionamientoLoRaWANSchema.optional(),
+    telemetriaLorawan: TelemetriaLoRaWANSchema.optional(),
     // Identificación corta que canta el guardia o que lleva la etiqueta del
     // medidor (`T-07`, `AG-112`). Única por complejo.
     etiqueta: z.string().optional(),
@@ -825,6 +868,7 @@ export type IDriverGatewayLoRaWAN = z.infer<typeof DriverGatewayLoRaWANSchema>;
 export type IEstadoGatewayLoRaWAN = z.infer<typeof EstadoGatewayLoRaWANSchema>;
 export type IEstadoAprovisionamientoLoRaWAN = z.infer<typeof EstadoAprovisionamientoLoRaWANSchema>;
 export type IAprovisionamientoLoRaWAN = z.infer<typeof AprovisionamientoLoRaWANSchema>;
+export type ITelemetriaLoRaWAN = z.infer<typeof TelemetriaLoRaWANSchema>;
 export type IEstadoInventarioDispositivo = z.infer<typeof EstadoInventarioDispositivoSchema>;
 export type ICapacidadVideo = z.infer<typeof CapacidadVideoSchema>;
 export type ICapacidadesVideo = z.infer<typeof CapacidadesVideoSchema>;

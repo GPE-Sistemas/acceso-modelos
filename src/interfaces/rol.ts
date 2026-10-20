@@ -164,6 +164,9 @@ export const AccionesRolSchema = z.enum([
   // Catálogo de plataforma: un perfil mal cargado corrompe la ingesta de todos
   // los equipos de ese modelo.
   "Hardware - Administrar perfiles de decodificación",
+  // Serie de mediciones de un equipo LoRaWAN (D55 §5.1, D66 Etapa 3): ficha del
+  // medidor/sensor. El consumo por UF tiene su propia acción (Etapa 4).
+  "Hardware - Ver mediciones de dispositivo",
   // MODULO SERVICIOS (telemetría de agua/gas, D66). Instalación del medidor en
   // la UF con su lectura inicial.
   "Servicios - Ver asignaciones de medidores",

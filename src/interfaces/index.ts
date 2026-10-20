@@ -60,6 +60,7 @@ export * from './perfil-camara';
 export * from './perfil-dispositivo';
 export * from './perfil-decodificacion';
 export * from './asignacion-dispositivo';
+export * from './medicion-dispositivo';
 export * from './importacion-lorawan';
 export * from './config-operacion-dispositivo';
 export * from './sync-status';

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.17.0
+  version: 0.18.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -4954,6 +4954,14 @@ x-entidades:
       replicadaEnEdge: false
       escrituraEdge: ninguna
       live: cloud
+    mediciones-dispositivo:
+      subject: medicion-dispositivo
+      replicadaEnEdge: false
+      escrituraEdge: bridge
+      live: cloud
+      # D66 Etapa 3 (doc 53 §4.2): serie escalar de los equipos LoRaWAN. La
+      # produce la ingesta del edge (append, `_id` determinístico, `expireAt`
+      # 90 días) y la consulta la web contra el cloud: el Hub edge no la sirve.
     multas:
       replicadaEnEdge: false
       escrituraEdge: ninguna

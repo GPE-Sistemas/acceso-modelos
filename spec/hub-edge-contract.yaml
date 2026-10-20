@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.16.0
+  version: 0.17.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -4825,6 +4825,15 @@ x-entidades:
         cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
         acceso-doc-general § Realtime del Hub edge.
       live: edge
+    asignaciones-dispositivo:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      # D66 (doc 53 §4.1): instalación del medidor en la UF (y, en la Etapa 7,
+      # entrega del tracker a la visita). Baja al edge porque la ingesta
+      # atribuye cada lectura a la asignación vigente según la fecha del dato.
+      # Hoy solo nace en cloud; cuando la garita la cree (Etapa 7) pasa a
+      # `bridge`.
+      live: edge
     autorizaciones-retiro:
       replicadaEnEdge: false
       escrituraEdge: ninguna
@@ -4964,6 +4973,13 @@ x-entidades:
     perfiles-camara:
       replicadaEnEdge: true
       escrituraEdge: ninguna
+      live: edge
+    perfiles-decodificacion:
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      # D66 (doc 53 §5.1): qué decodificador y qué device profile de ChirpStack
+      # usa cada modelo LoRaWAN. Baja al edge SIN los campos cifrados: la clave
+      # de cada equipo la resuelve el cloud por `/sync`.
       live: edge
     perfiles-dispositivo:
       replicadaEnEdge: false

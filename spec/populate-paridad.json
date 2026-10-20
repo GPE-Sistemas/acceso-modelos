@@ -8,6 +8,13 @@
         "complejo"
       ]
     },
+    "/asignaciones-dispositivo": {
+      "populate": [
+        "complejo",
+        "dispositivo",
+        "unidadFuncional"
+      ]
+    },
     "/autorizaciones-retiro": {
       "populate": [
         "unidadFuncional",
@@ -171,6 +178,11 @@
     "/obras": {
       "populate": [
         "unidadFuncional"
+      ]
+    },
+    "/perfiles-decodificacion": {
+      "populate": [
+        "cliente"
       ]
     },
     "/perfiles-dispositivo": {

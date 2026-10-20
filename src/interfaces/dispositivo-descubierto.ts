@@ -24,6 +24,9 @@ export const DispositivoDescubiertoTipoSchema = z.enum([
   "intercom",
   "no-integrable",
   "desconocido",
+  // D66: gateway LoRaWAN (RAK, OUI `ac:1f:09` + LuCI ⇒ WisGateOS 1). El edge lo
+  // autoconfigura si está de fábrica o ya apunta a él (`gatewayLorawan`).
+  "gateway-lorawan",
 ]);
 
 export const DispositivoDescubiertoProtocoloSchema = z.enum([
@@ -60,6 +63,39 @@ export const DispositivoDescubiertoCapabilitiesSchema = z.object({
   serverHeader: z.string().optional(),
   digestRealm: z.string().optional(),
   puertosAbiertos: z.array(z.number().int()).optional(),
+});
+
+/**
+ * Resultado de la autoconfiguración de un gateway LoRaWAN descubierto (D66,
+ * doc 53 §3.7). Lo escribe el EDGE (se pisa entero en cada publicación):
+ *  - `Configurado`: estaba de fábrica (o en el NS embebido) y el edge lo llevó
+ *    a Semtech UDP → este edge, AU915 sub-banda 6.
+ *  - `YaConfigurado`: ya apuntaba a este edge; no hubo que tocarlo.
+ *  - `Ajeno`: apunta a OTRO servidor (TTN, otro ChirpStack). No se toca: puede
+ *    ser de otro sistema y reconfigurarlo le cortaría el servicio.
+ *  - `CredencialNoDeFabrica`: no acepta `root`/`root`; se adopta a mano.
+ *  - `Inalcanzable` / `Error`: no se pudo relevar.
+ * Con `Configurado` / `YaConfigurado` acceso-api crea solo el `IDispositivo`.
+ */
+export const ResultadoAutoconfigGatewaySchema = z.enum([
+  "Configurado",
+  "YaConfigurado",
+  "Ajeno",
+  "CredencialNoDeFabrica",
+  "Inalcanzable",
+  "Error",
+]);
+
+export const AutoconfigGatewayDescubiertoSchema = z.object({
+  resultado: ResultadoAutoconfigGatewaySchema,
+  motivo: z.string().optional(),
+  fecha: z.string().optional(),
+  driver: z.string().optional(),
+  firmware: z.string().optional(),
+  // EUI derivado de la MAC, en minúsculas.
+  gatewayEUI: z.string().optional(),
+  // Servidor al que apunta el forwarder (`host:puerto`), relevado.
+  servidor: z.string().optional(),
 });
 
 export const DispositivoDescubiertoIpLanHistoricoEntrySchema = z.object({
@@ -110,6 +146,13 @@ export const DispositivoDescubiertoSchema = z.object({
     DispositivoDescubiertoEntidadAdoptadaTipoSchema.optional(),
 
   notasIntegrador: z.string().optional(),
+
+  // D66 — gateway LoRaWAN. Owner EDGE (viaja en cada publicación).
+  gatewayLorawan: AutoconfigGatewayDescubiertoSchema.optional(),
+  // Owner CLOUD: cuándo acceso-api lo dio de alta solo. El edge no lo manda, así
+  // que el upsert (`$set`) no lo pisa. Una vez hecha, la alta automática no se
+  // repite: si el operador borra el gateway, se vuelve a adoptar a mano.
+  autoAdoptadoEn: z.string().optional(),
 });
 
 export const CreateDispositivoDescubiertoSchema =
@@ -136,6 +179,12 @@ export type IDispositivoDescubiertoEntidadAdoptadaTipo = z.infer<
 >;
 export type IDispositivoDescubiertoCapabilities = z.infer<
   typeof DispositivoDescubiertoCapabilitiesSchema
+>;
+export type IResultadoAutoconfigGateway = z.infer<
+  typeof ResultadoAutoconfigGatewaySchema
+>;
+export type IAutoconfigGatewayDescubierto = z.infer<
+  typeof AutoconfigGatewayDescubiertoSchema
 >;
 export type IDispositivoDescubiertoIpLanHistoricoEntry = z.infer<
   typeof DispositivoDescubiertoIpLanHistoricoEntrySchema
@@ -243,6 +292,26 @@ export const AdoptarDispositivoResponseSchema = z.object({
   }),
 });
 
+// ── Adopción manual de un gateway LoRaWAN (D66) ───────────────────────────
+// Body del POST /dispositivos-descubiertos/:id/adoptar-gateway: el gateway no
+// aceptó la credencial de fábrica (o el operador prefiere adoptarlo a mano). La
+// credencial se guarda cifrada; el edge la usa para configurarlo y la rota.
+export const AdoptarGatewaySchema = z.object({
+  credUser: z.string().min(1),
+  credPass: z.string().min(1),
+  nombre: z.string().optional(),
+  idEdgeAppliancePrimario: z.string().optional(),
+});
+
+export const AdoptarGatewayResponseSchema = z.object({
+  dato: z.object({
+    dispositivo: DispositivoSchema,
+    descubierto: DispositivoDescubiertoSchema,
+  }),
+});
+
+export type IAdoptarGateway = z.infer<typeof AdoptarGatewaySchema>;
+export type IAdoptarGatewayResponse = z.infer<typeof AdoptarGatewayResponseSchema>;
 export type IAdoptarDispositivo = z.infer<typeof AdoptarDispositivoSchema>;
 export type IAdoptarResult = z.infer<typeof AdoptarResultSchema>;
 export type IAdoptarDispositivoResponse = z.infer<

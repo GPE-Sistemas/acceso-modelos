@@ -330,6 +330,29 @@ export const EdgeApplianceDiagnosticoRedSchema = z.object({
   actualizadoEn: z.string().optional(),
 });
 
+// IEdgeApplianceDiagnosticoReloj — hora del appliance (D66 doc 53 §3.4, P4).
+// La ingesta LoRaWAN usa la hora del edge como fecha de las lecturas de los
+// equipos sin timestamp (SML) y ChirpStack la usa para responder DeviceTimeReq:
+// sin batería de RTC, después de un corte el RPi5 vuelve con la hora del último
+// apagado hasta que sincroniza. Se reporta para verlo ANTES de que falle.
+export const EdgeApplianceDiagnosticoRelojSchema = z.object({
+  // Existe un RTC (/sys/class/rtc/rtc0).
+  rtcPresente: z.boolean(),
+  // Voltaje de la batería del RTC (RPi5). Ausente si el hardware no lo expone.
+  bateriaRtcVoltios: z.number().optional(),
+  // El kernel considera la hora sincronizada (NTP/chrony, sin STA_UNSYNC).
+  horaSincronizada: z.boolean(),
+});
+
+// IEdgeApplianceDiagnosticoLorawan — estado del subsistema LoRaWAN del agent.
+// `stackInstalado && !habilitado` es el caso de un appliance instalado con
+// LoRaWAN antes de que install.sh escribiera el bloque `lorawan:` en edge.yaml:
+// el gestor, la ingesta y el consumo no corren y nada falla.
+export const EdgeApplianceDiagnosticoLorawanSchema = z.object({
+  stackInstalado: z.boolean(),
+  habilitado: z.boolean(),
+});
+
 export const EdgeApplianceDiagnosticoSchema = z.object({
   // Cantidad de filas pendientes en outbox edge (publish a NATS pendiente).
   outboxDepth: z.number().int().nonnegative(),
@@ -346,6 +369,8 @@ export const EdgeApplianceDiagnosticoSchema = z.object({
   // detección de DNS rebind, etc.). Optional para back-compat con agents
   // < v1.24 que aún no reportan el bloque.
   red: EdgeApplianceDiagnosticoRedSchema.optional(),
+  reloj: EdgeApplianceDiagnosticoRelojSchema.optional(),
+  lorawan: EdgeApplianceDiagnosticoLorawanSchema.optional(),
   // Timestamp ISO del snapshot.
   actualizadoEn: z.string(),
 });
@@ -471,6 +496,12 @@ export type IEdgeApplianceIntegrityEntry = z.infer<
 >;
 export type IEdgeApplianceLastError = z.infer<
   typeof EdgeApplianceLastErrorSchema
+>;
+export type IEdgeApplianceDiagnosticoReloj = z.infer<
+  typeof EdgeApplianceDiagnosticoRelojSchema
+>;
+export type IEdgeApplianceDiagnosticoLorawan = z.infer<
+  typeof EdgeApplianceDiagnosticoLorawanSchema
 >;
 export type IEdgeApplianceDiagnosticoRed = z.infer<
   typeof EdgeApplianceDiagnosticoRedSchema

@@ -167,6 +167,10 @@ export const AccionesRolSchema = z.enum([
   // Serie de mediciones de un equipo LoRaWAN (D55 §5.1, D66 Etapa 3): ficha del
   // medidor/sensor. El consumo por UF tiene su propia acción (Etapa 4).
   "Hardware - Ver mediciones de dispositivo",
+  // Posiciones de un tracker (D54, D66 Etapa 7): la ficha del equipo. Separada
+  // de "Ver recorrido histórico" (Etapa 7b), que expone el trayecto de una
+  // visita — dato personal de un tercero.
+  "Hardware - Ver posición de dispositivo",
   // MODULO SERVICIOS (telemetría de agua/gas, D66). Instalación del medidor en
   // la UF con su lectura inicial.
   "Servicios - Ver asignaciones de medidores",

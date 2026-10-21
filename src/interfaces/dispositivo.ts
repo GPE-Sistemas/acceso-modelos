@@ -576,6 +576,28 @@ export const TelemetriaLoRaWANSchema = z.object({
       fechaDato: z.string().optional(),
     })
     .optional(),
+  /** Último reporte de ubicación de un tracker (D66 Etapa 7). Con
+   *  coordenadas solo si `tipo` es `GNSS`; un `SinResolver` dice por qué no
+   *  hubo fix (escaneo sin solver, timeout de GNSS, equipo sin hora). */
+  ultimaPosicion: z
+    .object({
+      tipo: z.string(),
+      latitud: z.number().optional(),
+      longitud: z.number().optional(),
+      fechaDato: z.string().optional(),
+      estadoPosicionamiento: z.string().optional(),
+      escaneo: z.string().optional(),
+    })
+    .optional(),
+  /** Última posición CON coordenadas (fix GNSS). Se conserva aunque los
+   *  reportes siguientes vengan sin fix: es "dónde se lo vio por última vez". */
+  ultimoFix: z
+    .object({
+      latitud: z.number(),
+      longitud: z.number(),
+      fechaDato: z.string().optional(),
+    })
+    .optional(),
   /** Bits de estado del equipo vigentes (por nombre estable del decodificador:
    *  `bateriaBaja`, `ataqueMagnetico`, `fuga`…). Solo los que están en true. */
   alarmasActivas: z.array(z.string()).optional(),

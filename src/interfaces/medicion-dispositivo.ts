@@ -152,6 +152,18 @@ export const LecturaProbadorSchema = z.object({
   fechaDato: z.string().optional(),
 });
 
+/** Posición que sacaría la ingesta de un tracker (decodificador `t1000`). */
+export const PosicionProbadorSchema = z.object({
+  tipo: z.string(),
+  fechaDato: z.string().optional(),
+  latitud: z.number().optional(),
+  longitud: z.number().optional(),
+  /** Resumen del escaneo WiFi/BLE (`WiFi: 4 (mejor -66 dBm)`). */
+  escaneo: z.string().optional(),
+  estadoPosicionamiento: z.string().optional(),
+  eventos: z.array(z.string()).optional(),
+});
+
 export const ResultadoProbadorSchema = z.object({
   ok: z.boolean(),
   /** Error tipado del decodificador (`checksum inválido`, `trama cifrada`, …). */
@@ -163,6 +175,7 @@ export const ResultadoProbadorSchema = z.object({
   disparador: z.string().optional(),
   relojSospechoso: z.boolean().optional(),
   crudo: z.record(z.string(), z.any()).optional(),
+  posiciones: z.array(PosicionProbadorSchema).optional(),
   /** Edge que ejecutó la prueba (hostname). */
   edge: z.string().optional(),
 });
@@ -173,4 +186,5 @@ export type IMedicionDispositivo = z.infer<typeof MedicionDispositivoSchema>;
 export type ICreateMedicionDispositivo = z.infer<typeof CreateMedicionDispositivoSchema>;
 export type IProbarDecodificador = z.infer<typeof ProbarDecodificadorSchema>;
 export type ILecturaProbador = z.infer<typeof LecturaProbadorSchema>;
+export type IPosicionProbador = z.infer<typeof PosicionProbadorSchema>;
 export type IResultadoProbador = z.infer<typeof ResultadoProbadorSchema>;

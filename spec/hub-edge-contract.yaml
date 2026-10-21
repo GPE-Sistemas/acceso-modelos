@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.19.0
+  version: 0.20.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -5015,6 +5015,14 @@ x-entidades:
       replicadaEnEdge: false
       escrituraEdge: ninguna
       live: cloud
+    posiciones-dispositivo:
+      subject: posicion-dispositivo
+      replicadaEnEdge: false
+      escrituraEdge: bridge
+      live: cloud
+      # D66 Etapa 7 (doc 38 §4.4): posiciones de los trackers (decodificador
+      # t1000). Mismo patrón que mediciones-dispositivo: append desde la
+      # ingesta del edge, `expireAt` 90 días, consulta contra el cloud.
     protocolos:
       replicadaEnEdge: false
       escrituraEdge: ninguna

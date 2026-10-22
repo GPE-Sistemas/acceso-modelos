@@ -70,6 +70,10 @@ export const AsignacionDispositivoSchema = z.object({
   /** Unidades del servicio por unidad cruda. Default del perfil
    *  (`factorDefault`); se pisa por asignación. */
   factor: z.number().positive().optional(),
+  /** Copia de `IPerfilDecodificacion.lecturaDirecta` al instalar (la pone
+   *  acceso-api): la lectura base se toma del equipo, con lecturaInicial =
+   *  odometroInicial × factor. Las lecturas no se editan a mano. */
+  lecturaDirecta: z.boolean().optional(),
   estadoBaseline: EstadoBaselineSchema.optional(),
   lecturaFinal: z.number().optional(),
   odometroFinal: z.number().optional(),
@@ -105,7 +109,13 @@ export const CreateAsignacionDispositivoSchema = AsignacionDispositivoSchema.omi
   complejo: true,
 });
 
-export const UpdateAsignacionDispositivoSchema = CreateAsignacionDispositivoSchema.partial();
+/** `null` borra el valor: un campo ausente del JSON no se distingue de "no lo
+ *  cambio". Borrar el contador inicial devuelve la lectura base a Provisorio
+ *  (la completa el próximo reporte); borrar el factor vuelve al del perfil. */
+export const UpdateAsignacionDispositivoSchema = CreateAsignacionDispositivoSchema.partial().extend({
+  odometroInicial: z.number().nullable().optional(),
+  factor: z.number().positive().nullable().optional(),
+});
 
 /** Body de `PUT /asignaciones-dispositivo/:id/cerrar` (retiro / reemplazo). */
 export const CerrarAsignacionDispositivoSchema = z.object({

@@ -50,7 +50,30 @@ export const MagnitudMedicionSchema = z.enum([
   "temperaturaAmbiente",
   "tiempoFuncionamiento",
   "intensidadSenal",
+  // D66 — medidor eléctrico NME (lector del HEXING por RS-485). La activa
+  // importada (OBIS 1.8.0) es `energiaAcumulada`, el contador del servicio.
+  "energiaActivaExportada", // 2.8.0, Wh acumulados
+  "energiaReactivaImportada", // 3.8.0, varh acumulados
+  "energiaReactivaExportada", // 4.8.0, varh acumulados
+  // Demanda máxima del medidor en W: SNAPSHOT del registro de máxima desde el
+  // último reset de facturación, no un acumulado — nunca se calculan deltas.
+  "demandaMaximaImportada", // 1.6.0
+  "demandaMaximaExportada", // 2.6.0
+  "demandaMaximaImportadaT1", // 1.6.0.1
+  "demandaMaximaExportadaT1", // 2.6.0.1
 ]);
+
+/**
+ * Magnitudes que son el CONTADOR del servicio de un medidor: de ellas salen la
+ * lectura del dial (`valorServicio`), la lectura base de la instalación y el
+ * consumo diario. Un equipo reporta una sola (volumen en agua y gas, energía
+ * activa importada en electricidad); las otras series acumuladas de un medidor
+ * eléctrico (exportada, reactivas) se guardan pero no se facturan.
+ */
+export const MAGNITUDES_CONTADOR_SERVICIO: readonly IMagnitudMedicion[] = [
+  "volumenAcumulado",
+  "energiaAcumulada",
+];
 
 /**
  * Calidad del dato.

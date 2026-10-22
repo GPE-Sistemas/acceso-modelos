@@ -102,6 +102,12 @@ export const PerfilDecodificacionSchema = z.object({
   /** Factor por defecto de la asignación (unidades del servicio por unidad
    *  cruda): SML en gas 0.001 m3, MRA en agua 0.01 m3 (doc 53 §4.1). */
   factorDefault: z.number().positive().optional(),
+  /** El contador del equipo ES la lectura del dial (en la unidad del equipo):
+   *  un lector del display de un medidor digital, como el NME. La instalación
+   *  no pide lecturas — la lectura del dial es siempre contador × factor, y la
+   *  lectura base sale del propio equipo. Un contador de pulsos (SML) no lo es:
+   *  arranca en 0 y necesita la lectura del dial al instalar. */
+  lecturaDirecta: z.boolean().optional(),
   // Populate
   cliente: ClienteSchema.optional(),
 });

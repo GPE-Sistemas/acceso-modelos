@@ -161,6 +161,8 @@ export const TipoPushSchema = z.enum([
   "solicitud_permiso_aprobada",
   "solicitud_permiso_rechazada",
   "credencial_recordatorio",
+  /** D66 Etapa 6: alarma de un medidor de la unidad (preferencia `alarma_medidor`). */
+  "alarma_medidor",
 ]);
 
 export type ITipoPush = z.infer<typeof TipoPushSchema>;

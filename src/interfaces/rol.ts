@@ -178,6 +178,10 @@ export const AccionesRolSchema = z.enum([
   // Consumo de todas las unidades del complejo (D66 Etapa 4). El consumo
   // horario revela presencia: la UF solo ve el suyo (`Ver mi consumo`, Etapa 6).
   "Servicios - Ver consumos de todas las UF",
+  // "Mi consumo" del residente (D66 Etapa 6): los medidores y el consumo de SU
+  // unidad, desde el inicio de su vigencia. Gatea también el push de alarma
+  // del medidor (`alarma_medidor`): no se avisa a quien no puede abrirlo.
+  "Servicios - Ver mi consumo",
   // Dispara la actualización de firmware de UN dispositivo. Operación
   // irreversible (el fabricante bloquea el downgrade) y con riesgo de dejar el
   // equipo inutilizable: gate propio, nunca incluida en "Editar dispositivos".

@@ -137,9 +137,64 @@ export const ResumenConsumoSchema = z.object({
 });
 
 export type ICalidadConsumoDiario = z.infer<typeof CalidadConsumoDiarioSchema>;
+// ── Mi consumo (residente, `GET /consumos-diarios/mios`, D66 Etapa 6) ──────
+
+/**
+ * Bits de estado de un medidor que se le avisan al residente (push
+ * `alarma_medidor`). Son los nombres que emite el decodificador del edge en el
+ * evento `alarma` (`subtipo`): EUW300 (`cjt188`), SML en agua (`hac-mlw`) y el
+ * medidor eléctrico NME. El resto (batería, válvula, falla del equipo) es
+ * mantenimiento: lo ve la administración, no el residente.
+ */
+export const ALARMAS_MEDIDOR_RESIDENTE = [
+  "goteo",
+  "ingresoAgua",
+  "alarmaFlujo",
+  "sobreflujo",
+  "flujoInverso",
+  "tuboVacio",
+  "sinEnergiaExterna",
+] as const;
+
+/** Rango opcional; default: los últimos 60 días. Nunca antes de la vigencia
+ *  del permiso (un dueño nuevo no ve el consumo del anterior). */
+export const MisConsumosQuerySchema = z.object({
+  desde: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  hasta: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
+/** Un medidor instalado hoy en la unidad. */
+export const MiMedidorSchema = z.object({
+  idAsignacion: z.string(),
+  servicio: ServicioMedidoSchema,
+  /** `m3` / `kWh`. */
+  unidad: z.string(),
+  fechaDesde: z.string(),
+  /** Lectura del dial del último reporte (null sin reportes). */
+  lecturaActual: z.number().nullable(),
+  fechaLectura: z.string().optional(),
+  /** `Online` / `Offline` / … del equipo. */
+  estado: z.string().optional(),
+  /** Alarmas activas que le importan al residente (subset de
+   *  `ALARMAS_MEDIDOR_RESIDENTE`). */
+  alarmasActivas: z.array(z.string()),
+});
+
+export const MisConsumosSchema = z.object({
+  desde: z.string(),
+  hasta: z.string(),
+  medidores: z.array(MiMedidorSchema),
+  /** Días del rango de las asignaciones de la unidad (vigentes y cerradas). */
+  dias: z.array(ConsumoDiarioSchema),
+});
+
 export type IConsumoDiario = z.infer<typeof ConsumoDiarioSchema>;
 export type ICreateConsumoDiario = z.infer<typeof CreateConsumoDiarioSchema>;
 export type IResumenConsumoQuery = z.infer<typeof ResumenConsumoQuerySchema>;
 export type IConsumoUnidadResumen = z.infer<typeof ConsumoUnidadResumenSchema>;
 export type IPuntoSerieConsumo = z.infer<typeof PuntoSerieConsumoSchema>;
 export type IResumenConsumo = z.infer<typeof ResumenConsumoSchema>;
+export type IAlarmaMedidorResidente = (typeof ALARMAS_MEDIDOR_RESIDENTE)[number];
+export type IMisConsumosQuery = z.infer<typeof MisConsumosQuerySchema>;
+export type IMiMedidor = z.infer<typeof MiMedidorSchema>;
+export type IMisConsumos = z.infer<typeof MisConsumosSchema>;

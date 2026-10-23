@@ -98,6 +98,12 @@ export const CategoriaNotificacionSchema = z.enum([
    * al menos un terminal facial habilitado.
    */
   "credencial_recordatorio",
+  /**
+   * Mobile UF (D66 Etapa 6): un medidor de la unidad levantó una alarma que le
+   * importa al residente (fuga, sobreflujo, flujo inverso, caño vacío, corte
+   * de luz). Ver `ALARMAS_MEDIDOR_RESIDENTE` en consumo-diario.
+   */
+  "alarma_medidor",
 ]);
 
 /**
@@ -165,6 +171,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   egreso_menor_resuelto: z.boolean(),
   menor_movimiento: z.boolean(),
   credencial_recordatorio: z.boolean(),
+  alarma_medidor: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -248,4 +255,5 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   egreso_menor_resuelto: true,
   menor_movimiento: true,
   credencial_recordatorio: true,
+  alarma_medidor: true,
 };

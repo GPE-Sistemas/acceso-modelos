@@ -121,7 +121,11 @@ export const CreatePerfilDecodificacionSchema = PerfilDecodificacionSchema.omit(
   tieneAppKey: true,
 });
 
-export const UpdatePerfilDecodificacionSchema = CreatePerfilDecodificacionSchema.partial();
+/** `idCliente: null` pasa el perfil a alcance Plataforma (global): un campo
+ *  ausente del JSON no se distingue de "no lo cambio". Solo un Proveedor. */
+export const UpdatePerfilDecodificacionSchema = CreatePerfilDecodificacionSchema.partial().extend({
+  idCliente: z.string().nullable().optional(),
+});
 
 export type IDecodificadorLoRaWAN = z.infer<typeof DecodificadorLoRaWANSchema>;
 export type IMetodoClaveLoRaWAN = z.infer<typeof MetodoClaveLoRaWANSchema>;

@@ -63,6 +63,8 @@ export * from './asignacion-dispositivo';
 export * from './medicion-dispositivo';
 export * from './posicion-dispositivo';
 export * from './consumo-diario';
+export * from './consumo-periodo';
+export * from './config-servicios';
 export * from './importacion-lorawan';
 export * from './config-operacion-dispositivo';
 export * from './sync-status';

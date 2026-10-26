@@ -3,6 +3,7 @@ import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { UnidadFuncionalSchema } from "./unidad-funcional";
 import { LiquidacionExpensaSchema } from "./liquidacion-expensa";
+import { DetalleConsumoItemExpensaSchema } from "./consumo-periodo";
 
 /**
  * Expensa de una UF para un período — el recibo / cuenta corriente de la UF.
@@ -34,6 +35,8 @@ export const TipoItemExpensaSchema = z.enum([
   "Reinspección de obra",
   /** Ajuste manual (crédito/débito). */
   "Ajuste",
+  /** Consumo de un servicio medido (agua/gas/electricidad, D66 Etapa 5; referencia `idConsumoPeriodo`). */
+  "Consumo de servicio",
 ]);
 export type ETipoItemExpensa = z.infer<typeof TipoItemExpensaSchema>;
 
@@ -64,6 +67,12 @@ export const ItemExpensaSchema = z.object({
   idMulta: z.string().optional(),
   /** Obra que originó el cargo (tipo='Derecho de construcción' / 'Reinspección de obra'). */
   idObra: z.string().optional(),
+  /** Consumo del período que originó el cargo (tipo='Consumo de servicio'). */
+  idConsumoPeriodo: z.string().optional(),
+  /** Consumo estimado (sin lectura): se ajusta en el período siguiente. */
+  estimado: z.boolean().optional(),
+  /** Lecturas y consumo (tipo='Consumo de servicio'). */
+  detalleConsumo: DetalleConsumoItemExpensaSchema.optional(),
   /** Período de origen "YYYY-MM" (tipo='Saldo anterior' / 'Interés'). */
   periodoOrigen: z.string().optional(),
   /** Tasa mensual aplicada en este tramo de interés (tipo='Interés'). */

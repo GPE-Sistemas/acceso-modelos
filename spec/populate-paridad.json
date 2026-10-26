@@ -44,6 +44,11 @@
         "cliente"
       ]
     },
+    "/consumos-periodo": {
+      "populate": [
+        "unidadFuncional"
+      ]
+    },
     "/credenciales": {
       "populate": [
         "cliente",

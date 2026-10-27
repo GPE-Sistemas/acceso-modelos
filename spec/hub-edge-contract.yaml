@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.20.0
+  version: 0.21.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -51,6 +51,8 @@ tags:
   description: Eventos de seguridad (D49 F3 — intrusión/perímetro, edge-first, bandeja de guardia)
 - name: panel-guardia
   description: Vista guardia por categoría (4 proyecciones)
+- name: trackers-visita
+  description: Tarjetas GPS de visita en la garita (D66 Etapa 7b) — entrega y devolución offline
 - name: dashboard
   description: Dashboards locales del complejo
 - name: storage
@@ -643,6 +645,137 @@ paths:
               type: object
       responses:
         '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /trackers-visita:
+    get:
+      tags:
+      - trackers-visita
+      summary: Asignaciones de trackers a visitas (filtro idEventoVisita / estado)
+      operationId: listTrackersVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/Filter'
+      - $ref: '#/components/parameters/Sort'
+      - $ref: '#/components/parameters/Populate'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /trackers-visita/disponibles:
+    get:
+      tags:
+      - trackers-visita
+      summary: Tarjetas habilitadas del complejo sin asignación activa
+      operationId: listTrackersDisponibles
+      x-scope: edge-required
+      x-source-bundle: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /trackers-visita/entregar:
+    post:
+      tags:
+      - trackers-visita
+      summary: Entregar una tarjeta a una visita (crea la asignación Activa)
+      operationId: entregarTrackerVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - idDispositivo
+              - idEventoVisita
+              properties:
+                idDispositivo:
+                  type: string
+                idEventoVisita:
+                  type: string
+                idVisitante:
+                  type: string
+                idVehiculo:
+                  type: string
+                idIngresoEgreso:
+                  type: string
+                observaciones:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /trackers-visita/{id}/devolver:
+    put:
+      tags:
+      - trackers-visita
+      summary: Recibir la tarjeta (Activa → Devuelta)
+      operationId: devolverTrackerVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idIngresoEgreso:
+                  type: string
+                observaciones:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento_Entidad'
+  /trackers-visita/{id}/no-devuelta:
+    put:
+      tags:
+      - trackers-visita
+      summary: Egreso sin devolver la tarjeta (Activa → NoDevuelta, motivo obligatorio)
+      operationId: noDevueltaTrackerVisita
+      x-scope: edge-required
+      x-source-bundle: true
+      parameters:
+      - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - motivoSalidaSinDevolver
+              properties:
+                motivoSalidaSinDevolver:
+                  type: string
+                idIngresoEgreso:
+                  type: string
+      responses:
+        '200':
           description: OK
           content:
             application/json:
@@ -4826,13 +4959,16 @@ x-entidades:
         acceso-doc-general § Realtime del Hub edge.
       live: edge
     asignaciones-dispositivo:
+      subject: asignacion-dispositivo
       replicadaEnEdge: true
-      escrituraEdge: ninguna
-      # D66 (doc 53 §4.1): instalación del medidor en la UF (y, en la Etapa 7,
-      # entrega del tracker a la visita). Baja al edge porque la ingesta
-      # atribuye cada lectura a la asignación vigente según la fecha del dato.
-      # Hoy solo nace en cloud; cuando la garita la cree (Etapa 7) pasa a
-      # `bridge`.
+      escrituraEdge: bridge
+      # D66 (doc 53 §4.1): instalación del medidor en la UF y entrega del
+      # tracker a la visita. Baja al edge porque la ingesta atribuye cada
+      # lectura a la asignación vigente según la fecha del dato. Etapa 7b: la
+      # garita del edge crea y cierra las de destino `Visita` (rutas
+      # `/trackers-visita`, offline) y suben por el bridge, Tipo A
+      # (`fechaActualizacion` último-write-wins). Las de medidores siguen
+      # naciendo solo en el cloud.
       live: edge
     autorizaciones-retiro:
       replicadaEnEdge: false

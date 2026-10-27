@@ -84,6 +84,10 @@ export const AsignacionDispositivoSchema = z.object({
   // ── Tracker (destino Visita, Etapa 7) ────────────────────────────────────
   idEventoVisita: z.string().optional(),
   idVisitante: z.string().optional(),
+  idVehiculo: z.string().optional(),
+  /** SNAPSHOT de la UF destino del evento al entregar: la verificación de
+   *  destino necesita el polígono de ESE destino aunque el evento se edite. */
+  idUnidadFuncionalDestino: z.string().optional(),
   idIngresoEgresoEntrega: z.string().optional(),
   idIngresoEgresoDevolucion: z.string().optional(),
   motivoSalidaSinDevolver: z.string().optional(),

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GeoJSONPointSchema } from "../auxiliares/geojson";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { DispositivoSchema } from "./dispositivo";
@@ -44,6 +45,12 @@ import { ZonaSchema } from "./zona";
  * puerta y dispara alarma silenciosa. Lleva `idDispositivo` (el terminal) en vez
  * de `idZona`/`idsDetecciones`.
  *
+ * `Panico` tampoco viene del correlador: es el botón SOS de una tarjeta GPS
+ * (T1000) que lleva una visita (D66 Etapa 7b). Lo materializa el edge al
+ * activarse el bit `sos` del equipo, nivel `Critico`. Lleva `idDispositivo` (la
+ * tarjeta), `idAsignacion` y `idEventoVisita` si estaba entregada, y la
+ * `ubicacion` del último fix.
+ *
  * `SuplantacionIdentidad` tampoco viene del correlador (doc 47): lo materializa
  * el cloud cuando un operador anula un movimiento con motivo
  * `Falso positivo de identificación`. El terminal concedió a alguien que no es
@@ -57,6 +64,7 @@ export const TipoEventoSeguridadSchema = z.enum([
   "Merodeo",
   "Coaccion",
   "SuplantacionIdentidad",
+  "Panico",
 ]);
 
 /** Severidad del evento. F3 deriva `Critica` (zona) → `Critico`; el resto del enum queda para escalado/granularidad futura. */
@@ -89,6 +97,11 @@ export const EventoSeguridadSchema = z.object({
    * Sólo `SuplantacionIdentidad`.
    */
   idPermisoSuplantado: z.string().optional(),
+  /** `Panico`: asignación de la tarjeta y la visita que la llevaba, si estaba entregada. */
+  idAsignacion: z.string().optional(),
+  idEventoVisita: z.string().optional(),
+  /** `Panico`: último fix de la tarjeta al activarse el SOS. coordinates = [lng, lat]. */
+  ubicacion: GeoJSONPointSchema.optional(),
   // Hecho
   tipo: TipoEventoSeguridadSchema.optional(),
   nivel: NivelEventoSeguridadSchema.optional(),

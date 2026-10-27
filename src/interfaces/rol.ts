@@ -171,6 +171,9 @@ export const AccionesRolSchema = z.enum([
   // de "Ver recorrido histórico" (Etapa 7b), que expone el trayecto de una
   // visita — dato personal de un tercero.
   "Hardware - Ver posición de dispositivo",
+  // Recorrido de una visita con tracker y verificación de que llegó a la UF que
+  // declaró (Etapa 7b). Se da con cuentagotas: es el trayecto de un tercero.
+  "Hardware - Ver recorrido histórico",
   // MODULO SERVICIOS (telemetría de agua/gas, D66). Instalación del medidor en
   // la UF con su lectura inicial.
   "Servicios - Ver asignaciones de medidores",
@@ -264,6 +267,9 @@ export const AccionesRolSchema = z.enum([
   "Movimientos - Ver panel de guardia",
   "Movimientos - Ver ingresos egresos",
   "Movimientos - Registrar ingreso egreso",
+  // Entregar y recibir la tarjeta GPS de una visita en la garita (D66 Etapa 7b,
+  // rutas `/trackers-visita`, edge + cloud).
+  "Movimientos - Entregar y devolver dispositivos de seguimiento",
   // Invalidar un movimiento ya registrado (doc 47). Separada de "Registrar"
   // a propósito: registrar es la rutina de la garita, anular es corregir el
   // registro histórico — incluido el falso positivo del terminal, que con

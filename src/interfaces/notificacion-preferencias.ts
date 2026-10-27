@@ -104,6 +104,11 @@ export const CategoriaNotificacionSchema = z.enum([
    * de luz). Ver `ALARMAS_MEDIDOR_RESIDENTE` en consumo-diario.
    */
   "alarma_medidor",
+  /**
+   * Mobile UF: el complejo emitió la liquidación de expensas y la unidad
+   * tiene su expensa del período (con la acción `Expensas - Ver mis expensas`).
+   */
+  "expensa_emitida",
 ]);
 
 /**
@@ -172,6 +177,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   menor_movimiento: z.boolean(),
   credencial_recordatorio: z.boolean(),
   alarma_medidor: z.boolean(),
+  expensa_emitida: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -256,4 +262,5 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   menor_movimiento: true,
   credencial_recordatorio: true,
   alarma_medidor: true,
+  expensa_emitida: true,
 };

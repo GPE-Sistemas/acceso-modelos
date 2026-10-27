@@ -163,6 +163,8 @@ export const TipoPushSchema = z.enum([
   "credencial_recordatorio",
   /** D66 Etapa 6: alarma de un medidor de la unidad (preferencia `alarma_medidor`). */
   "alarma_medidor",
+  /** Emisión de la liquidación de expensas (preferencia `expensa_emitida`). */
+  "expensa_emitida",
 ]);
 
 export type ITipoPush = z.infer<typeof TipoPushSchema>;

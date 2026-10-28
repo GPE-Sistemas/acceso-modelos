@@ -82,7 +82,14 @@ export const AsignacionDispositivoSchema = z.object({
   fotoRetiro: z.string().optional(),
 
   // ── Tracker (destino Visita, Etapa 7) ────────────────────────────────────
+  /** Visita principal: la del movimiento de ingreso (la primera UF). */
   idEventoVisita: z.string().optional(),
+  /**
+   * TODAS las visitas que la persona hace con la tarjeta (incluye
+   * `idEventoVisita`): la misma persona invitada por varias UF lleva una sola
+   * tarjeta. Crece si después declara otra UF (vínculo nuevo del ingreso).
+   */
+  idsEventosVisita: z.array(z.string()).optional(),
   idVisitante: z.string().optional(),
   idVehiculo: z.string().optional(),
   /** SNAPSHOT de la UF destino del evento al entregar: la verificación de

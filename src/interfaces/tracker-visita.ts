@@ -14,14 +14,18 @@ import { z } from "zod";
  * mientras que el ABM de medidores sobre `/asignaciones-dispositivo` es
  * cloud-only. La asignación que crea el edge sube al cloud por el bridge.
  *
- * Una tarjeta por visita: un evento no puede tener dos asignaciones `Activa`,
- * y una tarjeta tampoco.
+ * Una tarjeta por persona: la que va a varias UF lleva una sola, asociada a
+ * todas sus visitas (`idsEventosVisita`). Ninguna de esas visitas puede tener
+ * otra asignación `Activa`, y la tarjeta tampoco.
  */
 
 /** `POST /trackers-visita/entregar`. */
 export const EntregarTrackerSchema = z.object({
   idDispositivo: z.string().min(1),
+  /** Visita principal (la del movimiento). */
   idEventoVisita: z.string().min(1),
+  /** Todas las visitas de la persona (tarjeta agrupada); incluye la principal. */
+  idsEventosVisita: z.array(z.string().min(1)).optional(),
   /** Visitante que la lleva (opcional: el evento puede tener varios). */
   idVisitante: z.string().optional(),
   /** Vehículo del ingreso, si va en uno. */
@@ -51,22 +55,39 @@ export const NoDevueltaTrackerSchema = z.object({
 export type INoDevueltaTracker = z.infer<typeof NoDevueltaTrackerSchema>;
 
 /**
- * `GET /trackers-visita/:id/verificacion-destino` (cloud): si la visita estuvo
- * en la UF que declaró, contando las posiciones con coordenadas de la
- * asignación que caen dentro del polígono de la UF destino (snapshot
- * `idUnidadFuncionalDestino` de la entrega). La métrica es presencia en el
- * destino durante la ventana, no el recorrido continuo (doc 38 D10).
+ * Margen alrededor del lote para dar por llegada una posición: el auto
+ * estacionado en la calle, frente al lote, cuenta. La salida pide más
+ * (`MARGEN_SALIDA_LOTE_METROS`) y dos posiciones seguidas, para que el GPS
+ * rebotando en el borde no genere avisos.
  */
-export const VerificacionDestinoSchema = z.object({
-  idAsignacion: z.string(),
-  idUnidadFuncionalDestino: z.string().optional(),
-  /** La UF destino no tiene polígono cargado: no se puede verificar. */
+export const MARGEN_LLEGADA_LOTE_METROS = 15;
+export const MARGEN_SALIDA_LOTE_METROS = 30;
+
+/** Verificación de UNA de las visitas de la tarjeta (su UF destino). */
+export const VerificacionDestinoUFSchema = z.object({
+  idEventoVisita: z.string(),
+  idUnidadFuncional: z.string().optional(),
+  /** La UF no tiene polígono cargado: no se puede verificar. */
   sinPoligono: z.boolean(),
   llegoADestino: z.boolean(),
-  /** Primera posición con coordenadas dentro del polígono (fechaDato). */
+  /** Primera posición con coordenadas en el lote (con margen), fechaDato. */
   primeraPosicionEnDestino: z.string().optional(),
   minutosHastaDestino: z.number().optional(),
   posicionesEnDestino: z.number().int(),
+});
+export type IVerificacionDestinoUF = z.infer<typeof VerificacionDestinoUFSchema>;
+
+/**
+ * `GET /trackers-visita/:id/verificacion-destino` (cloud): si la persona
+ * estuvo en cada UF que visitaba, contando las posiciones con coordenadas de
+ * la asignación que caen en el lote (`MARGEN_LLEGADA_LOTE_METROS` incluido).
+ * La métrica es presencia en el destino durante la ventana, no el recorrido
+ * continuo (doc 38 D10).
+ */
+export const VerificacionDestinoSchema = z.object({
+  idAsignacion: z.string(),
+  /** Una por visita de la tarjeta, la principal primero. */
+  destinos: z.array(VerificacionDestinoUFSchema),
   /** Posiciones con coordenadas de la asignación. */
   posicionesConCoordenadas: z.number().int(),
   /** Todas las posiciones atribuidas, con y sin coordenadas. */

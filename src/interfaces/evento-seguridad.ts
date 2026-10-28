@@ -100,6 +100,8 @@ export const EventoSeguridadSchema = z.object({
   /** `Panico`: asignación de la tarjeta y la visita que la llevaba, si estaba entregada. */
   idAsignacion: z.string().optional(),
   idEventoVisita: z.string().optional(),
+  /** `Panico`: todas las visitas de la persona que llevaba la tarjeta. */
+  idsEventosVisita: z.array(z.string()).optional(),
   /** `Panico`: último fix de la tarjeta al activarse el SOS. coordinates = [lng, lat]. */
   ubicacion: GeoJSONPointSchema.optional(),
   // Hecho

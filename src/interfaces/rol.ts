@@ -225,6 +225,9 @@ export const AccionesRolSchema = z.enum([
   // la credencial facial en el momento de la visita. Crea el permiso
   // `Visitante` sin cuenta si la persona todavía no lo tiene.
   "Visitas - Cargar credencial de visitante",
+  // D66 Etapa 7b.2 — la UF ve dónde anda su visita que lleva tarjeta GPS
+  // (última posición y si llegó a su lote, nunca el recorrido).
+  "Visitas - Ver ubicación de mis visitas",
 
   // MODULO RETIROS (D64, doc 51) — autorización para que un visitante retire
   // objetos de una UF al egresar. "Crear" cubre la previa (nivel UF) y la

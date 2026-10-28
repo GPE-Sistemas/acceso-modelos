@@ -64,6 +64,31 @@ export const ConfigEgresoMenoresSchema = z.object({
   vencimientoAutomaticoAlCumplir: z.boolean().optional(),
 });
 
+/** `[lng, lat]`. */
+const EsquinaPlanoSchema = z.tuple([z.number(), z.number()]);
+
+/**
+ * Plano georreferenciado del complejo (D55 §9 / D66 Etapa 7b.2): una imagen
+ * (objectName del bucket público, carpeta `complejos`: se sube al cloud y el Hub edge la resuelve de su cache) y dónde caen sus cuatro
+ * esquinas, en el orden superior izquierda, superior derecha, inferior
+ * derecha, inferior izquierda (el de la fuente `image` de mapbox-gl).
+ *
+ * Es el fondo del mapa del Hub edge sin internet: los tiles satelitales los
+ * pide el navegador, y sin internet en la garita no hay mapa. La imagen la
+ * guarda el appliance en su cache la primera vez que se abre con internet.
+ */
+export const PlanoComplejoSchema = z.object({
+  imagen: z.string().min(1),
+  esquinas: z.tuple([
+    EsquinaPlanoSchema,
+    EsquinaPlanoSchema,
+    EsquinaPlanoSchema,
+    EsquinaPlanoSchema,
+  ]),
+  /** 0-1, sobre el satelital cuando hay internet. Default 0.85. */
+  opacidad: z.number().min(0).max(1).optional(),
+});
+
 export const ConfigComplejoSchema = z.object({
   imagenes: z.object({
       logo: z.string().optional(),
@@ -75,6 +100,8 @@ export const ConfigComplejoSchema = z.object({
   pinScheme: PinSchemeSchema.optional(),
   /** Defaults de egreso de menores (D57). Ausente = el complejo no lo usa. */
   egresoMenores: ConfigEgresoMenoresSchema.optional(),
+  /** Plano georreferenciado (mapa sin internet del Hub edge). */
+  plano: PlanoComplejoSchema.optional(),
 });
 
 export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
@@ -116,3 +143,5 @@ export type ITipoComplejo = z.infer<typeof TipoComplejoSchema>;
 export type IComplejo = z.infer<typeof ComplejoSchema>;
 export type ICreateComplejo = z.infer<typeof CreateComplejoSchema>;
 export type IUpdateComplejo = z.infer<typeof UpdateComplejoSchema>;
+
+export type IPlanoComplejo = z.infer<typeof PlanoComplejoSchema>;

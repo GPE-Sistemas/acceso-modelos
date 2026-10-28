@@ -7,13 +7,22 @@ import { z } from "zod";
  * - `Egreso`: salió del complejo con la parada abierta.
  * - `Vencimiento`: el recorrido se cerró sin egreso registrado (cron de 24 h o
  *   un ingreso nuevo del mismo permiso). Sin push.
+ * - `FueraDelLote`: la tarjeta GPS lo vio fuera del lote dos posiciones
+ *   seguidas (D66 Etapa 7b). Avisa la salida como "Terminé acá".
  */
 export const MotivoSalidaParadaSchema = z.enum([
   "OtraParada",
   "TermineAca",
   "Egreso",
   "Vencimiento",
+  "FueraDelLote",
 ]);
+
+/**
+ * Quién registró la parada: el visitante en la app ("Ahora voy acá") o la
+ * tarjeta GPS al entrar al lote (D66 Etapa 7b).
+ */
+export const OrigenParadaRecorridoSchema = z.enum(["Visitante", "Tracker"]);
 
 export const EstadoRecorridoVisitanteSchema = z.enum(["Activo", "Cerrado"]);
 
@@ -37,6 +46,8 @@ export const ParadaRecorridoSchema = z.object({
    * vínculo de garita: no hay camino cloud → edge para un vínculo.
    */
   fueraDeCandidatos: z.boolean().optional(),
+  /** Ausente = `Visitante` (paradas anteriores a la tarjeta). */
+  origen: OrigenParadaRecorridoSchema.optional(),
 });
 
 /**
@@ -44,6 +55,10 @@ export const ParadaRecorridoSchema = z.object({
  * una estadía en el complejo (del ingreso por cara al egreso) de un visitante
  * que va a dos o más UF. Lo crea acceso-api al recibir un ingreso con
  * `recorridoVisitante: true`.
+ *
+ * También lo crea la tarjeta GPS (D66 Etapa 7b) para una visita sin app: sin
+ * `idPermiso`, con `idAsignacion`, y las paradas las registra la tarjeta al
+ * entrar a cada lote. Se cierra al devolver la tarjeta.
  *
  * Los movimientos de garita y sus vínculos NO cambian: este registro solo
  * guarda las paradas declaradas y define quién recibe cada push.
@@ -60,6 +75,8 @@ export const RecorridoVisitanteSchema = z.object({
   idPermiso: z.string().optional(),
   /** `IIngresoEgreso` que abrió el recorrido. Único. */
   idIngreso: z.string().optional(),
+  /** Tarjeta GPS que registra las paradas (recorrido sin app). */
+  idAsignacion: z.string().optional(),
   /** `IIngresoEgreso` que lo cerró. Ausente si se cerró por `Vencimiento`. */
   idEgreso: z.string().optional(),
   estado: EstadoRecorridoVisitanteSchema.optional(),
@@ -82,6 +99,7 @@ export const UpdateRecorridoVisitanteSchema =
   CreateRecorridoVisitanteSchema.partial();
 
 export type IMotivoSalidaParada = z.infer<typeof MotivoSalidaParadaSchema>;
+export type IOrigenParadaRecorrido = z.infer<typeof OrigenParadaRecorridoSchema>;
 export type IEstadoRecorridoVisitante = z.infer<
   typeof EstadoRecorridoVisitanteSchema
 >;

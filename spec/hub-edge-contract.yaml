@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.23.0
+  version: 0.24.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -5032,9 +5032,19 @@ x-entidades:
       live: edge
     detecciones:
       subject: deteccion
-      replicadaEnEdge: false
+      # 2026-10-28: el edge es el único escritor (el cloud nunca las modifica) y
+      # ya las sirve de su Postgres local. Pasan a replicadas para que el
+      # recambio del appliance recupere el histórico reciente: el bootstrap baja
+      # la ventana de 30 días (`fechaDeteccion >= now-30d`, hydrate-only: sin
+      # borrado por ausencia, el edge retiene 60 días) y queda FUERA del
+      # integrity (nada que re-sincronizar después del bootstrap; y una ventana
+      # evaluada en dos instantes daría drift cada vez que una detección cruza
+      # el borde: ~2.500 por día en Chascomús). El `live` sale del Hub edge
+      # (`master-update` al ingestar), que es lo que `ENTIDADES_LIVE_EDGE`
+      # del bundle espera de toda entidad replicada.
+      replicadaEnEdge: true
       escrituraEdge: bridge
-      live: cloud
+      live: edge
     dispositivos:
       subject: dispositivo
       replicadaEnEdge: true

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.22.0
+  version: 0.23.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -664,6 +664,21 @@ paths:
       - $ref: '#/components/parameters/Populate'
       - $ref: '#/components/parameters/Page'
       - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listado_Entidad'
+  /trackers-visita/posiciones:
+    get:
+      tags:
+      - trackers-visita
+      summary: Tarjetas entregadas ahora con su última posición (mapa de la garita, sin internet con el plano)
+      operationId: listTrackersPosiciones
+      x-scope: edge-required
+      x-source-bundle: true
       responses:
         '200':
           description: OK

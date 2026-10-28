@@ -94,3 +94,60 @@ export const VerificacionDestinoSchema = z.object({
   posicionesTotales: z.number().int(),
 });
 export type IVerificacionDestino = z.infer<typeof VerificacionDestinoSchema>;
+
+/** Último reporte con coordenadas de una tarjeta. */
+export const PosicionTrackerSchema = z.object({
+  fechaDato: z.string(),
+  /** `[lng, lat]`. */
+  coordenadas: z.tuple([z.number(), z.number()]),
+});
+export type IPosicionTracker = z.infer<typeof PosicionTrackerSchema>;
+
+/**
+ * `GET /trackers-visita/posiciones` (edge y cloud): dónde está cada tarjeta
+ * entregada ahora, para el mapa de la garita. Lo sirve también el edge: con
+ * el plano del complejo responde "¿dónde está?" sin internet.
+ */
+export const TrackerEnCursoSchema = z.object({
+  idAsignacion: z.string(),
+  idDispositivo: z.string(),
+  etiqueta: z.string().optional(),
+  idEventoVisita: z.string().optional(),
+  idsEventosVisita: z.array(z.string()).optional(),
+  fechaDesde: z.string(),
+  /** Ausente: todavía no reportó una posición con coordenadas. */
+  posicion: PosicionTrackerSchema.optional(),
+});
+export type ITrackerEnCurso = z.infer<typeof TrackerEnCursoSchema>;
+
+/**
+ * Dónde anda la visita para la UF que la espera: en camino, en su lote o ya
+ * se fue de su lote (sale de las paradas del recorrido de la tarjeta).
+ */
+export const EstadoMiVisitaTrackerSchema = z.enum([
+  "EnCamino",
+  "EnTuLote",
+  "SeFue",
+]);
+
+/**
+ * `GET /trackers-visita/mis-visitas` (cloud, nivel UF, acción `Visitas - Ver
+ * ubicación de mis visitas`): las visitas de la UF que llevan una tarjeta
+ * entregada ahora. Solo la última posición, nunca el recorrido: es dato
+ * personal de un tercero y el trazado queda para la administración. Deja de
+ * verse al devolver la tarjeta.
+ */
+export const MiVisitaConTrackerSchema = z.object({
+  idEventoVisita: z.string(),
+  idAsignacion: z.string(),
+  etiqueta: z.string().optional(),
+  /** Nombre con el que la UF conoce a quien la lleva. */
+  visitante: z.string().optional(),
+  fechaEntrega: z.string(),
+  estado: EstadoMiVisitaTrackerSchema,
+  /** Desde cuándo está en ese estado (llegada o salida del lote). */
+  estadoDesde: z.string().optional(),
+  posicion: PosicionTrackerSchema.optional(),
+});
+export type IEstadoMiVisitaTracker = z.infer<typeof EstadoMiVisitaTrackerSchema>;
+export type IMiVisitaConTracker = z.infer<typeof MiVisitaConTrackerSchema>;

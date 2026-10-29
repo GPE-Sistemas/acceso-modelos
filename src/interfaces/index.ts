@@ -66,6 +66,7 @@ export * from './consumo-diario';
 export * from './consumo-periodo';
 export * from './tracker-visita';
 export * from './config-servicios';
+export * from './factura-servicio';
 export * from './importacion-lorawan';
 export * from './config-operacion-dispositivo';
 export * from './sync-status';

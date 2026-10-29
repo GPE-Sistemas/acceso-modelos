@@ -764,10 +764,9 @@ export const DispositivoSchema = z.object({
     // capacidad. El proveedor per-capacidad reemplaza al viejo `fuenteInferencia`
     // per-device.
     capacidades: CapacidadesDispositivoSchema.optional(),
-    // Sharding edge — qué appliance recibe el HTTP Push del terminal.
-    // Vacío en complejos N=1 (Standalone): el único edge es dueño implícito.
+    // Appliance que adoptó el terminal. Desde D68 el destino se resuelve por
+    // complejo (un appliance por complejo); el campo sale en la Fase 5.
     idEdgeAppliancePrimario: z.string().optional(),
-    idEdgeApplianceSecundario: z.string().optional(),
     // Estado runtime reportado por el agent edge (H-DEV-5 / H-DEV-8).
     estado: EstadoDispositivoSchema.optional(),
     // --- Telemetría de liveness por dispositivo (H-DEV-8) ---

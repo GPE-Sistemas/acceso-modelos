@@ -2,13 +2,6 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 
-// Rol del appliance dentro del complejo. Standalone = único edge (caso N=1).
-export const EdgeApplianceRolSchema = z.enum([
-  "Standalone",
-  "Primary",
-  "Secondary",
-]);
-
 export const EdgeApplianceEstadoSchema = z.enum([
   "Provisionando",
   "Online",
@@ -393,8 +386,10 @@ export const EdgeApplianceDiagnosticoSchema = z.object({
   actualizadoEn: z.string(),
 });
 
-// IEdgeAppliance — scalable-first: indice/fqdn/rol requeridos desde el día uno
-// (caso N=1 → rol='Standalone', indice=0).
+// IEdgeAppliance — D68: un complejo tiene exactamente un appliance. El
+// appliance es identidad (`_id`, `fqdn`, token, subjects NATS), no partición:
+// el destino de todo lo del complejo se resuelve por `idComplejo`. Los FQDN
+// emitidos antes de D68 conservan el sufijo `-0`.
 export const EdgeApplianceSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
@@ -403,10 +398,7 @@ export const EdgeApplianceSchema = z.object({
 
   idCliente: z.string(),
   idComplejo: z.string(),
-  indice: z.number().int().nonnegative(),
   fqdn: z.string(),
-  rol: EdgeApplianceRolSchema,
-  zonaCoverage: z.string().optional(),
 
   hostname: z.string().optional(),
   ipOverlay: z.string().optional(),
@@ -469,7 +461,6 @@ export const CreateEdgeApplianceSchema = EdgeApplianceSchema.omit({
 
 export const UpdateEdgeApplianceSchema = CreateEdgeApplianceSchema.partial();
 
-export type IEdgeApplianceRol = z.infer<typeof EdgeApplianceRolSchema>;
 export type IEdgeApplianceEstado = z.infer<typeof EdgeApplianceEstadoSchema>;
 export type IEdgeApplianceEntorno = z.infer<typeof EdgeApplianceEntornoSchema>;
 export type IEdgeApplianceFlagEstado = z.infer<

@@ -65,8 +65,6 @@ export const ZonaSchema = z.object({
   nivelCriticidad: NivelCriticidadZonaSchema.optional(),
   /** Polígono geográfico (lat/lng). Mismo campo que IComplejo / IUnidadFuncional. */
   ubicacion: GeoJSONMultiPolygonSchema.optional(),
-  /** Afinidad de edge preferido (propuesta doc 22). */
-  idEdgeAppliancePreferido: z.string().optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),

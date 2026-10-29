@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.24.0
+  version: 0.25.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -33,7 +33,7 @@ servers:
   variables:
     idComplejo:
       default: example
-      description: Slug del complejo (idComplejo o alias agregado round-robin)
+      description: Slug del complejo
 - url: https://api.coliving.sh
   description: Cloud (paths cloud-direct D41)
 tags:
@@ -1237,7 +1237,7 @@ paths:
     get:
       tags:
       - master-data
-      summary: Pares del complejo (subset edge-side de IEdgeAppliance)
+      summary: Appliance del complejo (subset edge-side de IEdgeAppliance; D68 — uno por complejo)
       operationId: listEdgeAppliances
       x-scope: cloud-direct
       x-source-bundle: true
@@ -4332,8 +4332,6 @@ components:
               type: object
               description: Capacidades de video (M1) — passthrough opaco.
         idEdgeAppliancePrimario:
-          type: string
-        idEdgeApplianceSecundario:
           type: string
         estado:
           type: string

@@ -34,9 +34,9 @@ export const EdgeLoginLocalRequestSchema = z.object({
 // transferToken es de un solo uso conceptualmente: el edge no lleva
 // estado de "usados" en MVP — TTL corto (sesgo 60s) lo cubre.
 //
-// idEdgeAppliance: el cloud lo setea según el complejo de destino. En
-// N>1 el cloud elige uno alcanzable según probe + rol. El edge valida
-// que matchea su propio idEdgeAppliance para evitar tokens cross-edge.
+// idEdgeAppliance: el cloud lo setea con el appliance del complejo de
+// destino (D68: uno por complejo). El edge valida que matchea su propio
+// idEdgeAppliance para evitar tokens cross-edge.
 export const EdgeTransferTokenClaimsSchema = z.object({
   idUsuario: z.string(),
   idPermiso: z.string(),

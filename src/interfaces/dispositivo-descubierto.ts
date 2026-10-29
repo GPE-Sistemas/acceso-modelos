@@ -109,7 +109,6 @@ export const DispositivoDescubiertoSchema = z.object({
   fechaActualizacion: z.string().optional(),
 
   idComplejo: z.string(),
-  reachableFrom: z.array(z.string()), // ids de IEdgeAppliance que lo descubren
 
   // Identidad estable cross-discovery, **normalizada en minúsculas**. El edge la
   // saca de la tabla ARP (que ya la entrega en minúsculas) y la normaliza igual,
@@ -211,9 +210,6 @@ export type IUpdateDispositivoDescubierto = z.infer<
 export const AdoptarDispositivoSchema = z.object({
   credUser: z.string().min(1),
   credPass: z.string().min(1),
-  // idEdgeAppliancePrimario es opcional cuando el descubierto tiene N=1 en
-  // reachableFrom (auto-elegido). Requerido si N>1.
-  idEdgeAppliancePrimario: z.string().optional(),
   // Reconfigurar `/ISAPI/Event/notification/httpHosts/1` apuntando al edge.
   // Default true (lo aplica acceso-api).
   reconfigPush: z.boolean().optional(),
@@ -300,7 +296,6 @@ export const AdoptarGatewaySchema = z.object({
   credUser: z.string().min(1),
   credPass: z.string().min(1),
   nombre: z.string().optional(),
-  idEdgeAppliancePrimario: z.string().optional(),
 });
 
 export const AdoptarGatewayResponseSchema = z.object({

@@ -18,6 +18,70 @@ import { DatosPersonalesSchema } from "./usuario";
 export const VisitanteAmbitoSchema = z.enum(["UnidadFuncional", "Complejo"]);
 export type IVisitanteAmbito = z.infer<typeof VisitanteAmbitoSchema>;
 
+/**
+ * Licencia de conducir del visitante (D69). La carga el guardia al registrar
+ * un ingreso en vehículo, eligiendo quién conduce. Vive en el visitante y no
+ * en el movimiento para no pedirla de nuevo en cada visita: acceso-api (y el
+ * edge) la copian a todos los visitantes activos del complejo con el mismo
+ * DNI, así la ve también la próxima UF que invite a la misma persona.
+ *
+ * No va dentro de `datosPersonales`: los PUT del visitante (formulario de la
+ * UF, link de invitación, edge) reemplazan ese subdocumento entero y la
+ * borrarían sin aviso.
+ */
+export const LicenciaConducirSchema = z.object({
+  /** Fecha de vencimiento, `YYYY-MM-DD` (fecha calendario, sin hora). */
+  vencimiento: z.string(),
+  /** Timestamp ISO de la última carga. */
+  fechaActualizacion: z.string().optional(),
+  /** Permiso del guardia que la cargó. */
+  idPermisoActualizacion: z.string().optional(),
+});
+export type ILicenciaConducir = z.infer<typeof LicenciaConducirSchema>;
+
+export const EstadoLicenciaConducirSchema = z.enum([
+  "Vigente",
+  "Por vencer",
+  "Vencida",
+]);
+export type IEstadoLicenciaConducir = z.infer<
+  typeof EstadoLicenciaConducirSchema
+>;
+
+/** Días antes del vencimiento a partir de los que se avisa `Por vencer`. */
+export const DIAS_AVISO_VENCIMIENTO_LICENCIA = 30;
+
+const MS_DIA = 24 * 60 * 60 * 1000;
+
+/** `YYYY-MM-DD` → día absoluto (UTC), o `null` si no es una fecha válida. */
+function diaCalendario(fecha: string): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha);
+  if (!m) return null;
+  const t = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Number.isNaN(t) ? null : Math.round(t / MS_DIA);
+}
+
+/**
+ * Estado de una licencia contra `hoy` (`YYYY-MM-DD` en la zona del complejo —
+ * lo arma el llamador: comparar contra la fecha UTC la daría por vencida un
+ * día antes a la noche). El día del vencimiento todavía es válida.
+ * `dias` = días hasta el vencimiento (negativo si ya venció). `null` si
+ * alguna fecha es inválida.
+ */
+export function estadoLicenciaConducir(
+  vencimiento: string,
+  hoy: string,
+  diasAviso: number = DIAS_AVISO_VENCIMIENTO_LICENCIA,
+): { estado: IEstadoLicenciaConducir; dias: number } | null {
+  const v = diaCalendario(vencimiento);
+  const h = diaCalendario(hoy);
+  if (v === null || h === null) return null;
+  const dias = v - h;
+  if (dias < 0) return { estado: "Vencida", dias };
+  if (dias <= diasAviso) return { estado: "Por vencer", dias };
+  return { estado: "Vigente", dias };
+}
+
 export const VisitanteSchema = z.object({
     _id: z.string().optional(),
     fechaCreacion: z.string().optional(),
@@ -50,6 +114,12 @@ export const VisitanteSchema = z.object({
      * privado sigue privado. System-managed: lo setea acceso-api.
      */
     idPermisoVisitante: z.string().optional(),
+    /**
+     * Licencia de conducir (D69). System-managed: la escribe el alta del
+     * movimiento (`licenciaConductor` en `POST /ingresos-egresos`), nunca un
+     * PUT del visitante.
+     */
+    licenciaConducir: LicenciaConducirSchema.optional(),
     // Populate
     cliente: ClienteSchema.optional(),
     complejo: ComplejoSchema.optional(),
@@ -72,6 +142,7 @@ export const CreateVisitanteSchema = VisitanteSchema.omit({
   validadoPorInvitado: true,
   fechaUltimaValidacionInvitado: true,
   idPermisoVisitante: true,
+  licenciaConducir: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,
@@ -86,6 +157,7 @@ export const UpdateVisitanteSchema = VisitanteSchema.omit({
   validadoPorInvitado: true,
   fechaUltimaValidacionInvitado: true,
   idPermisoVisitante: true,
+  licenciaConducir: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,

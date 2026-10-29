@@ -40,6 +40,11 @@ export const EdgeApplianceFlagEstadoSchema = z.enum([
   "CambioHardware",
   "CapacidadDesconocida",
   "SospechaTampering",
+  // El outbox edge→cloud tiene filas sin enviar desde hace más de 10 min, o
+  // el outbox de uploads tiene filas abandonadas: hay datos (movimientos,
+  // telemetría, eventos, imágenes) que el cloud todavía no tiene. Lo pone el
+  // edge en cada heartbeat mientras dure.
+  "OutboxAtascado",
 ]);
 
 // IEdgeHardwareSpec — auto-detectado por el agent al boot y heartbeat (B.S3).
@@ -356,6 +361,19 @@ export const EdgeApplianceDiagnosticoLorawanSchema = z.object({
 export const EdgeApplianceDiagnosticoSchema = z.object({
   // Cantidad de filas pendientes en outbox edge (publish a NATS pendiente).
   outboxDepth: z.number().int().nonnegative(),
+  // Filas sin enviar desde hace más de 10 min. Antes del 2026-10-29 el
+  // publisher abandonaba una fila a los 10 intentos fallidos (sin backoff,
+  // así que un corte de NATS de 20 s la mataba) y `outboxDepth` la seguía
+  // contando como pendiente sin que nadie avisara: el Golf acumuló 25 así.
+  // Ahora reintenta con backoff sin abandonar, y esto es la señal.
+  outboxAtascadas: z.number().int().nonnegative().optional(),
+  // `created_at` (ISO) de la fila sin enviar más vieja.
+  outboxMasAntigua: z.string().optional(),
+  // Último error de publicación registrado en una fila sin enviar.
+  outboxUltimoError: z.string().optional(),
+  // Filas del outbox de uploads (imágenes) abandonadas tras agotar sus
+  // intentos: imágenes que nunca llegaron al storage.
+  uploadsMuertos: z.number().int().nonnegative().optional(),
   // Resumen integrity por entidad. Key = nombre entidad (ej. "permisos",
   // "credenciales-dispositivos"). Valor = stats.
   integritySummary: z.record(z.string(), EdgeApplianceIntegrityEntrySchema),

@@ -3,14 +3,12 @@ import { EdgeApplianceSchema } from "./edge-appliance";
 
 // Snapshot inmutable persistido al ejecutar purge (hard delete) de un
 // EdgeAppliance. Permite forense / auditoría post-borrado. La purge ejecuta
-// además cascade: nullify FKs en Dispositivos (idEdgeAppliancePrimario /
-// idEdgeApplianceSecundario), delete de SyncStatus, pull del edge de
-// DispositivosDescubiertos.reachableFrom, revoke Headscale node,
-// invalidate JWT provisioning, delete DNS FQDN, drain NATS subscriptions.
+// además cascade: nullify `idEdgeAppliancePrimario` en Dispositivos, revoke
+// Headscale node, invalidate JWT provisioning, delete DNS FQDN, drain NATS
+// subscriptions.
 
 export const EdgeAppliancePurgeDispositivoAfectadoSchema = z.object({
   idDispositivo: z.string(),
-  rol: z.enum(["primario", "secundario"]),
   nombre: z.string().optional(),
   mac: z.string().optional(),
 });
@@ -24,8 +22,8 @@ export const EdgeAppliancePurgeSchema = z.object({
   idCliente: z.string(),
   idComplejo: z.string(),
 
-  // Snapshot completo del appliance pre-delete. Incluye fqdn, indice, rol,
-  // hardware, capacidad y todos los campos del momento. Estructura idéntica a
+  // Snapshot completo del appliance pre-delete. Incluye fqdn, hardware,
+  // capacidad y todos los campos del momento. Estructura idéntica a
   // EdgeApplianceSchema.
   applianceSnapshot: EdgeApplianceSchema,
 
@@ -36,14 +34,11 @@ export const EdgeAppliancePurgeSchema = z.object({
 
   motivo: z.string().optional(),
 
-  // Cascade resultante: FK en Dispositivos quedó nullify (idEdgeAppliancePrimario
-  // o idEdgeApplianceSecundario). Snapshot mínimo para auditoría.
+  // Cascade resultante: `idEdgeAppliancePrimario` en Dispositivos quedó nullify.
+  // Snapshot mínimo para auditoría.
   dispositivosAfectados: z.array(
     EdgeAppliancePurgeDispositivoAfectadoSchema,
   ),
-  // Counts del cascade.
-  syncStatusBorrados: z.number().int().nonnegative(),
-  dispositivosDescubiertosAfectados: z.number().int().nonnegative(),
 
   // Limpieza periférica (best-effort). Si falló alguna, queda registrada.
   headscaleNodeId: z.string().optional(),

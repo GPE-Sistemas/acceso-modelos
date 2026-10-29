@@ -69,7 +69,6 @@ export * from './config-servicios';
 export * from './factura-servicio';
 export * from './importacion-lorawan';
 export * from './config-operacion-dispositivo';
-export * from './sync-status';
 export * from './dispositivo-descubierto';
 export * from './tipo-actividad';
 export * from './plantilla-turno';

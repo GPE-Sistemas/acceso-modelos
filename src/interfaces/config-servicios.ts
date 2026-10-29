@@ -12,10 +12,10 @@ import { ServicioMedidoSchema } from "./asignacion-dispositivo";
  * - `corte`: día y hora local en que cierra el período de consumo. El cierre
  *   lo arma un job unas horas después (Borrador) y lo confirma el admin.
  * - `sinLectura`: qué hacer al confirmar un cierre con UF sin lectura.
- * - `servicios[]`: tarifa por servicio. Primera entrega: solo
- *   `PrecioUnitario` (cargo fijo + tramos versionados); el prorrateo de la
- *   factura de la distribuidora y el consumo común (medidor general) quedan
- *   para después.
+ * - `servicios[]`: cómo se valoriza cada servicio — `PrecioUnitario` (cargo
+ *   fijo + tramos versionados) o `ProrrateoFactura` (la factura de la
+ *   distribuidora repartida entre las UF) — y qué se hace con el consumo común
+ *   (medidor general menos la suma de las UF).
  */
 
 /** D66.11. Día del mes (1-28, todos los meses lo tienen) y hora local `HH:mm`. */
@@ -36,8 +36,53 @@ export type ICorteServicios = z.infer<typeof CorteServiciosSchema>;
 export const PoliticaSinLecturaSchema = z.enum(["Estimar", "Bloquear", "Omitir"]);
 export type EPoliticaSinLectura = z.infer<typeof PoliticaSinLecturaSchema>;
 
-export const MetodoValorizacionServicioSchema = z.enum(["PrecioUnitario"]);
+/**
+ * - `PrecioUnitario`: cada UF paga su consumo por la tarifa por tramos.
+ * - `ProrrateoFactura`: se reparte la factura de la distribuidora
+ *   (`IFacturaServicio`, asignada al cierre) según `modoProrrateo`. El cierre
+ *   no se confirma sin factura.
+ */
+export const MetodoValorizacionServicioSchema = z.enum([
+  "PrecioUnitario",
+  "ProrrateoFactura",
+]);
 export type EMetodoValorizacionServicio = z.infer<typeof MetodoValorizacionServicioSchema>;
+
+/**
+ * Cómo se reparte la factura con `ProrrateoFactura`:
+ * - `PrecioMedio`: precio medio = monto ÷ consumo facturado por la
+ *   distribuidora; cada UF paga su consumo × precio medio y lo que sobra
+ *   (consumo común: pérdidas, espacios comunes) va por
+ *   `tratamientoConsumoComun`. Necesita el consumo facturado.
+ * - `ProporcionalConsumo`: toda la factura entre las UF en proporción a su
+ *   consumo. El común queda absorbido proporcionalmente (solo se informa).
+ */
+export const ModoProrrateoFacturaSchema = z.enum([
+  "PrecioMedio",
+  "ProporcionalConsumo",
+]);
+export type EModoProrrateoFactura = z.infer<typeof ModoProrrateoFacturaSchema>;
+
+/**
+ * Qué se hace con el consumo común. Se reparte entre las UF que tienen
+ * medidor del servicio en el cierre:
+ * - `Coeficiente`: por el coeficiente de expensas de la UF (sin coeficientes
+ *   cargados, en partes iguales).
+ * - `PartesIguales`.
+ * - `AbsorbeComplejo`: no se cobra a las UF; queda como costo del complejo.
+ * - `SoloInformar`: no se cobra; se muestra en el cierre (default).
+ *
+ * Con `PrecioUnitario` el común es medidor general − Σ UF, valorizado al
+ * precio del primer tramo; con `PrecioMedio`, el monto de la factura que no
+ * cubren los consumos de las UF.
+ */
+export const TratamientoConsumoComunSchema = z.enum([
+  "Coeficiente",
+  "PartesIguales",
+  "AbsorbeComplejo",
+  "SoloInformar",
+]);
+export type ETratamientoConsumoComun = z.infer<typeof TratamientoConsumoComunSchema>;
 
 /**
  * Tramo de consumo: precio de cada unidad hasta `hasta` (acumulado desde 0).
@@ -66,6 +111,11 @@ export type ITarifaServicio = z.infer<typeof TarifaServicioSchema>;
 export const ConfigServicioSchema = z.object({
   servicio: ServicioMedidoSchema,
   metodo: MetodoValorizacionServicioSchema,
+  /** Solo `ProrrateoFactura`. Default `PrecioMedio`. */
+  modoProrrateo: ModoProrrateoFacturaSchema.optional(),
+  /** Default `SoloInformar`. */
+  tratamientoConsumoComun: TratamientoConsumoComunSchema.optional(),
+  /** Solo `PrecioUnitario` (con `ProrrateoFactura` el precio sale de la factura). */
   tarifas: z.array(TarifaServicioSchema).optional(),
   /** Períodos que promedia la estimación (`sinLectura: 'Estimar'`). Default 3. */
   periodosPromedioEstimacion: z.number().int().min(1).max(12).optional(),

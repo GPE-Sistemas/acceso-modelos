@@ -2,6 +2,11 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { ServicioMedidoSchema } from "./asignacion-dispositivo";
+import {
+  MetodoValorizacionServicioSchema,
+  ModoProrrateoFacturaSchema,
+  TratamientoConsumoComunSchema,
+} from "./config-servicios";
 
 /**
  * Cierre del período de consumo de un complejo (D66 Etapa 5, doc 53 §4.3).
@@ -11,10 +16,11 @@ import { ServicioMedidoSchema } from "./asignacion-dispositivo";
  *   acceso-api unas horas después del corte (`IConfigServiciosComplejo.corte`)
  *   en `Borrador`; el admin completa las lecturas que faltan y la confirma
  *   (`Servicios - Cerrar período de consumos`). Solo lo `Confirmado` se factura.
- * - `IConsumoPeriodo`: una fila por asignación de medidor de UF × período (si
+ * - `IConsumoPeriodo`: una fila por asignación de medidor × período (si
  *   hubo reemplazo en el período, dos filas y el recibo las suma). **Es la foto
  *   que se factura**: no se recalcula desde las mediciones, que tienen TTL de 90
- *   días en cloud.
+ *   días en cloud. Las del medidor general (`destino: 'Complejo'`) no se
+ *   facturan: dan el consumo común del servicio.
  *
  * Desfase entre consumo y expensa: la liquidación de un mes toma TODO consumo
  * de un cierre confirmado y no facturado todavía (patrón `turno.facturado`). Si
@@ -24,6 +30,37 @@ import { ServicioMedidoSchema } from "./asignacion-dispositivo";
 
 export const EstadoCierreConsumoSchema = z.enum(["Borrador", "Confirmado"]);
 export type EEstadoCierreConsumo = z.infer<typeof EstadoCierreConsumoSchema>;
+
+/**
+ * Resumen de un servicio en el cierre, fijado al CONFIRMAR (foto de cómo se
+ * repartió). `consumoComun` y `montoComun` en null = no se pudo calcular (sin
+ * medidor general, o alguna UF sin consumo: el común incluiría su consumo y
+ * la UF lo pagaría dos veces cuando cobre el acumulado).
+ */
+export const ResumenServicioCierreSchema = z.object({
+  servicio: ServicioMedidoSchema,
+  metodo: MetodoValorizacionServicioSchema,
+  modoProrrateo: ModoProrrateoFacturaSchema.optional(),
+  tratamientoConsumoComun: TratamientoConsumoComunSchema,
+  unidad: z.string().optional(),
+  /** Σ consumo de las UF (Estimado incluido). */
+  consumoUnidades: z.number(),
+  /** Consumo del medidor general; null = sin medidor general o sin lectura. */
+  consumoGeneral: z.number().nullable().optional(),
+  /** Unidades de consumo común; null = no calculable. */
+  consumoComun: z.number().nullable().optional(),
+  /** `ProrrateoFactura`: Σ de las facturas del servicio asignadas al cierre. */
+  montoFactura: z.number().optional(),
+  consumoFacturado: z.number().optional(),
+  /** `PrecioMedio`: montoFactura ÷ consumoFacturado. */
+  precioMedio: z.number().optional(),
+  /** Monto del común; null = no calculable. */
+  montoComun: z.number().nullable().optional(),
+  /** true = el común se repartió entre las UF (Coeficiente / PartesIguales). */
+  comunCobrado: z.boolean(),
+  observacion: z.string().optional(),
+});
+export type IResumenServicioCierre = z.infer<typeof ResumenServicioCierreSchema>;
 
 export const CierreConsumoSchema = z.object({
   _id: z.string().optional(),
@@ -40,6 +77,8 @@ export const CierreConsumoSchema = z.object({
   estado: EstadoCierreConsumoSchema,
   fechaConfirmacion: z.string().optional(),
   idPermisoConfirmacion: z.string().optional(),
+  /** Al confirmar: cómo se valorizó y repartió cada servicio. */
+  servicios: z.array(ResumenServicioCierreSchema).optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
@@ -78,6 +117,10 @@ export const OrigenConsumoPeriodoSchema = z.enum([
 ]);
 export type EOrigenConsumoPeriodo = z.infer<typeof OrigenConsumoPeriodoSchema>;
 
+/** De quién es el medidor de la fila (`IAsignacionDispositivo.destino`). */
+export const DestinoConsumoPeriodoSchema = z.enum(["UnidadFuncional", "Complejo"]);
+export type EDestinoConsumoPeriodo = z.infer<typeof DestinoConsumoPeriodoSchema>;
+
 export const ConsumoPeriodoSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
@@ -87,7 +130,10 @@ export const ConsumoPeriodoSchema = z.object({
   idCierre: z.string(),
   /** Denormalizado del cierre. */
   periodo: z.string().regex(/^\d{4}-\d{2}$/),
-  idUnidadFuncional: z.string(),
+  /** Ausente = `UnidadFuncional` (filas anteriores al medidor general). */
+  destino: DestinoConsumoPeriodoSchema.optional(),
+  /** Ausente solo en las filas del medidor general. */
+  idUnidadFuncional: z.string().optional(),
   idAsignacion: z.string(),
   idDispositivo: z.string(),
   servicio: ServicioMedidoSchema,
@@ -107,6 +153,15 @@ export const ConsumoPeriodoSchema = z.object({
   observacion: z.string().optional(),
   /** Días del período con discontinuidad del contador (reset, reemplazo): revisar antes de confirmar. */
   discontinuidades: z.number().int().nonnegative().optional(),
+  /**
+   * Fijados al CONFIRMAR el cierre:
+   * - `montoProrrateo`: con `ProrrateoFactura`, lo que paga la UF por su
+   *   consumo (con `PrecioUnitario` el monto sale de la tarifa al liquidar).
+   * - `consumoComun` / `montoComun`: la parte del consumo común que le toca.
+   */
+  montoProrrateo: z.number().optional(),
+  consumoComun: z.number().optional(),
+  montoComun: z.number().optional(),
   /** Anti doble cobro (patrón `turno.facturado`). Lo setea acceso-api al liquidar. */
   facturado: z.boolean().optional(),
   idExpensaUF: z.string().optional(),
@@ -153,5 +208,13 @@ export const DetalleConsumoItemExpensaSchema = z.object({
   consumo: z.number(),
   origen: OrigenConsumoPeriodoSchema,
   cargoFijo: z.number().optional(),
+  metodo: MetodoValorizacionServicioSchema.optional(),
+  /** `ProrrateoFactura` + `PrecioMedio`. */
+  precioMedio: z.number().optional(),
+  /** Lo que paga por su consumo (el ítem suma además `montoComun`). */
+  montoPropio: z.number().optional(),
+  consumoComun: z.number().optional(),
+  montoComun: z.number().optional(),
+  tratamientoConsumoComun: TratamientoConsumoComunSchema.optional(),
 });
 export type IDetalleConsumoItemExpensa = z.infer<typeof DetalleConsumoItemExpensaSchema>;

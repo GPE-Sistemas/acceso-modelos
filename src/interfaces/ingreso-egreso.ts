@@ -65,6 +65,30 @@ export const VehiculoSnapshotSchema = z.object({
 });
 
 /**
+ * Quién manejaba el vehículo del movimiento y con qué licencia (D69).
+ * Inmutable: `vencimientoLicencia` es la del visitante al momento del
+ * movimiento, para poder auditar después un ingreso con licencia vencida
+ * aunque el visitante la haya renovado. Lo arma acceso-api / el edge al
+ * crear el movimiento; ausente = no se informó conductor.
+ */
+export const ConductorIngresoEgresoSchema = z.object({
+  idVisitante: z.string(),
+  /** `YYYY-MM-DD`. Ausente = el conductor no tenía licencia cargada. */
+  vencimientoLicencia: z.string().optional(),
+});
+
+/**
+ * Body extra de `POST /ingresos-egresos` (D69): el guardia elige quién
+ * conduce y, opcionalmente, carga o corrige el vencimiento de su licencia.
+ * Sin `vencimiento` se usa el que ya tenía el visitante. Solo con
+ * `idVehiculo` y con `idVisitante` dentro de `idsVisitantes`.
+ */
+export const LicenciaConductorIngresoSchema = z.object({
+  idVisitante: z.string(),
+  vencimiento: z.string().optional(),
+});
+
+/**
  * Estado de la autorización de egreso de un menor (D57, doc 44). No existe un
  * estado previo a `Solicitada`: la notificación al responsable es automática, la
  * solicitud nace pedida.
@@ -203,6 +227,8 @@ export const IngresoEgresoSchema = z.object({
    * Snapshot inmutable del vehículo al momento del ingreso/egreso.
    */
   vehiculoSnapshot: VehiculoSnapshotSchema.optional(),
+  /** Conductor del vehículo y su licencia al momento del movimiento (D69). */
+  conductor: ConductorIngresoEgresoSchema.optional(),
   imagenes: z.array(z.string()).optional(),
   observaciones: z.string().optional(),
   // Populate
@@ -243,6 +269,7 @@ export const IngresoEgresoSchema = z.object({
 export const CreateIngresoEgresoSchema = IngresoEgresoSchema.omit({
   _id: true,
   fechaCreacion: true,
+  conductor: true,
   cliente: true,
   complejo: true,
   unidadFuncional: true,
@@ -274,6 +301,12 @@ export type IViaAutorizacionEgreso = z.infer<
 export type IAutorizacionEgreso = z.infer<typeof AutorizacionEgresoSchema>;
 export type IVisitanteSnapshot = z.infer<typeof VisitanteSnapshotSchema>;
 export type IVehiculoSnapshot = z.infer<typeof VehiculoSnapshotSchema>;
+export type IConductorIngresoEgreso = z.infer<
+  typeof ConductorIngresoEgresoSchema
+>;
+export type ILicenciaConductorIngreso = z.infer<
+  typeof LicenciaConductorIngresoSchema
+>;
 export type IIngresoEgreso = z.infer<typeof IngresoEgresoSchema>;
 export type ICreateIngresoEgreso = z.infer<typeof CreateIngresoEgresoSchema>;
 export type IUpdateIngresoEgreso = z.infer<typeof UpdateIngresoEgresoSchema>;

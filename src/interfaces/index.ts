@@ -1,4 +1,5 @@
 export * from './acceso';
+export * from './asistente';
 export * from './autorizacion-egreso-menor';
 export * from './autorizacion-retiro';
 export * from './complejo';

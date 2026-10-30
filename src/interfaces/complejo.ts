@@ -89,6 +89,16 @@ export const PlanoComplejoSchema = z.object({
   opacidad: z.number().min(0).max(1).optional(),
 });
 
+/**
+ * Asistente IA de ColivingApp (D70, doc 56). Ausente o `habilitado: false` = sin
+ * asistente. `mensajesDiarios` por residente; sin valor rige
+ * `MENSAJES_DIARIOS_ASISTENTE_DEFAULT` (asistente.ts).
+ */
+export const ConfigAsistenteComplejoSchema = z.object({
+  habilitado: z.boolean().optional(),
+  mensajesDiarios: z.number().int().positive().optional(),
+});
+
 export const ConfigComplejoSchema = z.object({
   imagenes: z.object({
       logo: z.string().optional(),
@@ -102,6 +112,7 @@ export const ConfigComplejoSchema = z.object({
   egresoMenores: ConfigEgresoMenoresSchema.optional(),
   /** Plano georreferenciado (mapa sin internet del Hub edge). */
   plano: PlanoComplejoSchema.optional(),
+  asistente: ConfigAsistenteComplejoSchema.optional(),
 });
 
 export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
@@ -138,6 +149,7 @@ export const UpdateComplejoSchema = ComplejoSchema.omit({
 export type IPinModo = z.infer<typeof PinModoSchema>;
 export type IPinScheme = z.infer<typeof PinSchemeSchema>;
 export type IConfigEgresoMenores = z.infer<typeof ConfigEgresoMenoresSchema>;
+export type IConfigAsistenteComplejo = z.infer<typeof ConfigAsistenteComplejoSchema>;
 export type IConfigComplejo = z.infer<typeof ConfigComplejoSchema>;
 export type ITipoComplejo = z.infer<typeof TipoComplejoSchema>;
 export type IComplejo = z.infer<typeof ComplejoSchema>;

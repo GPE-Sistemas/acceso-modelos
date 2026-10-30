@@ -20,6 +20,13 @@ export const EstadoEventoVisitaSchema = z.enum([
   "Vencida",
 ]);
 export const CreadoPorEventoVisitaSchema = z.enum(["Propietario", "Guardia"]);
+
+/**
+ * Canal por el que se cargó el evento. Ausente = formulario de la app/web.
+ * `Asistente`: lo confirmó el residente desde una propuesta del asistente IA
+ * (D70) — métricas de adopción y auditoría de errores del modelo.
+ */
+export const OrigenEventoVisitaSchema = z.enum(["Asistente"]);
 export const EstadoAprobacionEventoVisitaSchema = z.enum([
   "Pendiente",
   "Aprobado",
@@ -38,6 +45,7 @@ export const RecurrenciaEventoVisitaSchema = z.object({
 export type ITipoEventoVisita = z.infer<typeof TipoEventoVisitaSchema>;
 export type IEstadoEventoVisita = z.infer<typeof EstadoEventoVisitaSchema>;
 export type ICreadoPorEventoVisita = z.infer<typeof CreadoPorEventoVisitaSchema>;
+export type IOrigenEventoVisita = z.infer<typeof OrigenEventoVisitaSchema>;
 export type IEstadoAprobacionEventoVisita = z.infer<
   typeof EstadoAprobacionEventoVisitaSchema
 >;
@@ -123,6 +131,7 @@ export const EventoVisitaSchema = z.object({
    * anular / finalizar la obra cancela el evento.
    */
   idObra: z.string().optional(),
+  origen: OrigenEventoVisitaSchema.optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),

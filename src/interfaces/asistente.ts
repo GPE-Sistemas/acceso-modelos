@@ -55,13 +55,57 @@ export const PropuestaEventoVisitaAsistenteSchema = z.object({
   visitantes: z.array(VisitantePropuestaAsistenteSchema).min(1),
 });
 
-export const TipoPropuestaAsistenteSchema = z.enum(["EventoVisita"]);
+export const TipoPropuestaAsistenteSchema = z.enum([
+  "EventoVisita",
+  "Turno",
+  "CancelacionTurno",
+]);
+
+/**
+ * Turno libre que el asistente propone reservar. Al confirmar se crea la
+ * pre-reserva (5 min) y la app abre el formulario de reserva de siempre
+ * (participantes, invitados, luz): la propuesta solo elige el slot.
+ */
+export const PropuestaTurnoAsistenteSchema = z.object({
+  idPlantilla: z.string(),
+  idModalidad: z.string(),
+  idUnidadFuncionalRecurso: z.string(),
+  fechaInicio: z.string(),
+  fechaFin: z.string(),
+  /** Nombres para la tarjeta (snapshot al proponer). */
+  actividad: z.string().optional(),
+  plantilla: z.string().optional(),
+  modalidad: z.string().optional(),
+  recurso: z.string().optional(),
+  /** Costo base de la modalidad (sin luz ni invitados). */
+  costo: z.number().optional(),
+});
+
+/** Cancelación de un turno propio, para confirmar en la tarjeta. */
+export const PropuestaCancelacionTurnoAsistenteSchema = z.object({
+  idTurno: z.string(),
+  fechaInicio: z.string(),
+  fechaFin: z.string().optional(),
+  actividad: z.string().optional(),
+  recurso: z.string().optional(),
+  /**
+   * Fuera del plazo de cancelación gratis: el turno queda como "No show" y
+   * puede bloquear reservas futuras.
+   */
+  cancelacionTardia: z.boolean().optional(),
+  horasLimiteCancelacionGratis: z.number().optional(),
+});
 
 export const PropuestaAsistenteSchema = z.object({
   tipo: TipoPropuestaAsistenteSchema,
   estado: EstadoPropuestaAsistenteSchema,
   eventoVisita: PropuestaEventoVisitaAsistenteSchema.optional(),
-  /** `_id` de lo creado al confirmar (p. ej. el evento de visita). */
+  turno: PropuestaTurnoAsistenteSchema.optional(),
+  cancelacionTurno: PropuestaCancelacionTurnoAsistenteSchema.optional(),
+  /**
+   * `_id` de lo creado o tocado al confirmar: el evento de visita, la
+   * pre-reserva del turno o el turno cancelado.
+   */
   idResultado: z.string().optional(),
   fechaResolucion: z.string().optional(),
 });
@@ -252,8 +296,11 @@ export const UsoAsistenteSchema = z.object({
   msPrimerTexto: z.number().optional(),
   caracteresTexto: z.number().optional(),
   caracteresRespuesta: z.number().optional(),
-  /** Hubo propuesta de evento y cómo terminó (se actualiza al confirmar). */
+  /** Hubo propuesta y cómo terminó (se actualiza al confirmar). */
   propuesta: EstadoPropuestaAsistenteSchema.optional(),
+  tipoPropuesta: TipoPropuestaAsistenteSchema.optional(),
+  /** Pre-reserva creada o turno cancelado al confirmar. */
+  idTurno: z.string().optional(),
   idEventoVisita: z.string().optional(),
   /** Valoración del residente; `comentario` vence con el texto. `null` = la quitó. */
   feedback: FeedbackAsistenteSchema.nullable().optional(),
@@ -324,6 +371,20 @@ export const ConfirmarPropuestaAsistenteSchema = z.object({
 });
 
 /**
+ * Respuesta de `POST /asistente/propuestas/:id/confirmar`. Según el tipo:
+ * `idEventoVisita` (visita creada) o `idTurno` (pre-reserva a completar en el
+ * formulario de reserva, o turno cancelado).
+ */
+export const ResultadoConfirmacionAsistenteSchema = z.object({
+  tipo: TipoPropuestaAsistenteSchema,
+  idEventoVisita: z.string().optional(),
+  idTurno: z.string().optional(),
+  /** Evento creado (compatibilidad: la app anterior a los turnos lee este campo). */
+  evento: z.any().optional(),
+  mensaje: MensajeAsistenteSchema,
+});
+
+/**
  * Body de `PUT /mensajes-asistente/:id/resolver-propuesta` en acceso-datos.
  * Condicional a `Pendiente`: lo resuelve una sola vez.
  */
@@ -342,6 +403,13 @@ export type IPropuestaEventoVisitaAsistente = z.infer<
   typeof PropuestaEventoVisitaAsistenteSchema
 >;
 export type ITipoPropuestaAsistente = z.infer<typeof TipoPropuestaAsistenteSchema>;
+export type IPropuestaTurnoAsistente = z.infer<typeof PropuestaTurnoAsistenteSchema>;
+export type IPropuestaCancelacionTurnoAsistente = z.infer<
+  typeof PropuestaCancelacionTurnoAsistenteSchema
+>;
+export type IResultadoConfirmacionAsistente = z.infer<
+  typeof ResultadoConfirmacionAsistenteSchema
+>;
 export type IPropuestaAsistente = z.infer<typeof PropuestaAsistenteSchema>;
 export type IToolMensajeAsistente = z.infer<typeof ToolMensajeAsistenteSchema>;
 export type IConversacionAsistente = z.infer<typeof ConversacionAsistenteSchema>;

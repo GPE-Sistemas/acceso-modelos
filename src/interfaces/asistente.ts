@@ -59,7 +59,53 @@ export const TipoPropuestaAsistenteSchema = z.enum([
   "EventoVisita",
   "Turno",
   "CancelacionTurno",
+  "AprobacionVisita",
+  "CancelacionVisita",
+  "ModificacionVisita",
+  "AutorizacionEgresoMenor",
 ]);
+
+/** Una visita que ya existe, resumida para las tarjetas de gestión. */
+export const ResumenVisitaAsistenteSchema = z.object({
+  idEventoVisita: z.string(),
+  tipo: z.string().optional(),
+  fechaDesde: z.string().optional(),
+  fechaHasta: z.string().optional(),
+  recurrencia: RecurrenciaEventoVisitaSchema.optional(),
+  visitantes: z.array(z.string()).optional(),
+  /** Quién la cargó (en las que esperan la aprobación del residente). */
+  cargadaPor: z.string().optional(),
+});
+
+/**
+ * Visita de otra persona de la UF esperando aprobación: la tarjeta tiene
+ * Aprobar y Rechazar, y la decisión viaja en el body de confirmar.
+ */
+export const PropuestaAprobacionVisitaAsistenteSchema = ResumenVisitaAsistenteSchema;
+
+/** Visita propia a cancelar (se cierra: `PUT /eventos-visita/:id/cerrar`). */
+export const PropuestaCancelacionVisitaAsistenteSchema = ResumenVisitaAsistenteSchema;
+
+/** Nueva fecha u horario de una visita propia; la tarjeta muestra antes y después. */
+export const PropuestaModificacionVisitaAsistenteSchema =
+  ResumenVisitaAsistenteSchema.extend({
+    nuevo: z.object({
+      fechaDesde: z.string(),
+      fechaHasta: z.string().optional(),
+      recurrencia: RecurrenciaEventoVisitaSchema.optional(),
+    }),
+  });
+
+/**
+ * Salida de un menor esperando autorización en la garita (D57). La tarjeta tiene
+ * Autorizar y Rechazar (con motivo); la decisión viaja en el body de confirmar.
+ */
+export const PropuestaAutorizacionEgresoMenorAsistenteSchema = z.object({
+  idIngresoEgreso: z.string(),
+  menor: z.string().optional(),
+  acceso: z.string().optional(),
+  fechaSolicitud: z.string().optional(),
+});
 
 /**
  * Turno libre que el asistente propone reservar. Al confirmar se crea la
@@ -102,6 +148,12 @@ export const PropuestaAsistenteSchema = z.object({
   eventoVisita: PropuestaEventoVisitaAsistenteSchema.optional(),
   turno: PropuestaTurnoAsistenteSchema.optional(),
   cancelacionTurno: PropuestaCancelacionTurnoAsistenteSchema.optional(),
+  aprobacionVisita: PropuestaAprobacionVisitaAsistenteSchema.optional(),
+  cancelacionVisita: PropuestaCancelacionVisitaAsistenteSchema.optional(),
+  modificacionVisita: PropuestaModificacionVisitaAsistenteSchema.optional(),
+  autorizacionEgresoMenor: PropuestaAutorizacionEgresoMenorAsistenteSchema.optional(),
+  /** Aprobaciones y autorizaciones: qué decidió el residente en la tarjeta. */
+  aprobada: z.boolean().optional(),
   /**
    * `_id` de lo creado o tocado al confirmar: el evento de visita, la
    * pre-reserva del turno o el turno cancelado.
@@ -301,6 +353,8 @@ export const UsoAsistenteSchema = z.object({
   tipoPropuesta: TipoPropuestaAsistenteSchema.optional(),
   /** Pre-reserva creada o turno cancelado al confirmar. */
   idTurno: z.string().optional(),
+  /** Salida de menor resuelta desde la tarjeta. */
+  idIngresoEgreso: z.string().optional(),
   idEventoVisita: z.string().optional(),
   /** Valoración del residente; `comentario` vence con el texto. `null` = la quitó. */
   feedback: FeedbackAsistenteSchema.nullable().optional(),
@@ -368,6 +422,13 @@ export const ResumenUsoAsistenteSchema = z.object({
  */
 export const ConfirmarPropuestaAsistenteSchema = z.object({
   eventoVisita: PropuestaEventoVisitaAsistenteSchema.optional(),
+  /**
+   * `AprobacionVisita` y `AutorizacionEgresoMenor`: true = aprobar/autorizar,
+   * false = rechazar. Obligatorio para esos tipos.
+   */
+  aprobar: z.boolean().optional(),
+  /** Motivo del rechazo (obligatorio al rechazar la salida de un menor). */
+  motivo: z.string().max(500).optional(),
 });
 
 /**
@@ -379,6 +440,7 @@ export const ResultadoConfirmacionAsistenteSchema = z.object({
   tipo: TipoPropuestaAsistenteSchema,
   idEventoVisita: z.string().optional(),
   idTurno: z.string().optional(),
+  idIngresoEgreso: z.string().optional(),
   /** Evento creado (compatibilidad: la app anterior a los turnos lee este campo). */
   evento: z.any().optional(),
   mensaje: MensajeAsistenteSchema,
@@ -406,6 +468,13 @@ export type ITipoPropuestaAsistente = z.infer<typeof TipoPropuestaAsistenteSchem
 export type IPropuestaTurnoAsistente = z.infer<typeof PropuestaTurnoAsistenteSchema>;
 export type IPropuestaCancelacionTurnoAsistente = z.infer<
   typeof PropuestaCancelacionTurnoAsistenteSchema
+>;
+export type IResumenVisitaAsistente = z.infer<typeof ResumenVisitaAsistenteSchema>;
+export type IPropuestaModificacionVisitaAsistente = z.infer<
+  typeof PropuestaModificacionVisitaAsistenteSchema
+>;
+export type IPropuestaAutorizacionEgresoMenorAsistente = z.infer<
+  typeof PropuestaAutorizacionEgresoMenorAsistenteSchema
 >;
 export type IResultadoConfirmacionAsistente = z.infer<
   typeof ResultadoConfirmacionAsistenteSchema

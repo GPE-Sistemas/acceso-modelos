@@ -82,6 +82,8 @@ export const ConversacionAsistenteSchema = z.object({
   idComplejo: z.string().optional(),
   idUsuario: z.string().optional(),
   idPermiso: z.string().optional(),
+  /** Primer mensaje del residente, recortado: lo que muestra el historial. */
+  titulo: z.string().optional(),
   /** Se corre con cada mensaje; el índice TTL la borra al vencer. */
   fechaExpiracion: z.string().optional(),
 });
@@ -124,6 +126,144 @@ export const UpdateMensajeAsistenteSchema = CreateMensajeAsistenteSchema.partial
 /** Body de `POST /asistente/mensajes`. */
 export const EnviarMensajeAsistenteSchema = z.object({
   texto: z.string().min(1).max(2000),
+  /** Conversación a continuar. Ausente = conversación nueva. */
+  idConversacion: z.string().optional(),
+});
+
+/** Largo máximo del título de una conversación (el primer mensaje, recortado). */
+export const MAX_TITULO_CONVERSACION_ASISTENTE = 80;
+
+// ─── Logs de uso (control y debug) ──────────────────────────────────────────
+
+/**
+ * Cómo terminó un turno:
+ * - `Ok`: respondió.
+ * - `Rechazo`: el modelo (y su fallback) se negó (`stop_reason: refusal`).
+ * - `Error`: falló la API del modelo o una vuelta del loop.
+ * - `Cancelado`: la app cortó la conexión a mitad del turno.
+ * - `Cupo`: se rechazó antes de llamar al modelo por el límite diario.
+ */
+export const ResultadoUsoAsistenteSchema = z.enum([
+  "Ok",
+  "Rechazo",
+  "Error",
+  "Cancelado",
+  "Cupo",
+]);
+
+/** Una vuelta del loop modelo↔tools (un request a la API de Claude). */
+export const IteracionUsoAsistenteSchema = z.object({
+  /** Modelo que respondió (difiere del pedido si actuó el fallback). */
+  modelo: z.string().optional(),
+  stopReason: z.string().optional(),
+  tokensEntrada: z.number().optional(),
+  tokensSalida: z.number().optional(),
+  tokensCacheLectura: z.number().optional(),
+  tokensCacheEscritura: z.number().optional(),
+  ms: z.number().optional(),
+});
+
+/** Tool ejecutada en el turno, con su input (vence con el texto). */
+export const ToolUsoAsistenteSchema = z.object({
+  nombre: z.string(),
+  ok: z.boolean(),
+  ms: z.number().optional(),
+  error: z.string().optional(),
+  /** Input como JSON. Puede tener datos personales: vence con el texto. */
+  input: z.string().optional(),
+  /** Tamaño en caracteres del resultado que volvió al modelo. */
+  caracteresResultado: z.number().optional(),
+});
+
+/**
+ * Log de un turno del asistente (un mensaje del residente y su respuesta).
+ * Las métricas no vencen; el texto, la respuesta y el input de las tools se
+ * borran a `fechaExpiracionTexto` (30 días, lo que dice el aviso de
+ * privacidad). Sobrevive al borrado de la conversación por el residente.
+ * Solo lo ve el soporte GPE (Proveedor).
+ */
+export const UsoAsistenteSchema = z.object({
+  _id: z.string().optional(),
+  fechaCreacion: z.string().optional(),
+  fechaActualizacion: z.string().optional(),
+  idCliente: z.string().optional(),
+  idComplejo: z.string().optional(),
+  idUnidadFuncional: z.string().optional(),
+  idUsuario: z.string().optional(),
+  idPermiso: z.string().optional(),
+  username: z.string().optional(),
+  idConversacion: z.string().optional(),
+  /** Mensaje del asistente que cerró el turno. */
+  idMensaje: z.string().optional(),
+  resultado: ResultadoUsoAsistenteSchema.optional(),
+  error: z.string().optional(),
+  /** Modelo pedido (`ASISTENTE_MODELO`). */
+  modelo: z.string().optional(),
+  effort: z.string().optional(),
+  iteraciones: z.array(IteracionUsoAsistenteSchema).optional(),
+  tools: z.array(ToolUsoAsistenteSchema).optional(),
+  tokensEntrada: z.number().optional(),
+  tokensSalida: z.number().optional(),
+  tokensCacheLectura: z.number().optional(),
+  tokensCacheEscritura: z.number().optional(),
+  /** Estimado con la tabla de precios de acceso-api; null = modelo sin precio. */
+  costoUsd: z.number().nullable().optional(),
+  msTotal: z.number().optional(),
+  /** Hasta el primer texto que vio el residente. */
+  msPrimerTexto: z.number().optional(),
+  caracteresTexto: z.number().optional(),
+  caracteresRespuesta: z.number().optional(),
+  /** Hubo propuesta de evento y cómo terminó (se actualiza al confirmar). */
+  propuesta: EstadoPropuestaAsistenteSchema.optional(),
+  idEventoVisita: z.string().optional(),
+  /** Datos personales: se borran a `fechaExpiracionTexto`. */
+  texto: z.string().optional(),
+  respuesta: z.string().optional(),
+  fechaExpiracionTexto: z.string().optional(),
+  appVersion: z.string().optional(),
+  plataforma: z.string().optional(),
+  // Populate
+  complejo: z.any().optional(),
+  permiso: z.any().optional(),
+});
+
+export const CreateUsoAsistenteSchema = UsoAsistenteSchema.omit({
+  _id: true,
+  fechaCreacion: true,
+  fechaActualizacion: true,
+  complejo: true,
+  permiso: true,
+});
+export const UpdateUsoAsistenteSchema = CreateUsoAsistenteSchema.partial();
+
+/** Respuesta de `GET /asistente/usos/resumen`. */
+export const ResumenUsoAsistenteSchema = z.object({
+  turnos: z.number(),
+  usuarios: z.number(),
+  tokensEntrada: z.number(),
+  tokensSalida: z.number(),
+  tokensCacheLectura: z.number(),
+  tokensCacheEscritura: z.number(),
+  costoUsd: z.number(),
+  porResultado: z.record(z.string(), z.number()),
+  porComplejo: z.array(
+    z.object({
+      idComplejo: z.string(),
+      nombre: z.string().optional(),
+      turnos: z.number(),
+      costoUsd: z.number(),
+    }),
+  ),
+  porUsuario: z.array(
+    z.object({
+      idPermiso: z.string(),
+      username: z.string().optional(),
+      turnos: z.number(),
+      tokensEntrada: z.number(),
+      tokensSalida: z.number(),
+      costoUsd: z.number(),
+    }),
+  ),
 });
 
 /**
@@ -169,6 +309,13 @@ export type IEnviarMensajeAsistente = z.infer<typeof EnviarMensajeAsistenteSchem
 export type IResolverPropuestaMensajeAsistente = z.infer<
   typeof ResolverPropuestaMensajeAsistenteSchema
 >;
+export type IResultadoUsoAsistente = z.infer<typeof ResultadoUsoAsistenteSchema>;
+export type IIteracionUsoAsistente = z.infer<typeof IteracionUsoAsistenteSchema>;
+export type IToolUsoAsistente = z.infer<typeof ToolUsoAsistenteSchema>;
+export type IUsoAsistente = z.infer<typeof UsoAsistenteSchema>;
+export type ICreateUsoAsistente = z.infer<typeof CreateUsoAsistenteSchema>;
+export type IUpdateUsoAsistente = z.infer<typeof UpdateUsoAsistenteSchema>;
+export type IResumenUsoAsistente = z.infer<typeof ResumenUsoAsistenteSchema>;
 export type IConfirmarPropuestaAsistente = z.infer<
   typeof ConfirmarPropuestaAsistenteSchema
 >;

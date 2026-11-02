@@ -74,6 +74,43 @@ export const ToolMensajeAsistenteSchema = z.object({
   error: z.string().optional(),
 });
 
+// ─── Feedback del residente (👍/👎) ─────────────────────────────────────────
+
+export const ValoracionAsistenteSchema = z.enum(["Positiva", "Negativa"]);
+
+/** Motivos rápidos de un 👎: agrupan las fallas en las estadísticas. */
+export const MotivoValoracionAsistenteSchema = z.enum([
+  "No entendió",
+  "Dato incorrecto",
+  "No pudo hacerlo",
+  "Otro",
+]);
+
+export const MAX_COMENTARIO_FEEDBACK_ASISTENTE = 500;
+
+/**
+ * Valoración de una respuesta del asistente. Vive en el mensaje (la app la
+ * muestra al reabrir la conversación) y en el log de uso (estadísticas). El
+ * `comentario` es texto del residente: en el log vence con el texto (30 días);
+ * la valoración y los motivos no vencen.
+ */
+export const FeedbackAsistenteSchema = z.object({
+  valoracion: ValoracionAsistenteSchema,
+  motivos: z.array(MotivoValoracionAsistenteSchema).optional(),
+  comentario: z.string().max(MAX_COMENTARIO_FEEDBACK_ASISTENTE).optional(),
+  fecha: z.string().optional(),
+});
+
+/**
+ * Body de `PUT /asistente/mensajes/:id/feedback`. `valoracion: null` quita el
+ * voto. Motivos y comentario solo se guardan con `Negativa`.
+ */
+export const EnviarFeedbackAsistenteSchema = z.object({
+  valoracion: ValoracionAsistenteSchema.nullable(),
+  motivos: z.array(MotivoValoracionAsistenteSchema).max(4).optional(),
+  comentario: z.string().max(MAX_COMENTARIO_FEEDBACK_ASISTENTE).optional(),
+});
+
 export const ConversacionAsistenteSchema = z.object({
   _id: z.string().optional(),
   fechaCreacion: z.string().optional(),
@@ -105,6 +142,8 @@ export const MensajeAsistenteSchema = z.object({
   tokensEntrada: z.number().optional(),
   tokensSalida: z.number().optional(),
   tokensCache: z.number().optional(),
+  /** Valoración del residente (solo mensajes del asistente). `null` = la quitó. */
+  feedback: FeedbackAsistenteSchema.nullable().optional(),
   fechaExpiracion: z.string().optional(),
 });
 
@@ -216,6 +255,8 @@ export const UsoAsistenteSchema = z.object({
   /** Hubo propuesta de evento y cómo terminó (se actualiza al confirmar). */
   propuesta: EstadoPropuestaAsistenteSchema.optional(),
   idEventoVisita: z.string().optional(),
+  /** Valoración del residente; `comentario` vence con el texto. `null` = la quitó. */
+  feedback: FeedbackAsistenteSchema.nullable().optional(),
   /** Datos personales: se borran a `fechaExpiracionTexto`. */
   texto: z.string().optional(),
   respuesta: z.string().optional(),
@@ -246,6 +287,14 @@ export const ResumenUsoAsistenteSchema = z.object({
   tokensCacheEscritura: z.number(),
   costoUsd: z.number(),
   porResultado: z.record(z.string(), z.number()),
+  /** Turnos con 👍 / 👎 y conteo de motivos de los 👎. */
+  feedback: z
+    .object({
+      positivas: z.number(),
+      negativas: z.number(),
+      porMotivo: z.record(z.string(), z.number()),
+    })
+    .optional(),
   porComplejo: z.array(
     z.object({
       idComplejo: z.string(),
@@ -315,6 +364,10 @@ export type IToolUsoAsistente = z.infer<typeof ToolUsoAsistenteSchema>;
 export type IUsoAsistente = z.infer<typeof UsoAsistenteSchema>;
 export type ICreateUsoAsistente = z.infer<typeof CreateUsoAsistenteSchema>;
 export type IUpdateUsoAsistente = z.infer<typeof UpdateUsoAsistenteSchema>;
+export type IValoracionAsistente = z.infer<typeof ValoracionAsistenteSchema>;
+export type IMotivoValoracionAsistente = z.infer<typeof MotivoValoracionAsistenteSchema>;
+export type IFeedbackAsistente = z.infer<typeof FeedbackAsistenteSchema>;
+export type IEnviarFeedbackAsistente = z.infer<typeof EnviarFeedbackAsistenteSchema>;
 export type IResumenUsoAsistente = z.infer<typeof ResumenUsoAsistenteSchema>;
 export type IConfirmarPropuestaAsistente = z.infer<
   typeof ConfirmarPropuestaAsistenteSchema

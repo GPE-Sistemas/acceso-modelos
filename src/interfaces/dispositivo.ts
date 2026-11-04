@@ -38,6 +38,10 @@ import { ActivacionLoRaWANSchema, ClaseLoRaWANSchema } from "./perfil-decodifica
  *   instala en una UF con `IAsignacionDispositivo`.
  * - `Tracker` / `Sensor`: tarjeta de seguimiento de visitas y sensor genérico
  *   LoRaWAN (D55).
+ * - `RTU`: unidad remota de telemetría y telecontrol de una estación de bombeo
+ *   (D72, doc 58): hoy Milesight UC300 4G, conectividad `Celular`, datos por
+ *   MQTT al broker del cloud. Se asigna a una `IEstacionBombeo`; el edge no lo
+ *   gestiona.
  * - `Otro`: fallback.
  *
  * La coherencia formFactor↔capacidades (Terminal ⇒ ≥1 credencial; Cámara/NVR/XVR
@@ -56,6 +60,7 @@ export const FormFactorDispositivoSchema = z.enum([
   "Medidor",
   "Tracker",
   "Sensor",
+  "RTU",
   "Otro",
 ]);
 
@@ -511,9 +516,56 @@ export const ConectividadLoRaWANSchema = z.object({
   lote: z.string().optional(),
 });
 
+/** Equipo con módem celular propio (D72). Los escribe la ingesta (trama F3). */
+export const ConectividadCelularSchema = z.object({
+  imei: z.string().optional(),
+  imsi: z.string().optional(),
+  iccid: z.string().optional(),
+});
+
 export const ConectividadSchema = z.object({
   clase: ClaseConectividadSchema,
   lora: ConectividadLoRaWANSchema.optional(),
+  celular: ConectividadCelularSchema.optional(),
+});
+
+export const ModeloRtuDispositivoSchema = z.enum(["UC300"]);
+
+/**
+ * Cómo llegan los mensajes del RTU (D72, doc 58 §2.2):
+ *  - `Directo`: conectado a `mqtt.coliving.sh` con su propio cliente MQTT
+ *    (username = SN, rol `rtu-<SN>`), que crea acceso-api en el alta.
+ *  - `ReenviadoGas`: sigue conectado al EMQX de Gas y Gas reenvía tópico y
+ *    payload idénticos por el cliente `gas-puente`; los comandos vuelven por
+ *    el mismo puente.
+ */
+export const OrigenRtuSchema = z.enum(["Directo", "ReenviadoGas"]);
+
+/**
+ * Datos del RTU (solo `formFactor: 'RTU'`). Las credenciales siguen el trato
+ * de la del gateway LoRaWAN (D66.6): en claro solo en el body de alta/edición,
+ * acceso-api las cifra (AES-256-GCM) y nunca las devuelve; se expone `tiene*`.
+ */
+export const RtuDispositivoSchema = z.object({
+  modelo: ModeloRtuDispositivoSchema,
+  /** Número de serie de 16 hex, EN MAYÚSCULAS: es el `<SN>` de los tópicos
+   *  `uc/<SN>/ucp/14/*`. Único. */
+  sn: z.string().regex(/^[0-9A-F]{16}$/),
+  origen: OrigenRtuSchema,
+  /** Los escribe la ingesta desde la trama F3. */
+  firmware: z.string().optional(),
+  hardware: z.string().optional(),
+  /** Password UCP del equipo (6 dígitos; la de fábrica es 123456). Valida los
+   *  comandos de `cmd/update` (no los de `modbus/update`). */
+  passwordUcp: z.string().optional(),
+  passwordUcpCifrada: z.string().optional(),
+  tienePasswordUcp: z.boolean().optional(),
+  /** Password MQTT del equipo en el broker (`Directo`). La genera acceso-api;
+   *  se ve con `Bombeo - Ver credenciales de RTU` para cargarla en el ToolBox. */
+  passwordMqttCifrada: z.string().optional(),
+  tienePasswordMqtt: z.boolean().optional(),
+  /** Cuándo acceso-api dejó creado el cliente MQTT (o la ACL de `gas-puente`). */
+  mqttAprovisionadoEn: z.string().optional(),
 });
 
 export const DriverGatewayLoRaWANSchema = z.enum(["WisGateOS1", "WisGateOS2"]);
@@ -752,6 +804,8 @@ export const DispositivoSchema = z.object({
     conectividad: ConectividadSchema.optional(),
     // Relevamiento del gateway LoRaWAN por el edge. Solo en `Gateway LoRaWAN`.
     gatewayLorawan: EstadoGatewayLoRaWANSchema.optional(),
+    // RTU de bombeo (D72). Solo en `formFactor: 'RTU'`.
+    rtu: RtuDispositivoSchema.optional(),
     // Estado en el NS local de un equipo LoRaWAN (no gateway). Owner edge.
     aprovisionamientoLorawan: AprovisionamientoLoRaWANSchema.optional(),
     telemetriaLorawan: TelemetriaLoRaWANSchema.optional(),
@@ -885,6 +939,10 @@ export type IConfigDispositivo = z.infer<typeof ConfigDispositivoSchema>;
 export type IClaseConectividad = z.infer<typeof ClaseConectividadSchema>;
 export type IConectividadLoRaWAN = z.infer<typeof ConectividadLoRaWANSchema>;
 export type IConectividad = z.infer<typeof ConectividadSchema>;
+export type IConectividadCelular = z.infer<typeof ConectividadCelularSchema>;
+export type IModeloRtuDispositivo = z.infer<typeof ModeloRtuDispositivoSchema>;
+export type IOrigenRtu = z.infer<typeof OrigenRtuSchema>;
+export type IRtuDispositivo = z.infer<typeof RtuDispositivoSchema>;
 export type IDriverGatewayLoRaWAN = z.infer<typeof DriverGatewayLoRaWANSchema>;
 export type IEstadoGatewayLoRaWAN = z.infer<typeof EstadoGatewayLoRaWANSchema>;
 export type IEstadoAprovisionamientoLoRaWAN = z.infer<typeof EstadoAprovisionamientoLoRaWANSchema>;

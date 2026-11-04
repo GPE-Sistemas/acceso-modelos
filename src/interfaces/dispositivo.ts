@@ -552,6 +552,10 @@ export const RtuDispositivoSchema = z.object({
    *  `uc/<SN>/ucp/14/*`. Único. */
   sn: z.string().regex(/^[0-9A-F]{16}$/),
   origen: OrigenRtuSchema,
+  /** El SN tal como aparece en los tópicos del equipo (los tópicos MQTT
+   *  distinguen mayúsculas). Lo escribe la ingesta con el primer uplink; los
+   *  comandos se publican con este casing. */
+  snTopico: z.string().optional(),
   /** Los escribe la ingesta desde la trama F3. */
   firmware: z.string().optional(),
   hardware: z.string().optional(),

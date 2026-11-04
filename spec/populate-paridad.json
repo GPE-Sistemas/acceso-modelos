@@ -185,6 +185,17 @@
         "unidadFuncional"
       ]
     },
+    "/estaciones-bombeo": {
+      "populate": [
+        "plantilla",
+        "dispositivo"
+      ]
+    },
+    "/plantillas-rtu": {
+      "populate": [
+        "cliente"
+      ]
+    },
     "/perfiles-decodificacion": {
       "populate": [
         "cliente"

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.25.0
+  version: 0.26.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -5081,6 +5081,13 @@ x-entidades:
       replicadaEnEdge: false
       escrituraEdge: ninguna
       live: cloud
+    estaciones-bombeo:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      # D72 (doc 58): estaciones de bombeo con RTU celular. Cloud-only: el RTU
+      # sale por LTE al broker MQTT del cloud. Sus series (reportes-bombeo,
+      # resumenes-horarios-bombeo, ciclos-bomba) no emiten live.
+      live: cloud
     eventos-dispositivo:
       subject: evento-dispositivo
       replicadaEnEdge: false
@@ -5177,6 +5184,11 @@ x-entidades:
     plantillas-ronda:
       replicadaEnEdge: false
       escrituraEdge: ninguna
+      live: cloud
+    plantillas-rtu:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      # D72 (doc 58 §3.2): canales, señales y comandos de un RTU de bombeo.
       live: cloud
     posiciones-dispositivo:
       subject: posicion-dispositivo

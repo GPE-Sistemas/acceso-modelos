@@ -192,6 +192,24 @@ export const AccionesRolSchema = z.enum([
   "Servicios - Editar configuración de servicios",
   "Servicios - Cerrar período de consumos",
   "Servicios - Cargar lectura manual",
+
+  // MODULO BOMBEO (D72, doc 58): estaciones de bombeo de saneamiento con RTU
+  // celular. Lo usa sobre todo la categoría Mantenimiento (nivel Complejo).
+  // Ver = estado, histórico, ciclos y alertas; los reportes crudos (auditoría,
+  // 90 días) van aparte.
+  "Bombeo - Ver estaciones",
+  "Bombeo - Ver reportes crudos",
+  // ABM de estaciones, RTU y plantillas del cliente. Las plantillas globales
+  // las administra un Proveedor.
+  "Bombeo - Gestionar estaciones",
+  // Ver la password MQTT del RTU para cargarla en el ToolBox (como la
+  // credencial del gateway LoRaWAN, gate propio).
+  "Bombeo - Ver credenciales de RTU",
+  // Push `alerta_bombeo` (nivel alto, falla de variador, sin reportar).
+  "Bombeo - Recibir alertas",
+  // Arrancar/parar/rearmar bombas por RS-485. Escribe en el variador: gate
+  // propio, nunca incluido en Ver ni en Gestionar.
+  "Bombeo - Comandar bombas",
   // Dispara la actualización de firmware de UN dispositivo. Operación
   // irreversible (el fabricante bloquea el downgrade) y con riesgo de dejar el
   // equipo inutilizable: gate propio, nunca incluida en "Editar dispositivos".

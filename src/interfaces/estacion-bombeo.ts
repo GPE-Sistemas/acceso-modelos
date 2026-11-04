@@ -108,7 +108,13 @@ export const CreateEstacionBombeoSchema = EstacionBombeoSchema.omit({
   dispositivo: true,
 });
 
-export const UpdateEstacionBombeoSchema = CreateEstacionBombeoSchema.partial();
+/** `idDispositivo: null` desasigna el RTU y `ubicacion: null` la borra: un campo
+ *  ausente del JSON no se distingue de "no lo cambio" (acceso-datos hace
+ *  `$unset` de los `null`). */
+export const UpdateEstacionBombeoSchema = CreateEstacionBombeoSchema.partial().extend({
+  idDispositivo: z.string().nullable().optional(),
+  ubicacion: GeoJSONPointSchema.nullable().optional(),
+});
 
 export type IConexionEstacionBombeo = z.infer<typeof ConexionEstacionBombeoSchema>;
 export type IPozoEstacionBombeo = z.infer<typeof PozoEstacionBombeoSchema>;

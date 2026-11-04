@@ -555,7 +555,7 @@ export const RtuDispositivoSchema = z.object({
   /** Los escribe la ingesta desde la trama F3. */
   firmware: z.string().optional(),
   hardware: z.string().optional(),
-  /** Password UCP del equipo (6 dígitos; la de fábrica es 123456). Valida los
+  /** Password UCP del equipo (6 caracteres; la de fábrica es 123456). Valida los
    *  comandos de `cmd/update` (no los de `modbus/update`). */
   passwordUcp: z.string().optional(),
   passwordUcpCifrada: z.string().optional(),

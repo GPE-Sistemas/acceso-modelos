@@ -4975,6 +4975,12 @@ x-entidades:
         cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
         acceso-doc-general § Realtime del Hub edge.
       live: edge
+    alertas-bombeo:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      # D72 F6 (doc 58 §6): alertas de las estaciones de bombeo. Las escribe la
+      # ingesta del cloud; el alta dispara el push alerta_bombeo.
+      live: cloud
     asignaciones-dispositivo:
       subject: asignacion-dispositivo
       replicadaEnEdge: true

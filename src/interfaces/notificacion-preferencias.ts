@@ -109,6 +109,12 @@ export const CategoriaNotificacionSchema = z.enum([
    * tiene su expensa del período (con la acción `Expensas - Ver mis expensas`).
    */
   "expensa_emitida",
+  /**
+   * Mobile Complejo (D72 F6, doc 58 §6): se abrió una alerta de una estación
+   * de bombeo del complejo (nivel alto/bajo, falla de variador, sin respuesta,
+   * sin reportar), a los permisos con `Bombeo - Recibir alertas`.
+   */
+  "alerta_bombeo",
 ]);
 
 /**
@@ -178,6 +184,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   credencial_recordatorio: z.boolean(),
   alarma_medidor: z.boolean(),
   expensa_emitida: z.boolean(),
+  alerta_bombeo: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -263,4 +270,5 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   credencial_recordatorio: true,
   alarma_medidor: true,
   expensa_emitida: true,
+  alerta_bombeo: true,
 };

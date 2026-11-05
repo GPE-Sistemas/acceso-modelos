@@ -62,6 +62,7 @@ export * from './perfil-dispositivo';
 export * from './perfil-decodificacion';
 export * from './plantilla-rtu';
 export * from './estacion-bombeo';
+export * from './alerta-bombeo';
 export * from './reporte-bombeo';
 export * from './asignacion-dispositivo';
 export * from './medicion-dispositivo';

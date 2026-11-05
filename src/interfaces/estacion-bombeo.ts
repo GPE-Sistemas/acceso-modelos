@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GeoJSONPointSchema } from "../auxiliares/geojson";
+import { AlertaActivaEstacionSchema } from "./alerta-bombeo";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { EntradaDigitalRtuSchema, PlantillaRtuSchema } from "./plantilla-rtu";
@@ -83,6 +84,9 @@ export const EstacionBombeoSchema = z.object({
   /** Diferencias entre lo que manda el RTU y la plantilla (cantidad de
    *  canales/valores, signo). Vacío = coincide. */
   discrepanciasPlantilla: z.array(z.string()).optional(),
+  /** Alertas abiertas (F6, doc 58 §6): las escribe la ingesta al abrir o
+   *  cerrar una `IAlertaBombeo`. Vacío o ausente = ninguna. */
+  alertasActivas: z.array(AlertaActivaEstacionSchema).optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
@@ -95,6 +99,7 @@ const CalculadosEstacion = {
   timestampUltimoReporte: true,
   conexion: true,
   discrepanciasPlantilla: true,
+  alertasActivas: true,
 } as const;
 
 export const CreateEstacionBombeoSchema = EstacionBombeoSchema.omit({

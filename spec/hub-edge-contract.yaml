@@ -4981,6 +4981,13 @@ x-entidades:
       # D72 F6 (doc 58 §6): alertas de las estaciones de bombeo. Las escribe la
       # ingesta del cloud; el alta dispara el push alerta_bombeo.
       live: cloud
+    comandos-bomba:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      # D72 F7 (doc 58 §7): telecontrol de las bombas por RS-485. Lo crea la
+      # api, lo publica y lo sigue el worker de bombeo; web y app ven el
+      # progreso por live.
+      live: cloud
     asignaciones-dispositivo:
       subject: asignacion-dispositivo
       replicadaEnEdge: true

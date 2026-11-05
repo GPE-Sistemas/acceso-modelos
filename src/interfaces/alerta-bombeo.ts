@@ -43,8 +43,9 @@ export const AlertaBombeoSchema = z.object({
   numeroBomba: z.number().int().optional(),
   /** ISO. Instante del reporte que la abrió (o el último reporte, si es `SinReportar`). */
   desde: z.string(),
-  /** ISO. Ausente = abierta. */
-  hasta: z.string().optional(),
+  /** ISO. null (o ausente) = abierta: acceso-datos la guarda null porque el
+   *  índice parcial de una abierta por clave necesita una igualdad. */
+  hasta: z.string().nullish(),
   /** Nivel (m) que la abrió, o el código de falla del variador. */
   valor: z.number().optional(),
   /** Texto para el push y las vistas, en español. */

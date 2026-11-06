@@ -12,6 +12,7 @@ import { PublicacionSchema } from "./publicacion";
 import { VehiculoSchema } from "./vehiculo";
 import { TipoUnidadFuncionalSchema } from "./unidad-funcional";
 import { VinculoVehiculoSchema } from "./vinculo-vehiculo";
+import { TipoAlertaBombeoSchema } from "./alerta-bombeo";
 
 // ─── Dashboard nivel Complejo ────────────────────────────────────────────────
 
@@ -424,6 +425,88 @@ export const DashboardUFSchema: z.ZodObject<z.ZodRawShape> = z.object({
   contactos: DashboardUFContactosSchema,
 });
 
+// ─── Dashboard nivel Complejo, categoría Mantenimiento ──────────────────────
+//
+// Vista propia del permiso `nivel: 'Complejo'` + `categoriaPermiso:
+// 'Mantenimiento'` (`tipo: 'mantenimiento'` en `GET /dashboard/resumen`). El
+// dashboard general del complejo es operación de garita y administración —
+// visitas, residentes, cobertura— y no le sirve a quien atiende tickets y
+// estaciones de bombeo.
+//
+// Cada bloque es `null` cuando el rol no tiene la acción que lo habilita: el
+// gate lo decide acceso-api antes de pedir el agregado, no la UI.
+
+/**
+ * Tickets que atiende Mantenimiento: mismo criterio que el listado
+ * (`buildCategoriaFilter` + `atendidoPor`), así el número coincide con lo que
+ * el usuario puede abrir.
+ */
+export const DashboardMantenimientoTicketsSchema = z.object({
+  /** Pendiente + EnAtencion. */
+  abiertos: z.number(),
+  porEstado: z.object({
+    Pendiente: z.number(),
+    EnAtencion: z.number(),
+  }),
+  porCategoria: z.object({
+    Emergencia: z.number(),
+    Solicitud: z.number(),
+    Reclamo: z.number(),
+  }),
+  /** `estado: 'Resuelta'` con `fechaResolucion` desde las 00:00 (hora AR). */
+  resueltosHoy: z.number(),
+  /** Abiertos más recientes, top N. `ITicket` como `z.any()` (TS7056). */
+  recientes: z.array(z.any()),
+});
+
+/** Una alerta abierta de una estación, con el nombre resuelto para la lista. */
+export const DashboardMantenimientoAlertaSchema = z.object({
+  _id: z.string().optional(),
+  idEstacion: z.string(),
+  nombreEstacion: z.string().optional(),
+  tipo: TipoAlertaBombeoSchema,
+  numeroBomba: z.number().int().optional(),
+  /** ISO. */
+  desde: z.string(),
+  mensaje: z.string(),
+});
+
+export const DashboardMantenimientoBombeoSchema = z.object({
+  /** Estaciones activas del complejo, por `conexion`. */
+  estaciones: z.object({
+    total: z.number(),
+    Online: z.number(),
+    Offline: z.number(),
+    SinDatos: z.number(),
+  }),
+  alertasActivas: z.number(),
+  /** Alertas abiertas, más recientes primero, top N. */
+  alertas: z.array(DashboardMantenimientoAlertaSchema),
+});
+
+/**
+ * Personal de mantenimiento adentro del complejo. Sale del fold de presencia,
+ * con el mismo gate que la card del dashboard general (`soportaPresencia`):
+ * sin egresos registrados el número sólo sube y no se muestra.
+ */
+export const DashboardMantenimientoPersonalSchema = z.object({
+  soportaPresencia: z.boolean(),
+  ventanaHoras: z.number(),
+  /** Permisos de categoría Mantenimiento vigentes y habilitados. */
+  plantel: z.number(),
+  adentro: z.number(),
+  /** Estadías abiertas de categoría Mantenimiento (`IEstadiaCalculada`), top N. */
+  lista: z.array(z.any()),
+});
+
+export const DashboardMantenimientoSchema = z.object({
+  idComplejo: z.string(),
+  generadoEn: z.string(),
+  tickets: DashboardMantenimientoTicketsSchema.nullable(),
+  bombeo: DashboardMantenimientoBombeoSchema.nullable(),
+  personal: DashboardMantenimientoPersonalSchema.nullable(),
+});
+
 // ─── Dashboard nivel Cliente (Cliente final) ─────────────────────────────────
 
 export const DashboardClienteComplejoRowSchema = z.object({
@@ -615,3 +698,18 @@ export type IDashboardProveedorClienteRow = z.infer<
   typeof DashboardProveedorClienteRowSchema
 >;
 export type IDashboardProveedor = z.infer<typeof DashboardProveedorSchema>;
+export type IDashboardMantenimientoTickets = z.infer<
+  typeof DashboardMantenimientoTicketsSchema
+>;
+export type IDashboardMantenimientoAlerta = z.infer<
+  typeof DashboardMantenimientoAlertaSchema
+>;
+export type IDashboardMantenimientoBombeo = z.infer<
+  typeof DashboardMantenimientoBombeoSchema
+>;
+export type IDashboardMantenimientoPersonal = z.infer<
+  typeof DashboardMantenimientoPersonalSchema
+>;
+export type IDashboardMantenimiento = z.infer<
+  typeof DashboardMantenimientoSchema
+>;

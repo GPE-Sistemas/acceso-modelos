@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.26.0
+  version: 0.27.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -5244,6 +5244,12 @@ x-entidades:
       replicadaEnEdge: false
       escrituraEdge: bridge
       live: cloud
+    servidores-red-lorawan:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      # D74 (doc 59): NS LoRaWAN externos del cliente (token cifrado). El edge
+      # solo ve `conectividad.lora.red` del equipo.
+      live: cloud
     solicitudes-permiso:
       replicadaEnEdge: false
       escrituraEdge: ninguna
@@ -5261,6 +5267,13 @@ x-entidades:
         cloud-direct y sacarle la ruta al edge). Ver PENDIENTES de
         acceso-doc-general § Realtime del Hub edge.
       live: edge
+    uplinks-externos:
+      replicadaEnEdge: false
+      escrituraEdge: ninguna
+      # D74 (doc 59 §4.2): uplinks de un NS externo pendientes de que los
+      # procese el edge del complejo. No es replicación: el edge los baja por
+      # cursor (`GET /sync/lorawan/uplinks-externos`) y los pasa por la ingesta.
+      live: cloud
     usuarios:
       subject: usuario
       replicadaEnEdge: true

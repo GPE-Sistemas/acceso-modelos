@@ -495,6 +495,11 @@ export const IpLanHistoricoEntrySchema = z.object({
  */
 export const ClaseConectividadSchema = z.enum(["IP-LAN", "LoRaWAN", "Celular"]);
 
+/** D74: NS al que reporta un equipo LoRaWAN. */
+export const RedLoRaWANSchema = z.enum(["Local", "Externa"]);
+/** D74: quién encola downlinks a un equipo de red externa. */
+export const ComandadoPorLoRaWANSchema = z.enum(["Coliving", "Externo"]);
+
 export const ConectividadLoRaWANSchema = z.object({
   // **NORMALIZADO EN MINÚSCULAS**, misma regla que `mac` (y por el mismo
   // incidente): el EUI llega en mayúsculas de la etiqueta y en minúsculas de
@@ -514,6 +519,15 @@ export const ConectividadLoRaWANSchema = z.object({
   idPerfilDecodificacion: z.string().optional(),
   // Perfil `DerivadaDeLote`: nombre del lote del que sale la llave.
   lote: z.string().optional(),
+  // D74 (doc 59): a qué network server reporta. Ausente = `Local` (el
+  // ChirpStack del edge, todo lo que existía antes). `Externa` = tiene sesión
+  // en un NS ajeno (`idServidorRed`, obligatorio — lo valida acceso-api): el
+  // edge no lo da de alta en su ChirpStack y recibe los uplinks del cloud.
+  red: RedLoRaWANSchema.optional(),
+  idServidorRed: z.string().optional(),
+  // Quién manda downlinks a un equipo de red externa. Ausente = `Externo`: el
+  // NS ajeno (Gas) puede estar comandándolo y dos dueños de la cola se pisan.
+  comandadoPor: ComandadoPorLoRaWANSchema.optional(),
 });
 
 /** Equipo con módem celular propio (D72). Los escribe la ingesta (trama F3). */
@@ -942,6 +956,8 @@ export type IEstadoDispositivo = z.infer<typeof EstadoDispositivoSchema>;
 export type IConfigDispositivo = z.infer<typeof ConfigDispositivoSchema>;
 export type IClaseConectividad = z.infer<typeof ClaseConectividadSchema>;
 export type IConectividadLoRaWAN = z.infer<typeof ConectividadLoRaWANSchema>;
+export type IRedLoRaWAN = z.infer<typeof RedLoRaWANSchema>;
+export type IComandadoPorLoRaWAN = z.infer<typeof ComandadoPorLoRaWANSchema>;
 export type IConectividad = z.infer<typeof ConectividadSchema>;
 export type IConectividadCelular = z.infer<typeof ConectividadCelularSchema>;
 export type IModeloRtuDispositivo = z.infer<typeof ModeloRtuDispositivoSchema>;

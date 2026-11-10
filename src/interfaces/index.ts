@@ -61,6 +61,7 @@ export * from './perfil-camara';
 export * from './perfil-dispositivo';
 export * from './perfil-decodificacion';
 export * from './plantilla-rtu';
+export * from './servidor-red-lorawan';
 export * from './estacion-bombeo';
 export * from './alerta-bombeo';
 export * from './comando-bomba';

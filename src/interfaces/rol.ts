@@ -164,6 +164,10 @@ export const AccionesRolSchema = z.enum([
   // Catálogo de plataforma: un perfil mal cargado corrompe la ingesta de todos
   // los equipos de ese modelo.
   "Hardware - Administrar perfiles de decodificación",
+  // NS LoRaWAN externos del cliente (D74, doc 59): guarda el token de un NS
+  // ajeno y escribe en su integración HTTP. Mismo nivel de sensibilidad que la
+  // credencial del gateway.
+  "Hardware - Administrar servidores de red LoRaWAN",
   // Serie de mediciones de un equipo LoRaWAN (D55 §5.1, D66 Etapa 3): ficha del
   // medidor/sensor. El consumo por UF tiene su propia acción (Etapa 4).
   "Hardware - Ver mediciones de dispositivo",

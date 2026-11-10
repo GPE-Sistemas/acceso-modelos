@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ServicioMedidoSchema } from "./asignacion-dispositivo";
+import { ComandadoPorLoRaWANSchema, RedLoRaWANSchema } from "./dispositivo";
 
 /**
  * Importación masiva de equipos LoRaWAN (D66 Etapa 2.3, doc 53 §4.4). Es el
@@ -33,6 +34,12 @@ export const ImportarEquiposLorawanSchema = z.object({
   modelo: z.string().optional(),
   /** Servicio de las asignaciones (las filas con `uf`). */
   servicio: ServicioMedidoSchema.optional(),
+  /** D74 (doc 59): red de TODOS los equipos de la planilla. `Externa` exige
+   *  `idServidorRed` (NS del mismo cliente) y no pide AppKey: la sesión vive
+   *  en ese NS. Ausente = `Local`. */
+  red: RedLoRaWANSchema.optional(),
+  idServidorRed: z.string().optional(),
+  comandadoPor: ComandadoPorLoRaWANSchema.optional(),
   simular: z.boolean().optional(),
   filas: z.array(FilaImportacionLorawanSchema).min(1).max(2000),
 });

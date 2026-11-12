@@ -22,10 +22,14 @@ export const EdgeApplianceEstadoSchema = z.enum([
 
 // D18: el appliance puede ser hardware productivo, una VM (KVM/QEMU/VBox/VMware)
 // detectada via systemd-detect-virt, o un mini-PC genérico marcado como demo.
+// D75 (doc 60): `Nube` = edge virtual, el mismo agente corriendo en el cluster
+// como appliance de un complejo sin edge físico (sin LAN, sin overlay
+// Headscale, sin DNS; se actualiza por manifiesto, no por `update-image`).
 export const EdgeApplianceEntornoSchema = z.enum([
   "Productivo",
   "Virtualizado",
   "Demo",
+  "Nube",
 ]);
 
 export const EdgeApplianceFlagEstadoSchema = z.enum([

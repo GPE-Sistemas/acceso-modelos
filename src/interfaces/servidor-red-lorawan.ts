@@ -17,6 +17,11 @@ import { ClienteSchema } from "./cliente";
  * GET: se exponen `tieneToken`.
  */
 
+/** Downlinks por hora del NS externo si no se cargó otro valor. Más bajo que
+ *  el del edge (30 por gateway): no conocemos los gateways del NS y comparten
+ *  aire con los downlinks de la otra plataforma (doc 59 §5.2 regla 4). */
+export const PRESUPUESTO_DOWNLINKS_NS_EXTERNO_DEFAULT = 10;
+
 export const TipoServidorRedLorawanSchema = z.enum(["ChirpStackV3", "ChirpStackV4"]);
 
 /**
@@ -52,6 +57,15 @@ export const DiagnosticoServidorRedSchema = z.object({
   ultimoDescartadoDevEUI: z.string().optional(),
   reconciliadoEn: z.string().optional(),
   errorReconciliacion: z.string().optional(),
+  /** Downlinks (F2, doc 59 §5): encolados en el NS a pedido de un edge. */
+  ultimoDownlinkEn: z.string().optional(),
+  downlinksEncolados: z.number().int().optional(),
+  /** El comando anterior seguía en la cola del NS: no se reencoló. */
+  downlinksYaEnCola: z.number().int().optional(),
+  /** Pedidos rechazados por el presupuesto de aire del NS. */
+  downlinksSinPresupuesto: z.number().int().optional(),
+  ultimoErrorDownlink: z.string().optional(),
+  ultimoErrorDownlinkEn: z.string().optional(),
 });
 
 export const ServidorRedLorawanSchema = z.object({
@@ -72,7 +86,8 @@ export const ServidorRedLorawanSchema = z.object({
    *  en el NS. Cifrado (no hash) porque el reconciliador tiene que reconstruir
    *  la URL para buscarla en la integración. Nunca sale en un GET. */
   secretoIngestaCifrado: z.string().optional(),
-  /** Presupuesto de downlinks por hora para todo el NS (F2, doc 59 §5.2). */
+  /** Presupuesto de downlinks por hora para todo el NS (F2, doc 59 §5.2),
+   *  sumando todos los complejos. Ausente = `PRESUPUESTO_DOWNLINKS_NS_EXTERNO_DEFAULT`. */
   presupuestoDownlinksPorHora: z.number().int().positive().optional(),
   activo: z.boolean().optional(),
   /** Owner acceso-api (reconciliador / ingesta). */
@@ -189,3 +204,34 @@ export const PaginaUplinksExternosSchema = z.object({
 export type IEventoUplinkNormalizado = z.infer<typeof EventoUplinkNormalizadoSchema>;
 export type IUplinkExterno = z.infer<typeof UplinkExternoSchema>;
 export type IPaginaUplinksExternos = z.infer<typeof PaginaUplinksExternosSchema>;
+
+// ── Downlinks por el NS externo (F2, doc 59 §5) ─────────────────────────────
+
+/**
+ * Pedido del edge para encolar un downlink a un equipo de red externa
+ * (`POST /sync/lorawan/downlinks-externos`). El planificador del edge decide
+ * qué mandar y cierra por respuesta de aplicación (llega por el webhook);
+ * acá solo se encola en el NS con su token, que nunca baja al appliance.
+ * Siempre unconfirmed y sin `flushQueue`.
+ */
+export const EncolarDownlinkExternoSchema = z.object({
+  idDispositivo: z.string(),
+  /** Minúsculas, 16 hex: tiene que coincidir con el del equipo. */
+  devEUI: z.string().regex(/^[0-9a-f]{16}$/),
+  fPort: z.number().int().min(1).max(223),
+  /** Payload en base64. */
+  data: z.string(),
+  /** Para el log: `historico:2026-11-10`, `config`… */
+  clave: z.string().optional(),
+  comando: z.string().optional(),
+});
+
+/** Respuesta: `yaEnCola` = el mismo comando (fPort + payload) seguía en la
+ *  cola del NS y no se reencoló (la cola de v3 no vence, regla 3). */
+export const ResultadoDownlinkExternoSchema = z.object({
+  idItem: z.string(),
+  yaEnCola: z.boolean(),
+});
+
+export type IEncolarDownlinkExterno = z.infer<typeof EncolarDownlinkExternoSchema>;
+export type IResultadoDownlinkExterno = z.infer<typeof ResultadoDownlinkExternoSchema>;

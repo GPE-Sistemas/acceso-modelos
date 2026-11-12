@@ -527,6 +527,8 @@ export const ConectividadLoRaWANSchema = z.object({
   idServidorRed: z.string().optional(),
   // Quién manda downlinks a un equipo de red externa. Ausente = `Externo`: el
   // NS ajeno (Gas) puede estar comandándolo y dos dueños de la cola se pisan.
+  // Con `Coliving` el edge planifica sus comandos y acceso-api los encola en
+  // el NS (F2, doc 59 §5): recién cuando la otra plataforma lo excluyó.
   comandadoPor: ComandadoPorLoRaWANSchema.optional(),
 });
 

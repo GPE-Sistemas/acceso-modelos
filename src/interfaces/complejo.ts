@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { GeoJSONMultiPolygonSchema } from "../auxiliares/geojson";
+import { ZonaHorariaMinutosSchema } from "./perfil-decodificacion";
 
 /**
  * Esquema de identificador de PIN del complejo (terminales de teclado HIK, ej.
@@ -99,6 +100,16 @@ export const ConfigAsistenteComplejoSchema = z.object({
   mensajesDiarios: z.number().int().positive().optional(),
 });
 
+/**
+ * Equipos LoRaWAN del complejo (D76, doc 53 §5.2). Viaja al edge con el
+ * complejo (`config` entero, jsonb). `zonaHorariaMinutos`: zona en la que
+ * reportan los relojes de los equipos del complejo, en minutos respecto de UTC.
+ * Pisa la del perfil; la pisa la del equipo (`conectividad.lora`).
+ */
+export const ConfigLorawanComplejoSchema = z.object({
+  zonaHorariaMinutos: ZonaHorariaMinutosSchema.optional(),
+});
+
 export const ConfigComplejoSchema = z.object({
   imagenes: z.object({
       logo: z.string().optional(),
@@ -113,6 +124,8 @@ export const ConfigComplejoSchema = z.object({
   /** Plano georreferenciado (mapa sin internet del Hub edge). */
   plano: PlanoComplejoSchema.optional(),
   asistente: ConfigAsistenteComplejoSchema.optional(),
+  /** Equipos LoRaWAN del complejo (D76). Ausente = rigen los perfiles. */
+  lorawan: ConfigLorawanComplejoSchema.optional(),
 });
 
 export const TipoComplejoSchema = z.enum(["Barrio", "Edificio", "Condominio"]);
@@ -150,6 +163,7 @@ export type IPinModo = z.infer<typeof PinModoSchema>;
 export type IPinScheme = z.infer<typeof PinSchemeSchema>;
 export type IConfigEgresoMenores = z.infer<typeof ConfigEgresoMenoresSchema>;
 export type IConfigAsistenteComplejo = z.infer<typeof ConfigAsistenteComplejoSchema>;
+export type IConfigLorawanComplejo = z.infer<typeof ConfigLorawanComplejoSchema>;
 export type IConfigComplejo = z.infer<typeof ConfigComplejoSchema>;
 export type ITipoComplejo = z.infer<typeof TipoComplejoSchema>;
 export type IComplejo = z.infer<typeof ComplejoSchema>;

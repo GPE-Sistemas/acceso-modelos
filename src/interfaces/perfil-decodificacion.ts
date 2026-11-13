@@ -35,6 +35,27 @@ export const DecodificadorLoRaWANSchema = z.enum(["cjt188", "hac-mlw", "ml107a",
  */
 export const MetodoClaveLoRaWANSchema = z.enum(["PorDispositivo", "FijaPorModelo", "DerivadaDeLote"]);
 
+/**
+ * D76 (doc 53 §5.2): zona horaria en la que reporta el RELOJ de un equipo
+ * LoRaWAN, en minutos respecto de UTC (+480 = China, −180 = Argentina). La usan
+ * los decodificadores que leen una fecha de pared sin zona (CJ/T 188 del
+ * EUW300). Múltiplo de 15 (todas las zonas reales lo son) entre UTC−12 y UTC+14.
+ *
+ * Se resuelve en el edge con precedencia: dispositivo
+ * (`conectividad.lora.zonaHorariaMinutos`) > complejo
+ * (`config.lorawan.zonaHorariaMinutos`) > perfil (`parametros.zonaHorariaMinutos`)
+ * > default del decodificador. Así un equipo configurado en otra zona no pide
+ * un perfil por zona.
+ */
+export const ZONA_HORARIA_MINUTOS_MIN = -720;
+export const ZONA_HORARIA_MINUTOS_MAX = 840;
+export const ZonaHorariaMinutosSchema = z
+  .number()
+  .int()
+  .min(ZONA_HORARIA_MINUTOS_MIN)
+  .max(ZONA_HORARIA_MINUTOS_MAX)
+  .multipleOf(15);
+
 export const ClaseLoRaWANSchema = z.enum(["A", "B", "C"]);
 export const ActivacionLoRaWANSchema = z.enum(["OTAA", "ABP"]);
 /** Versiones LoRaWAN que acepta ChirpStack v4 (`commonMacVersion`). */

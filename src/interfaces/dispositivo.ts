@@ -8,7 +8,11 @@ import {
 } from "./config-operacion-dispositivo";
 import { PerfilDispositivoSchema } from "./perfil-dispositivo";
 import { GeoJSONPointSchema } from "../auxiliares/geojson";
-import { ActivacionLoRaWANSchema, ClaseLoRaWANSchema } from "./perfil-decodificacion";
+import {
+  ActivacionLoRaWANSchema,
+  ClaseLoRaWANSchema,
+  ZonaHorariaMinutosSchema,
+} from "./perfil-decodificacion";
 
 /**
  * Form-factor / familia física del dispositivo (eje físico, single-select). NO
@@ -530,6 +534,10 @@ export const ConectividadLoRaWANSchema = z.object({
   // Con `Coliving` el edge planifica sus comandos y acceso-api los encola en
   // el NS (F2, doc 59 §5): recién cuando la otra plataforma lo excluyó.
   comandadoPor: ComandadoPorLoRaWANSchema.optional(),
+  // D76 (doc 53 §5.2): zona en la que reporta el reloj de ESTE equipo, en
+  // minutos respecto de UTC. Ausente = la del complejo (`config.lorawan`), y si
+  // no la del perfil. Solo la leen los decodificadores con fecha de pared.
+  zonaHorariaMinutos: ZonaHorariaMinutosSchema.optional(),
 });
 
 /** Equipo con módem celular propio (D72). Los escribe la ingesta (trama F3). */

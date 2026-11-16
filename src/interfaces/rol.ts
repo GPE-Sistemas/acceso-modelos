@@ -189,6 +189,10 @@ export const AccionesRolSchema = z.enum([
   // unidad, desde el inicio de su vigencia. Gatea también el push de alarma
   // del medidor (`alarma_medidor`): no se avisa a quien no puede abrirlo.
   "Servicios - Ver mi consumo",
+  // Exportar consumos a Excel (resumen + hoja por UF + lecturas/cierres).
+  // Aparte de "Ver consumos de todas las UF": bajar el consumo de todo el
+  // complejo a un archivo es sacar el dato del sistema (revela presencia).
+  "Servicios - Exportar consumos",
   // Facturación de servicios en expensas (D66 Etapa 5): tarifas y corte del
   // período, y el cierre mensual (completar lecturas, confirmar). Un cierre
   // confirmado entra en la próxima liquidación de expensas.

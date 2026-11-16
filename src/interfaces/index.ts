@@ -71,6 +71,7 @@ export * from './medicion-dispositivo';
 export * from './posicion-dispositivo';
 export * from './consumo-diario';
 export * from './consumo-periodo';
+export * from './exportar-consumos';
 export * from './tracker-visita';
 export * from './config-servicios';
 export * from './factura-servicio';

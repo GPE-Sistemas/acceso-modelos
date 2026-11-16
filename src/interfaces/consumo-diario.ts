@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ClienteSchema } from "./cliente";
 import { ComplejoSchema } from "./complejo";
 import { DestinoAsignacionSchema, ServicioMedidoSchema } from "./asignacion-dispositivo";
+import { CorteServiciosSchema } from "./config-servicios";
 
 /**
  * IConsumoDiario — consumo de un día por asignación de medidor (D66 Etapa 4,
@@ -186,6 +187,21 @@ export const MisConsumosSchema = z.object({
   medidores: z.array(MiMedidorSchema),
   /** Días del rango de las asignaciones de la unidad (vigentes y cerradas). */
   dias: z.array(ConsumoDiarioSchema),
+  /**
+   * Corte del período de consumo del complejo (`IConfigServiciosComplejo.corte`).
+   * Con corte, las vistas agrupan por período de facturación: el período
+   * "YYYY-MM" va del día `dia` del mes anterior al día `dia − 1` del mes
+   * (ambos inclusive, hora local). Ausente = mes calendario.
+   */
+  corte: CorteServiciosSchema.optional(),
+});
+
+/**
+ * `GET /consumos-diarios/corte`: el corte del período de consumo del complejo
+ * para las vistas de consumo de la administración. null = mes calendario.
+ */
+export const CorteConsumosSchema = z.object({
+  corte: CorteServiciosSchema.nullable(),
 });
 
 export type IConsumoDiario = z.infer<typeof ConsumoDiarioSchema>;
@@ -198,3 +214,4 @@ export type IAlarmaMedidorResidente = (typeof ALARMAS_MEDIDOR_RESIDENTE)[number]
 export type IMisConsumosQuery = z.infer<typeof MisConsumosQuerySchema>;
 export type IMiMedidor = z.infer<typeof MiMedidorSchema>;
 export type IMisConsumos = z.infer<typeof MisConsumosSchema>;
+export type ICorteConsumos = z.infer<typeof CorteConsumosSchema>;

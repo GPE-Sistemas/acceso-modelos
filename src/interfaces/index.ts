@@ -65,6 +65,7 @@ export * from './servidor-red-lorawan';
 export * from './estacion-bombeo';
 export * from './alerta-bombeo';
 export * from './comando-bomba';
+export * from './alumbrado';
 export * from './reporte-bombeo';
 export * from './asignacion-dispositivo';
 export * from './medicion-dispositivo';

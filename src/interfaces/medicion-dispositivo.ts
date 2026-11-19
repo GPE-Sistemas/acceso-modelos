@@ -61,6 +61,12 @@ export const MagnitudMedicionSchema = z.enum([
   "demandaMaximaExportada", // 2.6.0
   "demandaMaximaImportadaT1", // 1.6.0.1
   "demandaMaximaExportadaT1", // 2.6.0.1
+  // D77 — nodo de luminaria GPE (doc 61). `tension`, `corriente` y
+  // `energiaAcumulada` (contador del nodo) ya existen.
+  "potencia", // W instantáneos
+  "factorPotencia", // 0..1
+  "nivelAtenuacion", // % de atenuación del driver (0-100)
+  "encendida", // 0/1: relé ON y potencia > 0
 ]);
 
 /**

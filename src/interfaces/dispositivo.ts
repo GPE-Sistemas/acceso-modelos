@@ -46,6 +46,9 @@ import {
  *   (D72, doc 58): hoy Milesight UC300 4G, conectividad `Celular`, datos por
  *   MQTT al broker del cloud. Se asigna a una `IEstacionBombeo`; el edge no lo
  *   gestiona.
+ * - `Luminaria`: nodo de luminaria LoRaWAN (D77, doc 61; hoy el nodo GPE
+ *   SSL-IDF). Se asigna a una `ILuminaria` con `IAsignacionDispositivo`
+ *   destino `Luminaria`; la config deseada sale de su sector de alumbrado.
  * - `Otro`: fallback.
  *
  * La coherencia formFactor↔capacidades (Terminal ⇒ ≥1 credencial; Cámara/NVR/XVR
@@ -65,6 +68,7 @@ export const FormFactorDispositivoSchema = z.enum([
   "Tracker",
   "Sensor",
   "RTU",
+  "Luminaria",
   "Otro",
 ]);
 
@@ -681,6 +685,15 @@ export const TelemetriaLoRaWANSchema = z.object({
   /** Bits de estado del equipo vigentes (por nombre estable del decodificador:
    *  `bateriaBaja`, `ataqueMagnetico`, `fuga`…). Solo los que están en true. */
   alarmasActivas: z.array(z.string()).optional(),
+  /** Último valor de CADA magnitud que reportó el equipo (D77): un equipo con
+   *  varias magnitudes vivas (luminaria: encendida, potencia, atenuación) no
+   *  entra en `ultimaLectura`. Merge por clave. */
+  ultimosValores: z
+    .record(z.string(), z.object({ valor: z.number().nullable(), fechaDato: z.string().optional() }))
+    .optional(),
+  /** Indicadores de estado que no son alarma ni medición (modo, relé,
+   *  firmware…), tal como los entrega el decodificador. */
+  indicadores: z.record(z.string(), z.any()).optional(),
   /** Uplinks que el decodificador rechazó desde el último decodificado OK. */
   uplinksSinDecodificar: z.number().int().optional(),
   ultimoErrorDecodificacion: z.string().optional(),

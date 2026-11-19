@@ -499,12 +499,27 @@ export const DashboardMantenimientoPersonalSchema = z.object({
   lista: z.array(z.any()),
 });
 
+/** Luminarias del complejo por `estadoLuminaria()` (D77). */
+export const DashboardMantenimientoAlumbradoSchema = z.object({
+  total: z.number(),
+  Encendida: z.number(),
+  Apagada: z.number(),
+  Manual: z.number(),
+  ConAlarma: z.number(),
+  SinComunicacion: z.number(),
+  Mantenimiento: z.number(),
+  SinNodo: z.number(),
+  SinDatos: z.number(),
+});
+
 export const DashboardMantenimientoSchema = z.object({
   idComplejo: z.string(),
   generadoEn: z.string(),
   tickets: DashboardMantenimientoTicketsSchema.nullable(),
   bombeo: DashboardMantenimientoBombeoSchema.nullable(),
   personal: DashboardMantenimientoPersonalSchema.nullable(),
+  /** `null` sin `Alumbrado - Ver`. Opcional: una api vieja no lo manda. */
+  alumbrado: DashboardMantenimientoAlumbradoSchema.nullable().optional(),
 });
 
 // ─── Dashboard nivel Cliente (Cliente final) ─────────────────────────────────
@@ -704,6 +719,7 @@ export type IDashboardMantenimientoTickets = z.infer<
 export type IDashboardMantenimientoAlerta = z.infer<
   typeof DashboardMantenimientoAlertaSchema
 >;
+export type IDashboardMantenimientoAlumbrado = z.infer<typeof DashboardMantenimientoAlumbradoSchema>;
 export type IDashboardMantenimientoBombeo = z.infer<
   typeof DashboardMantenimientoBombeoSchema
 >;

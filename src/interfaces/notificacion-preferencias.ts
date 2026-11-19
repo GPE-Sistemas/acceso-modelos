@@ -115,6 +115,12 @@ export const CategoriaNotificacionSchema = z.enum([
    * sin reportar), a los permisos con `Bombeo - Recibir alertas`.
    */
   "alerta_bombeo",
+  /**
+   * D77: alertas de alumbrado del complejo (corte de energía, relé sin
+   * consumo, golpe o manipulación del poste), agrupadas por sector, a los
+   * permisos con `Alumbrado - Recibir alertas`.
+   */
+  "alerta_alumbrado",
 ]);
 
 /**
@@ -185,6 +191,7 @@ export const CategoriasNotificacionMapSchema = z.object({
   alarma_medidor: z.boolean(),
   expensa_emitida: z.boolean(),
   alerta_bombeo: z.boolean(),
+  alerta_alumbrado: z.boolean(),
 });
 
 export const NotificacionPreferenciasSchema = z.object({
@@ -271,4 +278,5 @@ export const NOTIF_PREFERENCIAS_DEFAULT: ICategoriasNotificacionMap = {
   alarma_medidor: true,
   expensa_emitida: true,
   alerta_bombeo: true,
+  alerta_alumbrado: true,
 };

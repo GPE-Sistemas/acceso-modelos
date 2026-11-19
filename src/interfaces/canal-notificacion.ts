@@ -167,6 +167,8 @@ export const TipoPushSchema = z.enum([
   "expensa_emitida",
   /** D72 F6: alerta de una estación de bombeo (preferencia `alerta_bombeo`). */
   "alerta_bombeo",
+  /** D77: alerta de alumbrado agrupada por sector (preferencia `alerta_alumbrado`). */
+  "alerta_alumbrado",
 ]);
 
 export type ITipoPush = z.infer<typeof TipoPushSchema>;

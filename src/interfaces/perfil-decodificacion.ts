@@ -18,7 +18,15 @@ import { ClienteSchema } from "./cliente";
  */
 
 /** Familias implementadas en el edge (`internal/lorawan/decodificador`). */
-export const DecodificadorLoRaWANSchema = z.enum(["cjt188", "hac-mlw", "ml107a", "t1000", "nme"]);
+export const DecodificadorLoRaWANSchema = z.enum([
+  "cjt188",
+  "hac-mlw",
+  "ml107a",
+  "t1000",
+  "nme",
+  // D77: nodo de luminaria GPE (firmware SSL-IDF), doc 61.
+  "luminaria-gpe",
+]);
 
 /**
  * De dónde sale la AppKey de los equipos de este modelo (doc 53 §4.4). Es del

@@ -218,6 +218,19 @@ export const AccionesRolSchema = z.enum([
   // Arrancar/parar/rearmar bombas por RS-485. Escribe en el variador: gate
   // propio, nunca incluido en Ver ni en Gestionar.
   "Bombeo - Comandar bombas",
+
+  // MODULO ALUMBRADO (D77, doc 61): luminarias con nodo LoRaWAN GPE. Lo usa
+  // sobre todo la categoría Mantenimiento (nivel Complejo).
+  // Ver = mapa, listado, ficha, telemetría y órdenes.
+  "Alumbrado - Ver",
+  // Encender/apagar a mano una luminaria o un sector hasta una fecha.
+  "Alumbrado - Ordenar encendido",
+  // ABM de sectores y su config (modo, umbrales, calendario): viaja al nodo.
+  "Alumbrado - Configurar sectores",
+  // ABM de luminarias, vínculo con el nodo, ubicación.
+  "Alumbrado - Administrar luminarias",
+  // Push `alerta_alumbrado` (corte de energía, relé sin consumo, golpe…).
+  "Alumbrado - Recibir alertas",
   // Dispara la actualización de firmware de UN dispositivo. Operación
   // irreversible (el fabricante bloquea el downgrade) y con riesgo de dejar el
   // equipo inutilizable: gate propio, nunca incluida en "Editar dispositivos".

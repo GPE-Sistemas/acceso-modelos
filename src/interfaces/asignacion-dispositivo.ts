@@ -21,7 +21,13 @@ import { ComplejoSchema } from "./complejo";
  * `lecturaFinal`/`odometroFinal` y abrir otra.
  */
 
-export const DestinoAsignacionSchema = z.enum(["Visita", "UnidadFuncional", "Complejo"]);
+export const DestinoAsignacionSchema = z.enum([
+  "Visita",
+  "UnidadFuncional",
+  "Complejo",
+  // D77: nodo de luminaria → `ILuminaria`. Sin servicio: no factura.
+  "Luminaria",
+]);
 export const ServicioMedidoSchema = z.enum(["Agua", "Gas", "Electricidad"]);
 
 /**
@@ -98,6 +104,9 @@ export const AsignacionDispositivoSchema = z.object({
   idIngresoEgresoEntrega: z.string().optional(),
   idIngresoEgresoDevolucion: z.string().optional(),
   motivoSalidaSinDevolver: z.string().optional(),
+
+  // ── Luminaria (destino Luminaria, D77) ───────────────────────────────────
+  idLuminaria: z.string().optional(),
 
   idPermisoAlta: z.string().optional(),
   idPermisoCierre: z.string().optional(),

@@ -29,7 +29,7 @@ export const FilaImportacionLorawanSchema = z.object({
 export const ImportarEquiposLorawanSchema = z.object({
   idComplejo: z.string().optional(),
   idPerfilDecodificacion: z.string(),
-  formFactor: z.enum(["Medidor", "Sensor", "Tracker"]).optional(),
+  formFactor: z.enum(["Medidor", "Sensor", "Tracker", "Luminaria"]).optional(),
   marca: z.string().optional(),
   modelo: z.string().optional(),
   /** Servicio de las asignaciones (las filas con `uf`). */

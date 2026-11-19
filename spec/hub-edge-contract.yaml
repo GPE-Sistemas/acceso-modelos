@@ -5016,6 +5016,14 @@ x-entidades:
       replicadaEnEdge: false
       escrituraEdge: ninguna
       live: cloud
+    comandos-luminaria:
+      subject: comando-luminaria
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      # D77 (doc 61 §3.3): orden manual con vencimiento. La crea, cancela y
+      # vence acceso-api; el edge la lee para planificar el DL 110 y la
+      # restauración. El avance por luminaria va en `luminarias.override`.
+      live: cloud
     complejos:
       replicadaEnEdge: true
       escrituraEdge: ninguna
@@ -5141,6 +5149,13 @@ x-entidades:
       replicadaEnEdge: false
       escrituraEdge: ninguna
       live: cloud
+    luminarias:
+      subject: luminaria
+      replicadaEnEdge: true
+      escrituraEdge: bridge
+      # D77 (doc 61 §3.1): el activo físico. Autoría cloud; el edge escribe
+      # SOLO `override` y `estadoConfig` por el bridge (update, nunca alta).
+      live: cloud
     mascotas:
       replicadaEnEdge: false
       escrituraEdge: ninguna
@@ -5243,6 +5258,13 @@ x-entidades:
       subject: salud-stream
       replicadaEnEdge: false
       escrituraEdge: bridge
+      live: cloud
+    sectores-alumbrado:
+      subject: sector-alumbrado
+      replicadaEnEdge: true
+      escrituraEdge: ninguna
+      # D77 (doc 61 §3.2): config deseada de las luminarias; el edge la
+      # convierte en DL 100 / DL 112.
       live: cloud
     servidores-red-lorawan:
       replicadaEnEdge: false

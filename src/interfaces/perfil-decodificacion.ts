@@ -37,11 +37,29 @@ export const DecodificadorLoRaWANSchema = z.enum([
  *    proveedor, NFC). Se carga en cada equipo (`config.appKey`).
  *  - `FijaPorModelo`: el fabricante usa una sola clave para toda la flota
  *    (SML/HAC). Vive cifrada en el perfil.
- *  - `DerivadaDeLote`: equipos grabados con una llave maestra por lote:
- *    AES-128-CBC(llave del lote, IV fijo, PKCS7(devEUI)) — algoritmo de
- *    gas-admin. Las llaves viven cifradas en `lotes[]`.
+ *  - `DerivadaDeLote`: equipos grabados con una llave maestra por lote; la
+ *    AppKey se calcula del devEUI con `algoritmoDerivacion`. Las llaves viven
+ *    cifradas en `lotes[]`.
  */
 export const MetodoClaveLoRaWANSchema = z.enum(["PorDispositivo", "FijaPorModelo", "DerivadaDeLote"]);
+
+/**
+ * Cómo se deriva la AppKey de un perfil `DerivadaDeLote`. Los dos usan el
+ * mismo IV fijo (`57 08 17 18 00 30 2C 37 1D 09 1F 07 21 22 2F 05`), que no
+ * se carga: va en el código.
+ *  - `Gas` (default si falta): AES-128-CBC(llave del lote, IV, PKCS7(devEUI))
+ *    — gas-admin, medidores SML. Llave de 16 bytes.
+ *  - `SslGpe`: AES-256-CBC(llave del lote, IV, devEUI + 8 × 0x0A) — firmware
+ *    SSL-IDF de las luminarias GPE (`main_generar_llaves`). Llave de 32 bytes
+ *    (`MAIN_API_KEY_AES`).
+ */
+export const AlgoritmoDerivacionLoRaWANSchema = z.enum(["Gas", "SslGpe"]);
+
+/** Largo en bytes de la llave de lote que pide cada algoritmo. */
+export const BYTES_LLAVE_DERIVACION: Record<z.infer<typeof AlgoritmoDerivacionLoRaWANSchema>, number> = {
+  Gas: 16,
+  SslGpe: 32,
+};
 
 /**
  * D76 (doc 53 §5.2): zona horaria en la que reporta el RELOJ de un equipo
@@ -115,6 +133,8 @@ export const PerfilDecodificacionSchema = z.object({
   tieneAppKey: z.boolean().optional(),
   /** `DerivadaDeLote`. */
   lotes: z.array(LotePerfilDecodificacionSchema).optional(),
+  /** `DerivadaDeLote`: ausente = `Gas` (los perfiles previos). */
+  algoritmoDerivacion: AlgoritmoDerivacionLoRaWANSchema.optional(),
   /** Device profile de ChirpStack que arma el edge. Los defaults se relevan en
    *  el banco por modelo (doc 53 Etapa 0.4): no están en el código de Gas. */
   lorawan: z
@@ -158,6 +178,7 @@ export const UpdatePerfilDecodificacionSchema = CreatePerfilDecodificacionSchema
 
 export type IDecodificadorLoRaWAN = z.infer<typeof DecodificadorLoRaWANSchema>;
 export type IMetodoClaveLoRaWAN = z.infer<typeof MetodoClaveLoRaWANSchema>;
+export type IAlgoritmoDerivacionLoRaWAN = z.infer<typeof AlgoritmoDerivacionLoRaWANSchema>;
 export type IClaseLoRaWAN = z.infer<typeof ClaseLoRaWANSchema>;
 export type IActivacionLoRaWAN = z.infer<typeof ActivacionLoRaWANSchema>;
 export type IMacVersionLoRaWAN = z.infer<typeof MacVersionLoRaWANSchema>;

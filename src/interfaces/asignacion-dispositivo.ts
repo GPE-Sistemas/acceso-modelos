@@ -27,6 +27,9 @@ export const DestinoAsignacionSchema = z.enum([
   "Complejo",
   // D77: nodo de luminaria → `ILuminaria`. Sin servicio: no factura.
   "Luminaria",
+  // D78: botón de pánico BLE → `IPermiso`. Se cierra sola con la baja del
+  // permiso.
+  "Permiso",
 ]);
 export const ServicioMedidoSchema = z.enum(["Agua", "Gas", "Electricidad"]);
 
@@ -108,6 +111,10 @@ export const AsignacionDispositivoSchema = z.object({
   // ── Luminaria (destino Luminaria, D77) ───────────────────────────────────
   idLuminaria: z.string().optional(),
 
+  // ── Botón BLE (destino Permiso, D78) ─────────────────────────────────────
+  // `idUnidadFuncional` se copia del permiso al asignar (si es de UF).
+  idPermiso: z.string().optional(),
+
   idPermisoAlta: z.string().optional(),
   idPermisoCierre: z.string().optional(),
   observaciones: z.string().optional(),
@@ -115,6 +122,8 @@ export const AsignacionDispositivoSchema = z.object({
   // cadena profunda de populate (mismo criterio que vinculo-evento-ingreso.ts).
   dispositivo: z.any().optional(),
   unidadFuncional: z.any().optional(),
+  /** D78: dueño del botón BLE (destino Permiso). */
+  permiso: z.any().optional(),
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
 });
@@ -125,6 +134,7 @@ export const CreateAsignacionDispositivoSchema = AsignacionDispositivoSchema.omi
   fechaActualizacion: true,
   dispositivo: true,
   unidadFuncional: true,
+  permiso: true,
   cliente: true,
   complejo: true,
 });

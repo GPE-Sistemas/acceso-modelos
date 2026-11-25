@@ -69,6 +69,10 @@ export const FormFactorDispositivoSchema = z.enum([
   "Sensor",
   "RTU",
   "Luminaria",
+  // D78 (doc 62): botón de pánico BLE. Sin conexión propia: lo escuchan los
+  // nodos de luminaria y lo reenvían por LoRaWAN (UL 103). Se asigna a un
+  // permiso con `IAsignacionDispositivo` destino `Permiso`.
+  "Botón BLE",
   "Otro",
 ]);
 
@@ -501,7 +505,9 @@ export const IpLanHistoricoEntrySchema = z.object({
  * HACE). Selecciona además el pipeline de ingesta: `LoRaWAN` entra por el
  * ChirpStack local del edge. Ausente = `IP-LAN` (todo lo que existía antes).
  */
-export const ClaseConectividadSchema = z.enum(["IP-LAN", "LoRaWAN", "Celular"]);
+// `BLE` (D78): el equipo no habla con el sistema; lo escucha otro (un nodo de
+// luminaria). La identidad es `IDispositivo.mac`.
+export const ClaseConectividadSchema = z.enum(["IP-LAN", "LoRaWAN", "Celular", "BLE"]);
 
 /** D74: NS al que reporta un equipo LoRaWAN. */
 export const RedLoRaWANSchema = z.enum(["Local", "Externa"]);
@@ -704,6 +710,25 @@ export const TelemetriaLoRaWANSchema = z.object({
  * `estado` (alcanzabilidad runtime, owner edge): si compartieran campo, un
  * reporte del edge pisaría la decisión del operador.
  */
+/**
+ * D78 (doc 62): escuchas de un `Botón BLE`. Cloud-owned: la escribe acceso-api
+ * con cada `panicoBle`. Un botón no reporta si no se pulsa, así que no hay
+ * Offline por tiempo.
+ */
+export const EscuchaBotonBleSchema = z.object({
+  fecha: z.string(),
+  /** Nodo de luminaria que lo escuchó. */
+  idDispositivoNodo: z.string(),
+  idLuminaria: z.string().optional(),
+});
+
+export const TelemetriaBotonBleSchema = z.object({
+  primeraEscucha: z.string().optional(),
+  ultimaEscucha: EscuchaBotonBleSchema.optional(),
+  /** Uplinks recibidos (todas las luminarias, todas las pulsaciones). */
+  escuchas: z.number().int().nonnegative().optional(),
+});
+
 export const EstadoInventarioDispositivoSchema = z.enum([
   "Registrado",
   "Configurado",
@@ -850,6 +875,8 @@ export const DispositivoSchema = z.object({
     // Estado en el NS local de un equipo LoRaWAN (no gateway). Owner edge.
     aprovisionamientoLorawan: AprovisionamientoLoRaWANSchema.optional(),
     telemetriaLorawan: TelemetriaLoRaWANSchema.optional(),
+    // Solo `Botón BLE` (D78). Cloud-owned.
+    telemetriaBle: TelemetriaBotonBleSchema.optional(),
     // Identificación corta que canta el guardia o que lleva la etiqueta del
     // medidor (`T-07`, `AG-112`). Única por complejo.
     etiqueta: z.string().optional(),
@@ -991,6 +1018,8 @@ export type IEstadoGatewayLoRaWAN = z.infer<typeof EstadoGatewayLoRaWANSchema>;
 export type IEstadoAprovisionamientoLoRaWAN = z.infer<typeof EstadoAprovisionamientoLoRaWANSchema>;
 export type IAprovisionamientoLoRaWAN = z.infer<typeof AprovisionamientoLoRaWANSchema>;
 export type ITelemetriaLoRaWAN = z.infer<typeof TelemetriaLoRaWANSchema>;
+export type IEscuchaBotonBle = z.infer<typeof EscuchaBotonBleSchema>;
+export type ITelemetriaBotonBle = z.infer<typeof TelemetriaBotonBleSchema>;
 export type IEstadoInventarioDispositivo = z.infer<typeof EstadoInventarioDispositivoSchema>;
 export type ICapacidadVideo = z.infer<typeof CapacidadVideoSchema>;
 export type ICapacidadesVideo = z.infer<typeof CapacidadesVideoSchema>;

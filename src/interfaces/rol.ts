@@ -231,6 +231,9 @@ export const AccionesRolSchema = z.enum([
   "Alumbrado - Administrar luminarias",
   // Push `alerta_alumbrado` (corte de energía, relé sin consumo, golpe…).
   "Alumbrado - Recibir alertas",
+  // D78 (doc 62): botones de pánico BLE que escuchan las luminarias: asignar
+  // a un permiso, desasignar, renombrar, dar de baja. Verlos = `Alumbrado - Ver`.
+  "Alumbrado - Administrar botones BLE",
   // Dispara la actualización de firmware de UN dispositivo. Operación
   // irreversible (el fabricante bloquea el downgrade) y con riesgo de dejar el
   // equipo inutilizable: gate propio, nunca incluida en "Editar dispositivos".

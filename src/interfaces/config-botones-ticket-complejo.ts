@@ -17,6 +17,12 @@ export const ConfigBotonesTicketComplejoSchema = z.object({
   idComplejo: z.string().optional(),
   /** Botones (globales + del complejo) seleccionados, en orden. */
   idsBotones: z.array(z.string()).optional(),
+  /**
+   * D78: botón de Emergencia cuyo snapshot (texto, `atendidoPor`) llevan las
+   * emergencias de los botones BLE. Ausente = el primer `Emergencia`
+   * habilitado de `idsBotones`.
+   */
+  idBotonBle: z.string().optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),

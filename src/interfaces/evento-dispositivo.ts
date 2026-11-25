@@ -27,6 +27,12 @@ export const EventoDispositivoTipoSchema = z.enum([
   // Uplink LoRaWAN que no se pudo leer (checksum, trama cifrada, tipo
   // desconocido, sin perfil). El crudo queda en el edge para reprocesar.
   "decodificacion",
+  // D78 (doc 62): un botón de pánico BLE escuchado por un nodo de luminaria
+  // (UL 103). Uno por uplink (id determinístico devEUI + fCnt + MAC: el
+  // reenvío del confirmado no se duplica); nunca en un reproceso.
+  // `idDispositivo` = el NODO que lo escuchó; `detalle.botonBle` = la MAC.
+  // acceso-api crea o suma la emergencia del botón.
+  "panicoBle",
 ]);
 
 export const EventoDispositivoResultadoSchema = z.enum(["ok", "error"]);
@@ -68,6 +74,9 @@ export const EventoDispositivoDetalleSchema = z.object({
   fCnt: z.number().int().optional(),
   fPort: z.number().int().optional(),
   payloadHex: z.string().optional(),
+  // Pánico BLE (tipo='panicoBle', D78): MAC del botón (minúsculas, `aa:bb:…`).
+  // La luminaria del nodo la resuelve acceso-api.
+  botonBle: z.string().optional(),
 });
 
 export const EventoDispositivoSchema = z.object({

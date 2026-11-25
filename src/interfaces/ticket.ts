@@ -16,8 +16,30 @@ export const EstadoTicketSchema = z.enum([
 export const MetadataUbicacionTicketSchema = z.object({
   /** metros */
   accuracy: z.number().optional(),
-  fuente: z.enum(["gps", "network", "cache"]).optional(),
+  /** `luminarias` (D78): centroide de las luminarias que escucharon el botón BLE. */
+  fuente: z.enum(["gps", "network", "cache", "luminarias"]).optional(),
 });
+
+/** D78: de dónde salió el ticket. Ausente = `App`. */
+export const OrigenTicketSchema = z.enum(["App", "BotonBle"]);
+
+/** D78: una luminaria que escuchó el botón BLE (una por luminaria). */
+export const EscuchaTicketSchema = z.object({
+  fecha: z.string(),
+  idDispositivoNodo: z.string(),
+  idLuminaria: z.string().optional(),
+  /** Ubicación de la luminaria (o del nodo) usada para el centroide. */
+  ubicacion: GeoJSONPointSchema.optional(),
+});
+
+/** Estados en los que un ticket cuenta como abierto (un abierto por botón BLE). */
+export const ESTADOS_TICKET_ABIERTO = ["Pendiente", "EnAtencion"] as const;
+/** Escucha a más de esto de la anterior = otra pulsación del botón. */
+export const VENTANA_PULSACION_BOTON_BLE_SEG = 60;
+/** Recibida más de esto después de la pulsación = `recibidaConDemora`. */
+export const DEMORA_EMERGENCIA_BOTON_BLE_SEG = 120;
+/** Pulsación más vieja que esto no abre emergencia: solo actualiza el botón. */
+export const MAX_ANTIGUEDAD_EMERGENCIA_BOTON_BLE_HORAS = 24;
 
 /**
  * Snapshot inmutable del botón al disparar el ticket.
@@ -106,6 +128,20 @@ export const TicketSchema = z.object({
   fechaTomado: z.string().optional(),
   fechaResolucion: z.string().optional(),
   observacionesCierre: z.string().optional(),
+
+  // ── Botón de pánico BLE (D78, doc 62). Los escribe acceso-api. ──────────
+  origen: OrigenTicketSchema.optional(),
+  idDispositivoBle: z.string().optional(),
+  escuchas: z.array(EscuchaTicketSchema).optional(),
+  /** Ráfagas distintas recibidas mientras estuvo abierto (≥ 1). */
+  pulsaciones: z.number().int().positive().optional(),
+  /** Hora real de la primera pulsación (la del uplink). */
+  fechaPulsacion: z.string().optional(),
+  /** Última escucha recibida (cualquier luminaria): mide la ventana de pulsación. */
+  fechaUltimaEscucha: z.string().optional(),
+  recibidaConDemora: z.boolean().optional(),
+  /** Al crearse, el botón no tenía asignación activa (sin permiso ni UF). */
+  botonSinAsignar: z.boolean().optional(),
   // Populate
   cliente: ClienteSchema.optional(),
   complejo: ComplejoSchema.optional(),
@@ -137,6 +173,14 @@ export const CreateTicketSchema = TicketSchema.omit({
   costo: true,
   facturado: true,
   idExpensaUF: true,
+  origen: true,
+  idDispositivoBle: true,
+  escuchas: true,
+  pulsaciones: true,
+  fechaPulsacion: true,
+  fechaUltimaEscucha: true,
+  recibidaConDemora: true,
+  botonSinAsignar: true,
   ...TicketPopulateOmit,
 });
 
@@ -157,3 +201,5 @@ export type IRespuestaCampoFormularioTicket = z.infer<
 export type ITicket = z.infer<typeof TicketSchema>;
 export type ICreateTicket = z.infer<typeof CreateTicketSchema>;
 export type IUpdateTicket = z.infer<typeof UpdateTicketSchema>;
+export type IOrigenTicket = z.infer<typeof OrigenTicketSchema>;
+export type IEscuchaTicket = z.infer<typeof EscuchaTicketSchema>;

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hub edge contract
-  version: 0.27.0
+  version: 0.28.0
   description: 'Contrato HTTP+WS del bundle Hub edge (Angular target=edge). Autoritativo por D42 (2026-05-27).
 
     Cloud (`acceso-api`) y edge (`acceso-edge`) son implementaciones del spec.
@@ -4861,6 +4861,30 @@ x-ws-events:
             type: array
             items:
               type: string
+    sesion-actualizada:
+      x-scope: cloud-only
+      description: >-
+        Cambiaron los permisos del usuario conectado o las acciones de alguno de
+        sus roles. Room `sesion:<username>` (auto-join): el gateway cloud lo
+        emite al alta, edición o baja de un permiso del usuario, y al editar un
+        rol que tiene alguno de sus permisos. El cliente relee `/auth/me` y
+        `/auth/mis-permisos` sin cerrar sesión. La autorización del backend no
+        depende de esto (se resuelve contra Redis en cada request): es sólo el
+        estado que el cliente cacheó.
+      payload:
+        type: object
+        required:
+        - motivo
+        properties:
+          motivo:
+            type: string
+            enum:
+            - permiso
+            - rol
+          idPermiso:
+            type: string
+          idRol:
+            type: string
     edge-conectividad:
       x-scope: edge-required
       description: Contraparte local del fleet view cloud-only `edge-status:<idComplejo>`.
